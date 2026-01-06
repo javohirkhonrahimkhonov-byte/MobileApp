@@ -4,6 +4,7 @@ import '../../../../core/services/data_service.dart';
 // Using package imports is safer but let's correct relative first to match file system if package name is tricky
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/core/providers/auth_provider.dart';
 import 'package:talabahamkor_mobile/features/activities/screens/activities_screen.dart';
 // Commenting out missing screens for now to get build working, or using placeholders
 // import 'package:talabahamkor_mobile/features/clubs/screens/clubs_screen.dart';
@@ -44,6 +45,29 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print("Error loading home data: $e");
     }
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Chiqish"),
+        content: const Text("Tizimdan chiqmoqchimisiz?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Yo'q"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Provider.of<AuthProvider>(context, listen: false).logout();
+            },
+            child: const Text("Ha", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -123,7 +147,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   IconButton(icon: const Icon(Icons.notifications_none_rounded, size: 28), onPressed: () {}),
                   Positioned(right: 12, top: 12, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
                 ],
-              )
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                onPressed: _logout,
+                tooltip: "Chiqish",
+              ),
             ],
           ),
           const SizedBox(height: 24),
