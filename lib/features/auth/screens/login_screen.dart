@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,99 +35,97 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Basic Modern UI
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundWhite,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(
-                  Icons.school_rounded,
-                  size: 80,
-                  color: Colors.blueAccent,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Talaba Hamkor",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "HEMIS tizimi orqali kiring",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 40),
-                
-                // Login Field
-                TextFormField(
-                  controller: _loginController,
-                  decoration: InputDecoration(
-                    labelText: "HEMIS ID / Login",
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Branding Logo
+                  Hero(
+                    tag: 'app_logo',
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 120,
                     ),
                   ),
-                  validator: (v) => v!.isEmpty ? "Login kiriting" : null,
-                ),
-                const SizedBox(height: 16),
-                
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _isObscure,
-                  decoration: InputDecoration(
-                    labelText: "Parol",
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _isObscure = !_isObscure),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 30),
+                  Text(
+                    "Talaba Hamkor",
+                    textAlign: TextAlign.center,
+                    style: AppTheme.lightTheme.textTheme.displayMedium?.copyWith(
+                      color: AppTheme.primaryBlue,
                     ),
                   ),
-                  validator: (v) => v!.isEmpty ? "Parol kiriting" : null,
-                ),
-                const SizedBox(height: 24),
-                
-                Consumer<AuthProvider>(
-                  builder: (context, auth, _) {
-                    return ElevatedButton(
-                      onPressed: auth.isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "HEMIS tizimi orqali kiring",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Login Field
+                  TextFormField(
+                    controller: _loginController,
+                    decoration: const InputDecoration(
+                      labelText: "HEMIS ID / Login",
+                      prefixIcon: Icon(Icons.person_outline, color: AppTheme.primaryBlue),
+                    ),
+                    validator: (v) => v!.isEmpty ? "Login kiriting" : null,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Password Field
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _isObscure,
+                    decoration: InputDecoration(
+                      labelText: "Parol",
+                      prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primaryBlue),
+                      suffixIcon: IconButton(
+                        icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                        onPressed: () => setState(() => _isObscure = !_isObscure),
                       ),
-                      child: auth.isLoading
-                          ? const SizedBox(
-                              width: 20, 
-                              height: 20, 
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                            )
-                          : const Text(
-                              "Kirish",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                    );
-                  },
-                ),
-              ],
+                    ),
+                    validator: (v) => v!.isEmpty ? "Parol kiriting" : null,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return ElevatedButton(
+                        onPressed: auth.isLoading ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: auth.isLoading
+                            ? const SizedBox(
+                                width: 24, 
+                                height: 24, 
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)
+                              )
+                            : const Text(
+                                "Kirish",
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
