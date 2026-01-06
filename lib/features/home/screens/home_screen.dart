@@ -237,11 +237,15 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.1,
             children: [
+import 'package:talabahamkor_mobile/features/student_module/screens/academic_screen.dart';
+
+// ... (inside build method's GridView)
+
               DashboardCard(
-                title: "Davomat",
-                icon: Icons.calendar_today_rounded,
+                title: "Akademik",
+                icon: Icons.school_rounded,
                 color: Colors.green,
-                onTap: () => _showMock("Davomat"),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AcademicScreen())),
               ),
               DashboardCard(
                 title: "Ijtimoiy Faollik",
