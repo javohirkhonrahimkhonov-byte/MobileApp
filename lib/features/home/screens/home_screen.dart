@@ -8,6 +8,7 @@ import 'package:talabahamkor_mobile/features/community/screens/community_screen.
 import 'package:talabahamkor_mobile/features/student_module/screens/student_module_screen.dart';
 import 'package:talabahamkor_mobile/features/ai/screens/ai_screen.dart';
 import 'package:talabahamkor_mobile/features/student_module/widgets/student_dashboard_widgets.dart';
+import 'package:talabahamkor_mobile/features/student_module/screens/academic_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -241,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: "Akademik",
                 icon: Icons.school_rounded,
                 color: Colors.green,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AcademicScreen())),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AcademicScreen())),
               ),
               DashboardCard(
                 title: "Ijtimoiy Faollik",
