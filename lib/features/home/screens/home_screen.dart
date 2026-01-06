@@ -241,9 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: "Akademik",
                 icon: Icons.school_rounded,
                 color: Colors.green,
-                onTap: () {}, // Stats visible on card
-                gpa: "4.8",
-                attendanceStats: const {'unexcused': 12, 'excused': 4, 'total': 16},
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AcademicScreen())),
               ),
               DashboardCard(
                 title: "Ijtimoiy Faollik",
