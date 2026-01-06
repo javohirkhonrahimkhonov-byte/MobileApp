@@ -85,7 +85,11 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildInfoRow(Icons.account_balance_rounded, "Universitet", student.universityName ?? "JMCU"),
+                _buildInfoRow(Icons.account_balance_rounded, "Universitet", student.universityName ?? "Jizzax davlat pedagogika universiteti"),
+                const Divider(height: 1),
+                _buildInfoRow(Icons.school_rounded, "Fakultet", student.facultyName ?? "-"),
+                const Divider(height: 1),
+                _buildInfoRow(Icons.menu_book_rounded, "Yo'nalish", student.specialtyName ?? "-"),
                 const Divider(height: 1),
                 _buildInfoRow(
                   Icons.groups_rounded,
@@ -94,10 +98,6 @@ class ProfileScreen extends StatelessWidget {
                       ? student.groupNumber!.substring(0, 5)
                       : (student.groupNumber ?? "-"),
                 ),
-                const Divider(height: 1),
-                _buildInfoRow(Icons.school_rounded, "Fakultet", student.facultyName ?? "-"),
-                const Divider(height: 1),
-                _buildInfoRow(Icons.menu_book_rounded, "Yo'nalish", student.specialtyName ?? "-"),
                 const Divider(height: 1),
                 _buildInfoRow(Icons.calendar_today_rounded, "Semestr", student.semesterName ?? "-"),
               ],

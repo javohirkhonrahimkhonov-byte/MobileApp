@@ -132,7 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Salom, ${_profile?['full_name']?.split(' ')?[0] ?? 'Talaba'}!",
+                    "Salom, ${() {
+                      final name = _profile?['full_name'] ?? 'Talaba';
+                      final parts = name.split(' ');
+                      return parts.length > 1 ? parts[1] : parts[0];
+                    }()}!",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Row(
