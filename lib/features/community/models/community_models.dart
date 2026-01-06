@@ -9,6 +9,10 @@ class Post {
   final int commentsCount;
   final List<String> tags;
   final bool isLiked; // by current user
+  final bool isVerified; // Blue checkmark (Official)
+  final bool isTyutor; // Special badge
+  final int views; // View count
+  final int usefulScore; // "Foydali" score
 
   Post({
     required this.id,
@@ -21,6 +25,10 @@ class Post {
     this.commentsCount = 0,
     this.tags = const [],
     this.isLiked = false,
+    this.isVerified = false,
+    this.isTyutor = false,
+    this.views = 0,
+    this.usefulScore = 0,
   });
 }
 

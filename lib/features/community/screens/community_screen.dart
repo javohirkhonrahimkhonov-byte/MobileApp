@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
+import '../widgets/shimmer_post.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -56,12 +57,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+
+
   Widget _buildFeed(String scope) {
     return FutureBuilder<List<Post>>(
       future: _service.getPosts(scope: scope),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.builder(
+             padding: const EdgeInsets.all(16),
+             itemCount: 3,
+             itemBuilder: (ctx, i) => const ShimmerPost(),
+          );
         }
         if (snapshot.hasError) {
           return Center(child: Text("Xatolik: ${snapshot.error}"));

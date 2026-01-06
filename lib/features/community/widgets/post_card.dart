@@ -31,12 +31,15 @@ class PostCard extends StatelessWidget {
           // Header
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                child: Text(
-                  post.authorName.isNotEmpty ? post.authorName[0] : "?",
-                  style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+              Hero(
+                tag: "avatar_${post.id}",
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                  child: Text(
+                    post.authorName.isNotEmpty ? post.authorName[0] : "?",
+                    style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -44,11 +47,29 @@ class PostCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      post.authorName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            post.authorName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (post.isVerified) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified, color: Colors.blue, size: 16),
+                        ],
+                        if (post.isTyutor) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
+                            child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                          )
+                        ]
+                      ],
                     ),
                     Text(
                       "${post.authorRole} • ${post.timeAgo}",
@@ -57,7 +78,20 @@ class PostCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.more_horiz, color: Colors.grey),
+              if (post.usefulScore > 10) 
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                   decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(12)),
+                   child: Row(
+                     children: [
+                       const Icon(Icons.show_chart, size: 14, color: Colors.green),
+                       const SizedBox(width: 4),
+                       Text("Top so'rov", style: TextStyle(fontSize: 10, color: Colors.green[700], fontWeight: FontWeight.bold)),
+                     ],
+                   ),
+                 )
+              else 
+                 const Icon(Icons.more_horiz, color: Colors.grey),
             ],
           ),
           const SizedBox(height: 12),

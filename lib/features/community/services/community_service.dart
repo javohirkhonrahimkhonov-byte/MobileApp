@@ -17,6 +17,7 @@ class CommunityService {
           likes: 5,
           commentsCount: 2,
           timeAgo: "2 soat oldin",
+          usefulScore: 12, // Shows "Top so'rov"
         ),
         Post(
           id: '2',
@@ -28,6 +29,8 @@ class CommunityService {
           likes: 42,
           commentsCount: 0,
           timeAgo: "5 soat oldin",
+          isTyutor: true, // Shows badge
+          isVerified: true,
         ),
       ];
     } else {
@@ -43,6 +46,8 @@ class CommunityService {
           likes: 128,
           commentsCount: 45,
           timeAgo: "1 kun oldin",
+          isVerified: true, // Official
+          views: 5400,
         ),
         Post(
           id: '4',
