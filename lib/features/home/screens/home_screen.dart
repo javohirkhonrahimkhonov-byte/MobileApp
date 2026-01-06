@@ -6,6 +6,7 @@ import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 import 'package:talabahamkor_mobile/core/providers/auth_provider.dart';
 import 'package:talabahamkor_mobile/features/activities/screens/activities_screen.dart';
+import 'package:talabahamkor_mobile/features/profile/screens/profile_screen.dart';
 // Commenting out missing screens for now to get build working, or using placeholders
 // import 'package:talabahamkor_mobile/features/clubs/screens/clubs_screen.dart';
 // import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
@@ -70,6 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     // Screens for BottomNav
@@ -77,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeContent(),     // 0: Home
       const ActivitiesScreen(), // 1: Portfolio
       const Center(child: Text("Xizmatlar Menyusi (Tez orada)")), // 2: Services
-      const Center(child: Text("Profil (Tez orada)")), // 3: Profile
+      const ProfileScreen(), // 3: Profile
     ];
 
     return Scaffold(
