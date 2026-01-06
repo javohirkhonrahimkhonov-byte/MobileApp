@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class DashboardCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
   final String? gpa;
   final Map<String, int>? attendanceStats;
 

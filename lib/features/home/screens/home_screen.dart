@@ -237,10 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.1,
             children: [
-import 'package:talabahamkor_mobile/features/student_module/screens/academic_screen.dart';
-
-// ... (inside build method's GridView)
-
               DashboardCard(
                 title: "Akademik",
                 icon: Icons.school_rounded,
