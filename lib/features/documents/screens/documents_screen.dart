@@ -41,7 +41,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           tabs: const [
             Tab(text: "HEMIS Hujjatlari"),
-            Tab(text: "Mening Hujjatlarim"),
+            Tab(text: "Qo'shimcha hujjatlar"),
           ],
         ),
       ),
