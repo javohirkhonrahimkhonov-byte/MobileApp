@@ -245,7 +245,9 @@ import 'package:talabahamkor_mobile/features/student_module/screens/academic_scr
                 title: "Akademik",
                 icon: Icons.school_rounded,
                 color: Colors.green,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AcademicScreen())),
+                onTap: () {}, // Stats visible on card
+                gpa: "4.8",
+                attendanceStats: const {'unexcused': 12, 'excused': 4, 'total': 16},
               ),
               DashboardCard(
                 title: "Ijtimoiy Faollik",
