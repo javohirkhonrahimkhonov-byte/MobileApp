@@ -33,9 +33,20 @@ class DataService {
     throw Exception('Failed to load profile');
   }
 
-  // 2. Get Dashboard Stats (Real)
-  Future<Map<String, dynamic>> getDashboardStats() async {
+  // Cache for Dashboard
+  Map<String, dynamic>? _dashboardCache;
+  DateTime? _lastDashboardFetch;
+
+  // 2. Get Dashboard Stats (Real + Cached)
+  Future<Map<String, dynamic>> getDashboardStats({bool forceRefresh = false}) async {
     if (useMock) return _getMockStats();
+
+    // Check Cache (valid for 5 mins)
+    if (!forceRefresh && _dashboardCache != null && _lastDashboardFetch != null) {
+      if (DateTime.now().difference(_lastDashboardFetch!).inMinutes < 5) {
+        return _dashboardCache!;
+      }
+    }
 
     try {
       final headers = await _getHeaders();
@@ -90,12 +101,18 @@ class DataService {
         print("Absence calc error: $e");
       }
 
-      return {
+      final result = {
         "gpa": double.parse(gpa.toStringAsFixed(2)),
         "missed_hours": missedHours,
         "activities_count": 0, // Placeholder
         "clubs_count": 0
       };
+
+      // Update Cache
+      _dashboardCache = result;
+      _lastDashboardFetch = DateTime.now();
+
+      return result;
     } catch (e) {
       print("Dashboard Error: $e");
       // Return zeros instead of crashing
