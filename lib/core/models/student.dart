@@ -3,6 +3,12 @@ class Student {
   final String fullName;
   final String hemisLogin;
   final String? universityName;
+  final String? groupNumber;
+  final String? specialtyName;
+  final String? facultyName;
+  final String? semesterName;
+  final String? imageUrl;
+  final int missedHours;
 
   Student({
     required this.id,
