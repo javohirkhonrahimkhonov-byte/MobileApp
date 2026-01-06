@@ -10,6 +10,7 @@ import 'package:talabahamkor_mobile/features/ai/screens/ai_screen.dart';
 import 'package:talabahamkor_mobile/features/student_module/widgets/student_dashboard_widgets.dart';
 import 'package:talabahamkor_mobile/features/student_module/screens/academic_screen.dart';
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_screen.dart';
+import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -253,9 +254,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               DashboardCard(
                 title: "Hujjatlar",
-                icon: Icons.folder_open_rounded,
+                icon: Icons.folder_copy_rounded,
                 color: Colors.blue,
-                onTap: () => _showMock("Hujjatlar"),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentsScreen())),
               ),
               DashboardCard(
                 title: "Sertifikatlar",
