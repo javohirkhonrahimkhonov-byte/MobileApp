@@ -27,12 +27,14 @@ class Post {
 class Comment {
   final String id;
   final String authorName;
+  final String authorAvatar; // Initials or URL
   final String content;
   final String timeAgo;
 
   Comment({
     required this.id,
     required this.authorName,
+    this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
   });

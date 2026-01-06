@@ -58,4 +58,42 @@ class CommunityService {
       ];
     }
   }
+
+  Future<List<Comment>> getComments(String postId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (postId == '1') {
+      return [
+        Comment(
+          id: '101',
+          authorName: 'Aliyev Vali',
+          content: 'Ha, domla kasal ekanlar, dars bo\'lmaydi.',
+          timeAgo: '1 soat oldin',
+        ),
+        Comment(
+          id: '102',
+          authorName: 'Karimova Gulnoza',
+          content: 'Rahmat, men endi yo\'lga chiqmoqchi edim!',
+          timeAgo: '50 daqiqa oldin',
+        ),
+      ];
+    } else if (postId == '3') {
+      return [
+        Comment(
+          id: '301',
+          authorName: 'Rustamov Sardor',
+          content: 'Narxi qancha ekan?',
+          timeAgo: '5 soat oldin',
+        ),
+        Comment(
+          id: '302',
+          authorName: 'Uzbekistan Youth Union',
+          authorAvatar: '', // Not used in Comment yet but could be
+          content: 'Oromgoh bepul! Faqat saralashdan o\'tish kerak.',
+          timeAgo: '4 soat oldin',
+        ),
+      ];
+    }
+    return [];
+  }
 }

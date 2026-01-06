@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
+import '../screens/post_detail_screen.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
+  final bool isDetail;
 
-  const PostCard({super.key, required this.post});
+  const PostCard({super.key, required this.post, this.isDetail = false});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget content = Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: BoxDecoration( // ... style 
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -95,11 +97,25 @@ class PostCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (isDetail) return content;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailScreen(post: post),
+          ),
+        );
+      },
+      child: content,
+    );
   }
 
   Widget _buildAction(IconData icon, String label) {
     return InkWell(
-      onTap: () {},
+      onTap: () {}, // TODO: Implement interaction
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
