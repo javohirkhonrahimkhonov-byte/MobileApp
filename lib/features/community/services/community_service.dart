@@ -32,6 +32,33 @@ class CommunityService {
           timeAgo: "1 soat oldin",
         ),
       ];
+    } else if (scope == "faculty") {
+      return [
+        Post(
+          id: '20',
+          authorName: 'Fakultet Dekani',
+          authorAvatar: '',
+          authorRole: 'Dekanat',
+          content: 'Hurmatli talabalar! Kelasi hafta "Fakultet kuni" tadbiri bo\'lib o\'tadi. Barcha faol talabalarni taklif qilamiz.',
+          tags: ['#tadbir', '#dekanat', '#elon'],
+          likes: 156,
+          commentsCount: 34,
+          timeAgo: "1 kun oldin",
+          isVerified: true,
+          views: 1200,
+        ),
+        Post(
+          id: '21',
+          authorName: 'O\'quv bo\'limi',
+          authorAvatar: '',
+          authorRole: 'Admin',
+          content: 'Imtihon jadvalsari doskaga ilindi. Iltimos, tanishib chiqing.',
+          tags: ['#imtihon', '#jadval'],
+          likes: 89,
+          commentsCount: 5,
+          timeAgo: "3 soat oldin",
+        ),
+      ];
     } else if (scope == "university") {
       return [
         Post(

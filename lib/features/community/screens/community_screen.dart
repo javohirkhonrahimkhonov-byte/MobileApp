@@ -19,7 +19,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         backgroundColor: AppTheme.backgroundWhite,
         appBar: AppBar(
@@ -31,9 +31,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
             labelColor: AppTheme.primaryBlue,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppTheme.primaryBlue,
-            isScrollable: true, // Scrollable for 3+ items generally better on small screens
+            isScrollable: true,
             tabs: [
               Tab(text: "Yo'nalish"),
+              Tab(text: "Fakultet"),
               Tab(text: "Universitet"),
               Tab(text: "Respublika"),
             ],
@@ -48,6 +49,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         body: TabBarView(
           children: [
             _buildFeed("specialty"),
+            _buildFeed("faculty"),
             _buildFeed("university"),
             _buildFeed("republic"),
           ],

@@ -78,6 +78,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   isExpanded: true,
                   items: const [
                     DropdownMenuItem(value: 'university', child: Text("🏛️  Universitet (Barchaga)")),
+                    DropdownMenuItem(value: 'faculty', child: Text("🎓  Fakultet (Dekanat)")),
                     DropdownMenuItem(value: 'specialty', child: Text("🎯  Yo'nalish (Guruhga)")),
                   ],
                   onChanged: (val) => setState(() => _selectedScope = val!),
