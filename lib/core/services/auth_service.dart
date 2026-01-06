@@ -4,9 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
 
 class AuthService {
-  // Use localhost for simulator (Android: 10.0.2.2, iOS: 127.0.0.1)
-  // Since we are likely on web/linux for now, sticking to relative or config.
-  static const String baseUrl = 'http://localhost:8000/api/v1'; 
+  // Android Emulator uses 10.0.2.2 to access host machine's localhost
+  static const String baseUrl = 'http://10.0.2.2:8000/api/v1'; 
 
   Future<Student?> login(String login, String password) async {
     final url = Uri.parse('$baseUrl/auth/hemis');
