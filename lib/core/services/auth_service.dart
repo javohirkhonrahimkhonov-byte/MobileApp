@@ -7,65 +7,49 @@ import '../constants/api_constants.dart';
 class AuthService {
   
   Future<Student?> login(String login, String password) async {
-    final url = Uri.parse(ApiConstants.authLogin);
+    // We MUST use the Backend Proxy because:
+    // 1. It creates/updates the Student record in our local Postgres DB (required for other features).
+    // 2. It bypasses SSL handshake issues on Android Emulators.
+    final url = Uri.parse('${ApiConstants.backendUrl}/auth/hemis');
+    
     try {
+      print('Attempting login to: $url');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'login': login, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       print('Login Response: ${response.statusCode} ${response.body}');
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        
-        // HEMIS API structure: {"success": true, "data": {"token": "..."}}
-        String? token;
-        if (body['data'] != null && body['data']['token'] != null) {
-          token = body['data']['token'];
-        } else if (body['token'] != null) {
-          // Fallback if structure varies
-          token = body['token'];
-        }
+        final data = jsonDecode(response.body);
+        final token = data['token'];
+        final profile = data['profile'];
 
-        if (token != null) {
+        if (token != null && profile != null) {
           await _saveToken(token);
-          
-          // Step 2: Get Profile
-          return await _fetchAndSaveProfile(token);
+          await _saveProfile(profile);
+          return Student.fromJson(profile);
         }
-      } 
-    } catch (e) {
-      print('Auth Error: $e');
-    }
-    return null;
-  }
-
-  Future<Student?> _fetchAndSaveProfile(String token) async {
-    try {
-      final url = Uri.parse(ApiConstants.profile);
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json'
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        // HEMIS /account/me usually returns: {"success": true, "data": {...}}
-        final profileData = body['data'] ?? body;
-        
-        await _saveProfile(profileData);
-        return Student.fromJson(profileData);
+      } else {
+        // Parse error message
+        try {
+          final errorBody = jsonDecode(response.body);
+          print('Login Failed: ${errorBody['detail']}');
+          throw Exception(errorBody['detail'] ?? 'Login Error: ${response.statusCode}');
+        } catch (_) {
+          throw Exception('Login Failed: ${response.statusCode}');
+        }
       }
     } catch (e) {
-      print('Profile Fetch Error: $e');
+      print('Auth Exception: $e');
+      rethrow; // Pass error up to Provider
     }
     return null;
   }
+
+  // _fetchAndSaveProfile is removed because the Proxy returns everything in one go.
 
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
