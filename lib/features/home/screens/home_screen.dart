@@ -77,14 +77,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Screens for BottomNav
     final List<Widget> screens = [
-      _buildHomeContent(),     // 0: Home
-      const ActivitiesScreen(), // 1: Portfolio
-      const Center(child: Text("Xizmatlar Menyusi (Tez orada)")), // 2: Services
-      const ProfileScreen(), // 3: Profile
+      _buildHomeContent(),           // 0: Home
+      const StudentModuleScreen(),   // 1: Talaba Moduli
+      const AiScreen(),              // 2: AI
+      const CommunityScreen(),       // 3: Choyxona
+      const ProfileScreen(),         // 4: Profile
     ];
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundWhite, // #EDEDED
+      backgroundColor: AppTheme.backgroundWhite, 
       body: SafeArea(
         child: screens[_currentIndex],
       ),
@@ -98,14 +99,15 @@ class _HomeScreenState extends State<HomeScreen> {
           selectedItemColor: AppTheme.primaryBlue,
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
+          type: BottomNavigationBarType.fixed, // Fixed is crucial for >3 items
           backgroundColor: Colors.white,
           elevation: 0,
           onTap: (index) => setState(() => _currentIndex = index),
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Home"),
-            BottomNavigationBarItem(icon: Icon(Icons.emoji_events_rounded), label: "Portfolio"),
-            BottomNavigationBarItem(icon: Icon(Icons.apps_rounded), label: "Xizmatlar"),
+            BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Asosiy"),
+            BottomNavigationBarItem(icon: Icon(Icons.newspaper_rounded), label: "Talaba"),
+            BottomNavigationBarItem(icon: Icon(Icons.smart_toy_rounded), label: "AI"),
+            BottomNavigationBarItem(icon: Icon(Icons.forum_rounded), label: "Choyxona"),
             BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "Profil"),
           ],
         ),
