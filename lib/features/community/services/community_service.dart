@@ -5,7 +5,34 @@ class CommunityService {
     // Mock API Delay
     await Future.delayed(const Duration(milliseconds: 500));
 
-    if (scope == "university") {
+    if (scope == "specialty") {
+      return [
+        Post(
+          id: '5',
+          authorName: 'Sardor aka (Mentor)',
+          authorAvatar: '',
+          authorRole: 'Dasturlash Kafedrasi',
+          content: 'Python bo\'yicha qo\'shimcha darslar har chorshanba 14:00 da 204-xonada bo\'ladi.',
+          tags: ['#python', '#dars', '#elon'],
+          likes: 25,
+          commentsCount: 8,
+          timeAgo: "45 daqiqa oldin",
+          isVerified: true,
+          usefulScore: 50,
+        ),
+        Post(
+          id: '6',
+          authorName: '315-21 Guruh sardori',
+          authorAvatar: '',
+          authorRole: 'Guruh',
+          content: 'Javalar darsiga vazifani gruppaga tashlab qo\'ydim. Ko\'rib olinglar.',
+          tags: ['#java', '#vazifa'],
+          likes: 12,
+          commentsCount: 3,
+          timeAgo: "1 soat oldin",
+        ),
+      ];
+    } else if (scope == "university") {
       return [
         Post(
           id: '1',
