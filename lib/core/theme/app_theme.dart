@@ -36,20 +36,9 @@ class AppTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme( // Wait, if I use CardTheme() it acts as the Widget. I normally use CardTheme for data too? 
-                            // Actually, let's try CardThemeData if it exists, OR check if I need to use CardTheme.of(context) style? 
-                            // No, inside ThemeData it is just properties. 
-                            // The error explicitly said: expects CardThemeData. 
-                            // So I will use CardThemeData. if that fails, I revert.
-      // update: CardTheme class in older flutter was used for data. In newer, maybe CardThemeData.
-      // Let's use CardThemeData based on the error message.
-      cardTheme: const CardTheme().copyWith( // Alternative safe way? No.
-         // Let's try explicit CardThemeData 
-      ),
-      */
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceWhite,
-        elevation: 0, 
+        elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       ),
