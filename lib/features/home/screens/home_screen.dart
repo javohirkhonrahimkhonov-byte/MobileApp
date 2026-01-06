@@ -78,10 +78,10 @@ class _HomeScreenState extends State<HomeScreen> {
     // Screens for BottomNav
     final List<Widget> screens = [
       _buildHomeContent(),           // 0: Home
-      const StudentModuleScreen(),   // 1: Talaba Moduli
-      const AiScreen(),              // 2: AI
-      const CommunityScreen(),       // 3: Choyxona
-      const ProfileScreen(),         // 4: Profile
+      StudentModuleScreen(),         // 1: Talaba Moduli
+      AiScreen(),                    // 2: AI
+      CommunityScreen(),             // 3: Choyxona
+      ProfileScreen(),               // 4: Profile
     ];
 
     return Scaffold(
