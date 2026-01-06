@@ -4,6 +4,7 @@ import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
 import '../widgets/shimmer_post.dart';
+import '../screens/create_post_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -52,7 +53,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+            );
+          },
           backgroundColor: AppTheme.primaryBlue,
           child: const Icon(Icons.edit, color: Colors.white),
         ),

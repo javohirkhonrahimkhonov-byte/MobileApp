@@ -35,6 +35,21 @@ class CommunityService {
     } else if (scope == "university") {
       return [
         Post(
+          id: '10', // ID 10 for Poll
+          authorName: 'Talabalar Kengashi',
+          authorAvatar: '',
+          authorRole: 'Rasmiy',
+          content: 'Hurmatli talabalar! Universitet oshxonasidagi ovqatlar sifati va narxi sizni qoniqtiradimi? Sizning fikringiz muhim!',
+          tags: ['#sorovnoma', '#oshxona', '#muhim'],
+          likes: 88,
+          commentsCount: 15,
+          timeAgo: "30 daqiqa oldin",
+          isVerified: true,
+          pollOptions: ["Ha, juda zo'r", "Yomon emas, bo'ladi", "Narxi qimmat", "Sifatsiz", "Oshxona bormi? 😅"],
+          pollVotes: [12, 45, 20, 8, 3], // Mock votes
+          userVote: null, // User hasn't voted yet
+        ),
+        Post(
           id: '1',
           authorName: 'Akramjonov Muhammadali',
           authorAvatar: '',
@@ -44,7 +59,7 @@ class CommunityService {
           likes: 5,
           commentsCount: 2,
           timeAgo: "2 soat oldin",
-          usefulScore: 12, // Shows "Top so'rov"
+          usefulScore: 12, 
         ),
         Post(
           id: '2',

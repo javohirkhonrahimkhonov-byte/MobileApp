@@ -13,6 +13,9 @@ class Post {
   final bool isTyutor; // Special badge
   final int views; // View count
   final int usefulScore; // "Foydali" score
+  final List<String>? pollOptions; // If not null, it's a poll
+  final List<int>? pollVotes; // Vote counts per option
+  final int? userVote; // Index of option user voted for (or null)
 
   Post({
     required this.id,
@@ -29,6 +32,9 @@ class Post {
     this.isTyutor = false,
     this.views = 0,
     this.usefulScore = 0,
+    this.pollOptions,
+    this.pollVotes,
+    this.userVote,
   });
 }
 
