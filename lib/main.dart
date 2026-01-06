@@ -5,7 +5,10 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'core/theme/app_theme.dart';
 
+import 'dart:io';
+
 void main() {
+  HttpOverrides.global = MyHttpOverrides(); // Bypass SSL issues for Emulator
   runApp(
     MultiProvider(
       providers: [
@@ -14,6 +17,15 @@ void main() {
       child: const TalabaHamkorApp(),
     ),
   );
+}
+
+// Bypass Bad SSL Certificate (Android Emulator / University Server issues)
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }
 
 class TalabaHamkorApp extends StatelessWidget {

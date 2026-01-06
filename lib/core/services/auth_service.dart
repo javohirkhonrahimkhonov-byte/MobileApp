@@ -6,50 +6,65 @@ import '../constants/api_constants.dart';
 
 class AuthService {
   
+  // Using DIRECT HEMIS API because Proxy Server is Geo-Blocked
   Future<Student?> login(String login, String password) async {
-    // We MUST use the Backend Proxy because:
-    // 1. It creates/updates the Student record in our local Postgres DB (required for other features).
-    // 2. It bypasses SSL handshake issues on Android Emulators.
-    final url = Uri.parse('${ApiConstants.backendUrl}/auth/hemis');
-    
+    final url = Uri.parse(ApiConstants.authLogin);
     try {
-      print('Attempting login to: $url');
+      print('Direct Login: $url');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'login': login, 'password': password}),
-      ).timeout(const Duration(seconds: 30));
+      );
 
-      print('Login Response: ${response.statusCode} ${response.body}');
+      print('Login Response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final token = data['token'];
-        final profile = data['profile'];
+        final body = jsonDecode(response.body);
+        
+        // HEMIS API: {"success": true, "data": {"token": "..."}}
+        String? token;
+        if (body['data'] != null && body['data']['token'] != null) {
+          token = body['data']['token'];
+        }
 
-        if (token != null && profile != null) {
+        if (token != null) {
           await _saveToken(token);
-          await _saveProfile(profile);
-          return Student.fromJson(profile);
+          return await _fetchAndSaveProfile(token);
         }
       } else {
-        // Parse error message
-        try {
-          final errorBody = jsonDecode(response.body);
-          print('Login Failed: ${errorBody['detail']}');
-          throw Exception(errorBody['detail'] ?? 'Login Error: ${response.statusCode}');
-        } catch (_) {
-          throw Exception('Login Failed: ${response.statusCode}');
-        }
+        throw Exception('Login Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Auth Exception: $e');
-      rethrow; // Pass error up to Provider
+      print('Auth Error: $e');
+      rethrow;
     }
     return null;
   }
 
-  // _fetchAndSaveProfile is removed because the Proxy returns everything in one go.
+  Future<Student?> _fetchAndSaveProfile(String token) async {
+    try {
+      final url = Uri.parse(ApiConstants.profile);
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final profileData = body['data'] ?? body;
+        
+        await _saveProfile(profileData);
+        return Student.fromJson(profileData);
+      }
+    } catch (e) {
+      print('Profile Error: $e');
+    }
+    return null;
+  }
 
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
