@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../auth/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../feedback/screens/feedback_screen.dart';
+import '../../documents/screens/documents_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -23,7 +25,22 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text("Sozlamalar"),
-            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.message_outlined),
+            title: const Text("Murojaatlar"),
+            onTap: () {
+               Navigator.pop(context);
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.file_copy_outlined),
+            title: const Text("Hujjatlar"),
+            onTap: () {
+               Navigator.pop(context);
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentsScreen()));
+            },
           ),
           ListTile(
             leading: const Icon(Icons.help_outline),
