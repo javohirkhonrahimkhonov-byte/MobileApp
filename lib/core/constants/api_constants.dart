@@ -1,19 +1,15 @@
 class ApiConstants {
-  // Replace with your server IP or domain
-  // For Emulator: 10.0.2.2
-  // For Physical Device: Your LAN IP (e.g., 192.168.1.5)
-  static const String baseUrl = 'http://38.242.223.171:8000/api/v1'; 
+  // Official HEMIS API for JMCU
+  static const String baseUrl = 'https://student.jmcu.uz/rest/v1'; 
   
-  static const String authInit = '$baseUrl/auth/init';
-  static const String authCheck = '$baseUrl/auth/check';
+  // Auth
+  static const String authLogin = '$baseUrl/auth/login';
   
-  static const String profile = '$baseUrl/student/me';
-  static const String dashboard = '$baseUrl/student/dashboard';
+  // Account
+  static const String profile = '$baseUrl/account/me';
   
-  static const String activities = '$baseUrl/student/activities';
-  static const String clubsMy = '$baseUrl/student/clubs/my';
-  static const String clubsAll = '$baseUrl/student/clubs/all';
-  
-  static const String feedback = '$baseUrl/student/feedback';
-  static const String documents = '$baseUrl/student/documents';
+  // Data
+  static const String gpaList = '$baseUrl/data/student-gpa-list';
+  static const String taskList = '$baseUrl/data/subject-task-student-list';
+  static const String documentList = '$baseUrl/data/student-certificate-list';
 }

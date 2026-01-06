@@ -1,156 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../auth/auth_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/providers/auth_provider.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer<AuthProvider>(
-        builder: (context, auth, child) {
-          if (auth.status == AuthStatus.authenticating) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text("Iltimos, Telegramda tasdiqlang...", style: TextStyle(fontSize: 16)),
-                ],
-              ),
-            );
-          }
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo Placeholder
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryBlue.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.school, size: 50, color: AppTheme.primaryBlue),
-                  ),
-                  const SizedBox(height: 32),
-                  
-                  Text(
-                    "TalabaHamkor",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.bgDark
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Talabalar uchun yagona portal",
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600]
-                    ),
-                  ),
-                  const SizedBox(height: 48),
+class _LoginScreenState extends State<LoginScreen> {
+  final _loginController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isObscure = true;
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: () => auth.startLogin(),
-                      icon: const Icon(Icons.telegram),
-                      label: const Text("Telegram orqali kirish", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0088cc),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // HEMIS Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showHemisLoginDialog(context, auth),
-                      icon: const Icon(Icons.school_outlined),
-                      label: const Text("HEMIS orqali kirish", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.primaryBlue),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final error = await auth.login(
+      _loginController.text.trim(),
+      _passwordController.text.trim(),
     );
+
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+    }
+    // Navigation is handled by Main Wrapper based on Auth State
   }
 
-  void _showHemisLoginDialog(BuildContext context, AuthProvider auth) {
-    final loginController = TextEditingController();
-    final passController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("HEMIS Login"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: loginController,
-              decoration: const InputDecoration(
-                labelText: "Login (Talaba ID)",
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
+  @override
+  Widget build(BuildContext context) {
+    // Basic Modern UI
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.school_rounded,
+                  size: 80,
+                  color: Colors.blueAccent,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Talaba Hamkor",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "HEMIS tizimi orqali kiring",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 40),
+                
+                // Login Field
+                TextFormField(
+                  controller: _loginController,
+                  decoration: InputDecoration(
+                    labelText: "HEMIS ID / Login",
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (v) => v!.isEmpty ? "Login kiriting" : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _isObscure,
+                  decoration: InputDecoration(
+                    labelText: "Parol",
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _isObscure = !_isObscure),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (v) => v!.isEmpty ? "Parol kiriting" : null,
+                ),
+                const SizedBox(height: 24),
+                
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return ElevatedButton(
+                      onPressed: auth.isLoading ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              width: 20, 
+                              height: 20, 
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                            )
+                          : const Text(
+                              "Kirish",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                    );
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: passController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Parol",
-                prefixIcon: Icon(Icons.lock),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Bekor qilish"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final success = await auth.loginWithHemis(
-                loginController.text.trim(),
-                passController.text.trim(),
-              );
-              
-              if (!success && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Login yoki Parol xato!"), backgroundColor: Colors.red),
-                );
-              }
-            },
-            child: const Text("Kirish"),
-          ),
-        ],
       ),
     );
   }
 }
-

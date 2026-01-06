@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/data_service.dart';
 import '../../core/theme/app_theme.dart';
-import '../../features/activities/screens/activities_screen.dart'; // Will create next
-import '../../features/clubs/screens/clubs_screen.dart'; // Will create next
-import '../widgets/dashboard_stats_widget.dart'; // Will create next
-import '../widgets/drawer_widget.dart';
+import '../../features/activities/screens/activities_screen.dart';
+import '../../features/clubs/screens/clubs_screen.dart';
+import '../../features/feedback/screens/feedback_screen.dart';
+import '../../features/documents/screens/documents_screen.dart';
+// import '../widgets/drawer_widget.dart'; // Drawer replaced by Services Menu
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,126 +48,241 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Screens for BottomNav
     final List<Widget> screens = [
-      _buildHomeContent(),
-      const ActivitiesScreen(), // Placeholder for now
-      const Center(child: Text("AI Konspekt (Tez orada)")),
-      const ClubsScreen(),      // Placeholder for now
+      _buildHomeContent(),     // 0: Home
+      const ActivitiesScreen(), // 1: Portfolio
+      const Center(child: Text("Xizmatlar Menyusi (Tez orada)")), // 2: Services
+      const Center(child: Text("Profil (Tez orada)")), // 3: Profile
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("TalabaHamkor"),
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
-        ],
+      backgroundColor: AppTheme.backgroundWhite, // #EDEDED
+      body: SafeArea(
+        child: screens[_currentIndex],
       ),
-      drawer: const AppDrawer(), // Logout is here
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) 
-          : screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: AppTheme.primaryBlue,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Bosh sahifa"),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: "Faolliklar"),
-          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome), label: "AI"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Klublar"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHomeContent() {
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Header
-            Text(
-              "Salom, ${_profile?['full_name']?.split(' ')?[0] ?? 'Talaba'}! 👋",
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              "Guruh: ${_profile?['group_number']} • ID: ${_profile?['id']}",
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            
-            // GPA Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBlue,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                   const Text("Joriy GPA Ko'rsatkichi", style: TextStyle(color: Colors.white70)),
-                   const SizedBox(height: 8),
-                   Text(
-                     "${_dashboard?['gpa'] ?? '0.0'}", 
-                     style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)
-                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Stats Grid
-            Row(
-              children: [
-                Expanded(child: _statCard("Faolliklar", "${_dashboard?['activities_count']}", Icons.star, Colors.orange)),
-                const SizedBox(width: 16),
-                Expanded(child: _statCard("Klublar", "${_dashboard?['clubs_count']}", Icons.flag, Colors.purple)),
-              ],
-            ),
-             const SizedBox(height: 16),
-             Row(
-              children: [
-                Expanded(child: _statCard("Tasdiqlandi", "${_dashboard?['activities_approved_count']}", Icons.check_circle, AppTheme.accentGreen)),
-                const SizedBox(width: 16),
-                Expanded(child: _statCard("Hujjatlar", "0", Icons.folder, Colors.blueGrey)),
-              ],
-            ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          selectedItemColor: AppTheme.primaryBlue,
+          unselectedItemColor: Colors.grey,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(Icons.emoji_events_rounded), label: "Portfolio"),
+            BottomNavigationBarItem(icon: Icon(Icons.apps_rounded), label: "Xizmatlar"),
+            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "Profil"),
           ],
         ),
       ),
     );
   }
 
-  Widget _statCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-        ]
-      ),
+  Widget _buildHomeContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          // 1. Header (Avatar + Name + Status)
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.grey[200],
+                child: const Icon(Icons.person, color: Colors.grey),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Salom, ${_profile?['full_name']?.split(' ')?[0] ?? 'Talaba'}!",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    children: [
+                      Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.accentGreen, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Text("Online", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Stack(
+                children: [
+                  IconButton(icon: const Icon(Icons.notifications_none_rounded, size: 28), onPressed: () {}),
+                  Positioned(right: 12, top: 12, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
+                ],
+              )
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // 2. GPA Module (Full Width)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryBlue, Color(0xFF0052CC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: AppTheme.primaryBlue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+              ],
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: (_dashboard?['gpa'] ?? 0.0) / 5.0,
+                        strokeWidth: 8,
+                        color: AppTheme.accentGreen,
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                      ),
+                      Text(
+                        "${_dashboard?['gpa'] ?? '0.0'}", 
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Joriy Semestr", 
+                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        "A'lo natija! 🏆", 
+                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)
+                      ),
+                      Text(
+                        "Guruh: ${_profile?['group_number'] ?? '...'}", 
+                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 3. Module Grid
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 1.1,
+            children: [
+              _buildModuleCard(
+                title: "Faollik",
+                value: "${_dashboard?['activities_count'] ?? 0}",
+                subtitle: "Ballarim",
+                icon: Icons.emoji_events_rounded,
+                color: Colors.orange,
+                onTap: () => setState(() => _currentIndex = 1),
+              ),
+              _buildModuleCard(
+                title: "Klublar",
+                value: "${_dashboard?['clubs_count'] ?? 0}",
+                subtitle: "A'zolik",
+                icon: Icons.groups_rounded,
+                color: Colors.purple,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
+              ),
+              _buildModuleCard(
+                title: "Davomat",
+                value: "${_dashboard?['missed_hours'] ?? 0} soat",
+                subtitle: "Qoldirilgan dars",
+                icon: Icons.timer_off_outlined,
+                color: Colors.redAccent,
+                onTap: () {}, // Future: Open Attendance Details
+              ),
+              _buildModuleCard(
+                title: "Murojaat",
+                value: "Dekanat",
+                subtitle: "Aloqa",
+                icon: Icons.chat_bubble_rounded,
+                color: AppTheme.accentGreen,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModuleCard({
+    required String title, 
+    required String value, 
+    required String subtitle, 
+    required IconData icon, 
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFF0123FF).withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4)),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                Icon(Icons.arrow_outward_rounded, color: Colors.grey[300], size: 20),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textBlack)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

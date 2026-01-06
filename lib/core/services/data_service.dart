@@ -5,6 +5,8 @@ import 'auth_service.dart';
 
 class DataService {
   final AuthService _authService = AuthService();
+  // Development Mode: Set to true to bypass backend
+  static const bool useMock = true;
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await _authService.getToken();
@@ -16,22 +18,73 @@ class DataService {
 
   // 1. Get Profile
   Future<Map<String, dynamic>> getProfile() async {
+    if (useMock) {
+      await Future.delayed(const Duration(seconds: 1)); 
+      return {
+        "id": "3902111",
+        "full_name": "Aliyev Vali Valiyevich",
+        "group_number": "315-21 Axborot Xavfsizligi",
+        "faculty": "Kiberxavfsizlik Fakulteti",
+        "phone": "+998901234567"
+      };
+    }
+
     final response = await http.get(
       Uri.parse(ApiConstants.profile),
       headers: await _getHeaders(),
     );
-    if (response.statusCode == 200) return json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      final body = json.decode(response.body);
+      return body['data']; // HEMIS returns { "data": { ... } }
+    }
     throw Exception('Failed to load profile');
   }
 
-  // 2. Get Dashboard Stats
+  // 2. Get Dashboard Stats (Aggregated)
   Future<Map<String, dynamic>> getDashboardStats() async {
-    final response = await http.get(
-      Uri.parse(ApiConstants.dashboard),
-      headers: await _getHeaders(),
-    );
-    if (response.statusCode == 200) return json.decode(response.body);
-    throw Exception('Failed to load dashboard');
+    if (useMock) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      return {
+        "gpa": 4.8,
+        "missed_hours": 12,
+        "activities_count": 12,
+        "clubs_count": 3
+      };
+    }
+
+    try {
+      final headers = await _getHeaders();
+      
+      // Fetch GPA
+      final gpaResponse = await http.get(Uri.parse(ApiConstants.gpaList), headers: headers);
+      double gpa = 0.0;
+      if (gpaResponse.statusCode == 200) {
+        final gpaData = json.decode(gpaResponse.body);
+        // Logic: Calculate Average or get latest (Simplified)
+        if (gpaData['data']['items'] != null && (gpaData['data']['items'] as List).isNotEmpty) {
+           gpa = 4.5; // Placeholder logic as structure needs deep parsing
+        }
+      }
+
+      // Fetch Tasks (for Homework count)
+      final taskResponse = await http.get(Uri.parse(ApiConstants.taskList), headers: headers);
+      int tasks = 0;
+      if (taskResponse.statusCode == 200) {
+        final taskData = json.decode(taskResponse.body);
+        tasks = taskData['data']['pagination']['totalCount'] ?? 0;
+      }
+
+      return {
+        "gpa": gpa,
+        "missed_hours": 0, // Not available in public docs yet
+        "activities_count": tasks, // Mapping tasks to activities for now
+        "clubs_count": 0
+      };
+    } catch (e) {
+      print("Dashboard Error: $e");
+      throw Exception('Failed to load dashboard');
+    }
   }
 
   // 3. Get Activities
