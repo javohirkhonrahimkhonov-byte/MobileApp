@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/services/data_service.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/core/services/data_service.dart';
+import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
