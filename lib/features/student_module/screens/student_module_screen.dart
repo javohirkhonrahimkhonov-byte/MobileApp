@@ -10,76 +10,36 @@ class StudentModuleScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       appBar: AppBar(
-        title: const Text("Talaba Moduli", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text("Talaba Bozori", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, color: AppTheme.primaryBlue),
+            onPressed: () {},
+          )
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Asosiy Xizmatlar",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-            ),
+            Icon(Icons.storefront_rounded, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.1,
-              children: [
-                DashboardCard(
-                  title: "Davomat",
-                  icon: Icons.calendar_today_rounded,
-                  color: Colors.green,
-                  onTap: () => _showMock(context, "Davomat"),
-                ),
-                DashboardCard(
-                  title: "Ijtimoiy Faollik",
-                  icon: Icons.star_rounded,
-                  color: Colors.orange,
-                  onTap: () => _showMock(context, "Ijtimoiy Faollik"),
-                ),
-                DashboardCard(
-                  title: "Hujjatlar",
-                  icon: Icons.folder_open_rounded,
-                  color: Colors.blue,
-                  onTap: () => _showMock(context, "Hujjatlar"),
-                ),
-                DashboardCard(
-                  title: "Sertifikatlar",
-                  icon: Icons.workspace_premium_rounded,
-                  color: Colors.deepPurple,
-                  onTap: () => _showMock(context, "Sertifikatlar"),
-                ),
-                DashboardCard(
-                  title: "Klublar",
-                  icon: Icons.people_outline_rounded,
-                  color: Colors.redAccent,
-                  onTap: () => _showMock(context, "Klublar"),
-                ),
-                DashboardCard(
-                  title: "Murojaatlar",
-                  icon: Icons.chat_bubble_outline_rounded,
-                  color: Colors.cyan,
-                  onTap: () => _showMock(context, "Murojaatlar"),
-                ),
-              ],
+            Text(
+              "Talaba Bozori",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Kitoblar, buyumlar va xizmatlar savdosi.\nTez orada...",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showMock(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$feature bo'limi tez orada ishga tushadi!")),
     );
   }
 }

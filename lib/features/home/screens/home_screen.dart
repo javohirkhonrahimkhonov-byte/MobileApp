@@ -1,27 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/services/data_service.dart'; 
-// Using package imports is safer but let's correct relative first to match file system if package name is tricky
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 import 'package:talabahamkor_mobile/core/providers/auth_provider.dart';
-import 'package:talabahamkor_mobile/features/activities/screens/activities_screen.dart';
 import 'package:talabahamkor_mobile/features/profile/screens/profile_screen.dart';
 import 'package:talabahamkor_mobile/features/community/screens/community_screen.dart';
 import 'package:talabahamkor_mobile/features/student_module/screens/student_module_screen.dart';
+import 'package:talabahamkor_mobile/features/ai/screens/ai_screen.dart';
 import 'package:talabahamkor_mobile/features/student_module/widgets/student_dashboard_widgets.dart';
 
-// ... (existing imports)
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+  final DataService _dataService = DataService();
+  Map<String, dynamic>? _profile;
+  Map<String, dynamic>? _dashboard;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final profile = await _dataService.getProfile();
+      final dashboard = await _dataService.getDashboardStats();
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _dashboard = dashboard;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error loading home data: $e");
+    }
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Chiqish"),
+        content: const Text("Tizimdan chiqmoqchimisiz?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Yo'q"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Provider.of<AuthProvider>(context, listen: false).logout();
+            },
+            child: const Text("Ha", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     // Screens for BottomNav
     final List<Widget> screens = [
       _buildHomeContent(),           // 0: Home (Dashboard)
-      StudentModuleScreen(),         // 1: Yangiliklar (Ex-Talaba)
-      AiScreen(),                    // 2: AI
-      CommunityScreen(),             // 3: Choyxona
-      ProfileScreen(),               // 4: Profile
+      const StudentModuleScreen(),   // 1: Yangiliklar (Ex-Talaba)
+      const AiScreen(),              // 2: AI
+      const CommunityScreen(),       // 3: Choyxona
+      const ProfileScreen(),         // 4: Profile
     ];
 
     return Scaffold(
@@ -45,7 +100,7 @@ import 'package:talabahamkor_mobile/features/student_module/widgets/student_dash
           onTap: (index) => setState(() => _currentIndex = index),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Asosiy"),
-            BottomNavigationBarItem(icon: Icon(Icons.newspaper_rounded), label: "Yangiliklar"),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_rounded), label: "Bozor"),
             BottomNavigationBarItem(icon: Icon(Icons.smart_toy_rounded), label: "AI"),
             BottomNavigationBarItem(icon: Icon(Icons.forum_rounded), label: "Choyxona"),
             BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "Profil"),
