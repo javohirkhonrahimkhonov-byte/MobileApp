@@ -2,12 +2,7 @@ class Student {
   final int id;
   final String fullName;
   final String hemisLogin;
-  final String? groupNumber;
-  final String? specialtyName;
-  final String? facultyName;
-  final String? semesterName;
-  final String? imageUrl;
-  final int missedHours;
+  final String? universityName;
 
   Student({
     required this.id,
@@ -17,6 +12,7 @@ class Student {
     this.specialtyName,
     this.facultyName,
     this.semesterName,
+    this.universityName,
     this.imageUrl,
     this.missedHours = 0,
   });
@@ -43,6 +39,7 @@ class Student {
       specialtyName: getName('specialty') ?? json['specialty_name']?.toString(),
       facultyName: getName('faculty') ?? json['faculty_name']?.toString(),
       semesterName: getName('semester') ?? json['semester_name']?.toString(),
+      universityName: getName('university'),
       imageUrl: json['image'] ?? json['image_url'],
       missedHours: json['missed_hours'] ?? 0,
     );

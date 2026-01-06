@@ -85,7 +85,15 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildInfoRow(Icons.groups_rounded, "Guruh", student.groupNumber ?? "-"),
+                _buildInfoRow(Icons.account_balance_rounded, "Universitet", student.universityName ?? "JMCU"),
+                const Divider(height: 1),
+                _buildInfoRow(
+                  Icons.groups_rounded,
+                  "Guruh",
+                  (student.groupNumber != null && student.groupNumber!.length > 5)
+                      ? student.groupNumber!.substring(0, 5)
+                      : (student.groupNumber ?? "-"),
+                ),
                 const Divider(height: 1),
                 _buildInfoRow(Icons.school_rounded, "Fakultet", student.facultyName ?? "-"),
                 const Divider(height: 1),
