@@ -16,9 +16,16 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _loadUser() async {
-    _currentUser = await _authService.getSavedUser();
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _currentUser = await _authService.getSavedUser();
+    } catch (e) {
+      print("Error loading user: $e");
+      // Optionally clear bad data
+      await _authService.logout();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<String?> login(String login, String password) async {
