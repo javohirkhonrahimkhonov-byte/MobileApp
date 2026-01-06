@@ -7,6 +7,10 @@ import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 import 'package:talabahamkor_mobile/core/providers/auth_provider.dart';
 import 'package:talabahamkor_mobile/features/activities/screens/activities_screen.dart';
 import 'package:talabahamkor_mobile/features/profile/screens/profile_screen.dart';
+import 'package:talabahamkor_mobile/features/community/screens/community_screen.dart';
+import 'package:talabahamkor_mobile/features/student_module/screens/student_module_screen.dart';
+import 'package:talabahamkor_mobile/features/ai/screens/ai_screen.dart';
+
 // Commenting out missing screens for now to get build working, or using placeholders
 // import 'package:talabahamkor_mobile/features/clubs/screens/clubs_screen.dart';
 // import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
