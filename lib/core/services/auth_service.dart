@@ -18,17 +18,34 @@ class AuthService {
   }
 
   // 2. Check Auth Status (Poll)
-  Future<Map<String, dynamic>?> checkAuth(String uuid) async {
-    try {
-      final response = await http.get(Uri.parse('${ApiConstants.authCheck}/$uuid'));
+  Future<bool> checkAuthStatus(String uuid) async {
+    final response = await http.get(Uri.parse('${ApiConstants.authCheck}/$uuid'));
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'verified') {
+        await _storage.write(key: 'auth_token', value: data['token']);
+        return true;
       }
-    } catch (e) {
-      print("Check auth error: $e");
     }
-    return null;
+    return false;
+  }
+
+  Future<bool> loginWithHemis(String login, String password) async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/auth/hemis'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'login': login, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'verified' && data['token'] != null) {
+        await _storage.write(key: 'auth_token', value: data['token']);
+        return true;
+      }
+    }
+    return false;
   }
 
   // 3. Save Token

@@ -51,6 +51,32 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // HEMIS Login
+  Future<bool> loginWithHemis(String login, String password) async {
+    try {
+      _status = AuthStatus.authenticating;
+      notifyListeners();
+      
+      final success = await _authService.loginWithHemis(login, password);
+      
+      if (success) {
+        final token = await _authService.getToken();
+        _token = token;
+        _status = AuthStatus.authenticated;
+        notifyListeners();
+        return true;
+      } else {
+        _status = AuthStatus.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void _startPolling(String uuid) {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {

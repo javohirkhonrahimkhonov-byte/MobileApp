@@ -63,10 +63,27 @@ class LoginScreen extends StatelessWidget {
                     height: 56,
                     child: ElevatedButton.icon(
                       onPressed: () => auth.startLogin(),
-                      icon: const Icon(Icons.telegram), // Replaced send with telegram icon if available or generic
+                      icon: const Icon(Icons.telegram),
                       label: const Text("Telegram orqali kirish", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0088cc), // Telegram color
+                        backgroundColor: const Color(0xFF0088cc),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // HEMIS Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showHemisLoginDialog(context, auth),
+                      icon: const Icon(Icons.school_outlined),
+                      label: const Text("HEMIS orqali kirish", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.primaryBlue),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
@@ -78,4 +95,62 @@ class LoginScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showHemisLoginDialog(BuildContext context, AuthProvider auth) {
+    final loginController = TextEditingController();
+    final passController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("HEMIS Login"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: loginController,
+              decoration: const InputDecoration(
+                labelText: "Login (Talaba ID)",
+                prefixIcon: Icon(Icons.person),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: passController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "Parol",
+                prefixIcon: Icon(Icons.lock),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Bekor qilish"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await auth.loginWithHemis(
+                loginController.text.trim(),
+                passController.text.trim(),
+              );
+              
+              if (!success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Login yoki Parol xato!"), backgroundColor: Colors.red),
+                );
+              }
+            },
+            child: const Text("Kirish"),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
