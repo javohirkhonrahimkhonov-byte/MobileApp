@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
+import '../constants/api_constants.dart';
 
 class AuthService {
-  // Android Emulator uses 10.0.2.2 to access host machine's localhost
-  static const String baseUrl = 'http://10.0.2.2:8000/api/v1'; 
-
+  
   Future<Student?> login(String login, String password) async {
-    final url = Uri.parse('$baseUrl/auth/hemis');
+    final url = Uri.parse(ApiConstants.authLogin);
     try {
       final response = await http.post(
         url,
@@ -16,21 +15,54 @@ class AuthService {
         body: jsonEncode({'login': login, 'password': password}),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final token = data['token'];
-        final profile = data['profile'];
+      print('Login Response: ${response.statusCode} ${response.body}');
 
-        if (token != null && profile != null) {
-          await _saveToken(token);
-          await _saveProfile(profile);
-          return Student.fromJson(profile);
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        
+        // HEMIS API structure: {"success": true, "data": {"token": "..."}}
+        String? token;
+        if (body['data'] != null && body['data']['token'] != null) {
+          token = body['data']['token'];
+        } else if (body['token'] != null) {
+          // Fallback if structure varies
+          token = body['token'];
         }
-      } else {
-        print('Login failed: ${response.body}');
-      }
+
+        if (token != null) {
+          await _saveToken(token);
+          
+          // Step 2: Get Profile
+          return await _fetchAndSaveProfile(token);
+        }
+      } 
     } catch (e) {
       print('Auth Error: $e');
+    }
+    return null;
+  }
+
+  Future<Student?> _fetchAndSaveProfile(String token) async {
+    try {
+      final url = Uri.parse(ApiConstants.profile);
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        // HEMIS /account/me usually returns: {"success": true, "data": {...}}
+        final profileData = body['data'] ?? body;
+        
+        await _saveProfile(profileData);
+        return Student.fromJson(profileData);
+      }
+    } catch (e) {
+      print('Profile Fetch Error: $e');
     }
     return null;
   }
