@@ -119,10 +119,10 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     };
 
     return Container(
-      height: 100, // Fixed height for statistics area
+      height: 110, // Increased height to prevent overflow
       color: Colors.white,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12), // Reduced vertical padding
         scrollDirection: Axis.horizontal,
         itemCount: stats.keys.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -130,17 +130,39 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           final key = stats.keys.elementAt(index);
           final value = stats[key];
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            constraints: const BoxConstraints(minWidth: 100),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: AppTheme.backgroundWhite,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.blue.withOpacity(0.1)),
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("$value", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
-                Text(key, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(
+                  "$value", 
+                  style: const TextStyle(
+                    fontSize: 24, 
+                    fontWeight: FontWeight.w800, 
+                    color: AppTheme.primaryBlue
+                  )
+                ),
+                Text(
+                  key, 
+                  style: TextStyle(
+                    fontSize: 13, 
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600]
+                  )
+                ),
               ],
             ),
           );
@@ -152,7 +174,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   Widget _buildFilters() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -169,20 +191,26 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                     label: Text(cat),
                     selected: isSelected,
                     onSelected: (val) => setState(() => _selectedCategory = cat),
-                    backgroundColor: Colors.grey[100],
-                    selectedColor: AppTheme.primaryBlue.withOpacity(0.2),
+                    backgroundColor: Colors.white,
+                    selectedColor: AppTheme.primaryBlue.withOpacity(0.1),
                     labelStyle: TextStyle(
                       color: isSelected ? AppTheme.primaryBlue : Colors.grey[700],
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 13,
                     ),
                     checkmarkColor: AppTheme.primaryBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? AppTheme.primaryBlue : Colors.transparent)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), 
+                      side: BorderSide(color: isSelected ? AppTheme.primaryBlue : Colors.grey[300]!)
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    elevation: 0,
                   ),
                 );
               }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           // Status Filter
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -200,18 +228,23 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
+                  child: FilterChip(  // Changed from ChoiceChip to FilterChip for consistent look
                     label: Text(status),
                     selected: isSelected,
                     onSelected: (val) => setState(() => _selectedStatus = status),
-                    selectedColor: color.withOpacity(0.2),
                     backgroundColor: Colors.white,
+                    selectedColor: color.withOpacity(0.1), 
                     labelStyle: TextStyle(
                       color: isSelected ? color : Colors.grey[600],
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 13,
                     ),
-                    side: BorderSide(color: isSelected ? color : Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    checkmarkColor: color,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), 
+                      side: BorderSide(color: isSelected ? color : Colors.grey[300]!)
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
                 );
               }).toList(),
@@ -261,27 +294,54 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: activity))),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06), 
+              blurRadius: 15, 
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
+            )
+          ],
         ),
+        clipBehavior: Clip.antiAlias, // Clean corners
         child: Column(
           children: [
-            // Image
-            Container(
-              height: 180,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                color: Colors.grey[200],
-                image: activity.imageUrls.isNotEmpty ? DecorationImage(
-                  image: NetworkImage(activity.imageUrls.first),
-                  fit: BoxFit.cover,
-                ) : null,
-              ),
-              child: activity.imageUrls.isEmpty ? const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40)) : null,
+            // Image with Category Overlay
+            Stack(
+              children: [
+                Container(
+                  height: 200, // Slightly taller
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: activity.imageUrls.isNotEmpty 
+                      ? Image.network(
+                          activity.imageUrls.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                        ) 
+                      : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40)),
+                ),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
+                    ),
+                    child: Text(
+                      activity.category, 
+                      style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)
+                    ),
+                  ),
+                ),
+              ],
             ),
             
             // Content
@@ -293,24 +353,36 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppTheme.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                        child: Text(activity.category, style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)),
-                      ),
                       Row(
                         children: [
-                          Icon(statusIcon, size: 16, color: statusColor),
-                          const SizedBox(width: 4),
-                          Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                          Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[500]),
+                          const SizedBox(width: 6),
+                          Text(activity.date, style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500)),
                         ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(statusIcon, size: 14, color: statusColor),
+                            const SizedBox(width: 4),
+                            Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(activity.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 8),
-                  Text(activity.date, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                  Text(
+                    activity.title, 
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2), 
+                    maxLines: 2, 
+                    overflow: TextOverflow.ellipsis
+                  ),
                 ],
               ),
             ),
