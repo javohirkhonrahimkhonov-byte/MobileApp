@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/services/data_service.dart';
-import '../../core/theme/app_theme.dart';
-import '../../features/activities/screens/activities_screen.dart';
-import '../../features/clubs/screens/clubs_screen.dart';
-import '../../features/feedback/screens/feedback_screen.dart';
-import '../../features/documents/screens/documents_screen.dart';
-// import '../widgets/drawer_widget.dart'; // Drawer replaced by Services Menu
+import '../../../../core/services/data_service.dart'; 
+// Using package imports is safer but let's correct relative first to match file system if package name is tricky
+import 'package:talabahamkor_mobile/core/services/data_service.dart';
+import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/features/activities/screens/activities_screen.dart';
+// Commenting out missing screens for now to get build working, or using placeholders
+// import 'package:talabahamkor_mobile/features/clubs/screens/clubs_screen.dart';
+// import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
+// import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -211,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: "A'zolik",
                 icon: Icons.groups_rounded,
                 color: Colors.purple,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
+                onTap: () {}, // Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
               ),
               _buildModuleCard(
                 title: "Davomat",
@@ -227,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: "Aloqa",
                 icon: Icons.chat_bubble_rounded,
                 color: AppTheme.accentGreen,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
+                onTap: () {}, // Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
               ),
             ],
           ),
