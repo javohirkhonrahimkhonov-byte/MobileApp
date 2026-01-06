@@ -22,15 +22,28 @@ class Student {
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
+    // Helper to get nested name safely
+    String? getName(String key) {
+      if (json[key] is Map) {
+        return json[key]['name']?.toString();
+      }
+      return null;
+    }
+
+    String fullName = "";
+    if (json['firstname'] != null) fullName += "${json['firstname']} ";
+    if (json['lastname'] != null) fullName += "${json['lastname']}";
+    if (fullName.trim().isEmpty) fullName = json['full_name'] ?? "Talaba"; // Fallback for proxy data
+
     return Student(
-      id: json['id'],
-      fullName: json['full_name'],
-      hemisLogin: json['hemis_login'],
-      groupNumber: json['group_number'],
-      specialtyName: json['specialty_name'],
-      facultyName: json['faculty_name'],
-      semesterName: json['semester_name'],
-      imageUrl: json['image_url'],
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      fullName: fullName.trim(),
+      hemisLogin: json['login'] ?? json['hemis_login'] ?? '',
+      groupNumber: getName('group') ?? json['group_number']?.toString(),
+      specialtyName: getName('specialty') ?? json['specialty_name']?.toString(),
+      facultyName: getName('faculty') ?? json['faculty_name']?.toString(),
+      semesterName: getName('semester') ?? json['semester_name']?.toString(),
+      imageUrl: json['image'] ?? json['image_url'],
       missedHours: json['missed_hours'] ?? 0,
     );
   }
