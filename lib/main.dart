@@ -34,7 +34,7 @@ class TalabaHamkorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TalabaHamkor',
+      title: 'tengdosh',
       theme: AppTheme.lightTheme,
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {

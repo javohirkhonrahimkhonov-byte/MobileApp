@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
                   Text(
-                    "Talaba Hamkor",
+                    "tengdosh",
                     textAlign: TextAlign.center,
                     style: AppTheme.lightTheme.textTheme.displayMedium?.copyWith(
                       color: AppTheme.primaryBlue,
