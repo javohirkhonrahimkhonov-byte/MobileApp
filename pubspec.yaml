@@ -23,7 +23,7 @@ dependencies:
   # UI/UX
   google_fonts: ^6.1.0
   intl: ^0.18.1
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0
   
   # Deep Linking & URLs
   url_launcher: ^6.1.11
