@@ -15,9 +15,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
   }
 
   @override
@@ -55,14 +52,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
           _buildPersonalDocsTab(),
         ],
       ),
-      floatingActionButton: _tabController.index == 1 
-        ? FloatingActionButton.extended(
-            onPressed: _showAddDocumentSheet,
-            backgroundColor: AppTheme.primaryBlue,
-            icon: const Icon(Icons.upload_file),
-            label: const Text("Hujjat yuklash"),
-          )
-        : null,
     );
   }
 
@@ -176,80 +165,128 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
     ];
 
     if (personalDocs.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.folder_open_rounded, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              "Hujjatlar yo'q",
-              style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
-      itemCount: personalDocs.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final doc = personalDocs[index];
-        final isPdf = doc['type'] == 'pdf';
-        
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isPdf ? Colors.red[50] : Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-                color: isPdf ? Colors.red : Colors.blue,
-              ),
-            ),
-            title: Text(
-              doc['title'] as String,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
+      return Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.calendar_today_rounded, size: 12, color: Colors.grey[500]),
-                  const SizedBox(width: 4),
+                  Icon(Icons.folder_open_rounded, size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
                   Text(
-                    doc['date'] as String,
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    doc['category'] as String,
-                    style: TextStyle(color: AppTheme.primaryBlue.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w600),
+                    "Hujjatlar yo'q",
+                    style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            trailing: const Icon(Icons.more_vert_rounded, color: Colors.grey),
           ),
-        );
-      },
+          _buildBottomButton(),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            itemCount: personalDocs.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final doc = personalDocs[index];
+              final isPdf = doc['type'] == 'pdf';
+              
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isPdf ? Colors.red[50] : Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
+                      color: isPdf ? Colors.red : Colors.blue,
+                    ),
+                  ),
+                  title: Text(
+                    doc['title'] as String,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_rounded, size: 12, color: Colors.grey[500]),
+                        const SizedBox(width: 4),
+                        Text(
+                          doc['date'] as String,
+                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          doc['category'] as String,
+                          style: TextStyle(color: AppTheme.primaryBlue.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  trailing: const Icon(Icons.more_vert_rounded, color: Colors.grey),
+                ),
+              );
+            },
+          ),
+        ),
+        _buildBottomButton(),
+      ],
+    );
+  }
+
+  Widget _buildBottomButton() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05), 
+            blurRadius: 20, 
+            offset: const Offset(0, -5)
+          )
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _showAddDocumentSheet,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
+            child: const Text(
+              "Hujjat yuklash",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
