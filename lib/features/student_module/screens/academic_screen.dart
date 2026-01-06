@@ -89,8 +89,55 @@ class AcademicScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Menu List
+            _buildMenuItem(context, "Davomat", Icons.calendar_month_rounded, Colors.green),
+            _buildMenuItem(context, "Dars Jadvali", Icons.schedule_rounded, Colors.blue),
+            _buildMenuItem(context, "Fanlar va Resurslar", Icons.library_books_rounded, Colors.orange),
+            _buildMenuItem(context, "Nazorat va Baholar", Icons.grade_rounded, Colors.purple),
+            _buildMenuItem(context, "Imtihonlar", Icons.edit_document, Colors.redAccent),
+            _buildMenuItem(context, "Reyting Daftarchasi", Icons.history_edu_rounded, Colors.teal),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(BuildContext context, String title, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("$title bo'limi tez orada ishga tushadi")),
+          );
+        },
       ),
     );
   }
@@ -104,10 +151,7 @@ class AcademicScreen extends StatelessWidget {
             Container(
               width: 12,
               height: 12,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 12),
             Text(
