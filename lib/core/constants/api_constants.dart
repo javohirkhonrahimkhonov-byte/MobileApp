@@ -1,6 +1,6 @@
 class ApiConstants {
-  // Official HEMIS API for JMCU
-  static const String baseUrl = 'https://student.jmcu.uz/rest/v1'; 
+  // Official HEMIS API for JDPU (Jizzax Davlat Pedagogika Universiteti)
+  static const String baseUrl = 'https://student.jdpu.uz/rest/v1'; 
 
   // Backend API (Talaba Hamkor)
   // Use 10.0.2.2 for Android Emulator to reach localhost

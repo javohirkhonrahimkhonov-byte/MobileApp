@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/universities.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -69,7 +70,38 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
+                  
+                  // University Dropdown
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return DropdownButtonFormField<University>(
+                        value: auth.selectedUniversity,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: "Universitet",
+                          prefixIcon: Icon(Icons.school, color: AppTheme.primaryBlue),
+                          border: OutlineInputBorder(),
+                        ),
+                        items: supportedUniversities.map((u) {
+                          return DropdownMenuItem(
+                            value: u,
+                            child: Text(
+                              u.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            auth.setUniversity(val);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   
                   // Login Field
                   TextFormField(
