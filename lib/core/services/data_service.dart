@@ -51,68 +51,26 @@ class DataService {
     try {
       final headers = await _getHeaders();
       
-      // Calculate GPA (from /education/performance)
-      // Note: ApiConstants.gpaList is likely admin endpoint. Use student endpoint.
-      // Since we don't have the exact endpoint in constants, let's try a common one or standard list.
-      // Standard HEMIS: /education/performance
-      final performanceUri = Uri.parse('${ApiConstants.baseUrl}/education/performance'); 
-      double gpa = 0.0;
-      
-      try {
-        final perfResponse = await http.get(performanceUri, headers: headers);
-        if (perfResponse.statusCode == 200) {
-           final data = json.decode(perfResponse.body);
-           // Calculate average grade 
-           // Structure: {"data": [{"grade": 5, ...}, ...]}
-           final items = data['data'] as List?;
-           if (items != null && items.isNotEmpty) {
-             double total = 0;
-             int count = 0;
-             for (var item in items) {
-               if (item['grade'] != null) {
-                 total += double.tryParse(item['grade'].toString()) ?? 0;
-                 count++;
-               }
-             }
-             if (count > 0) gpa = total / count;
-           }
-        }
-      } catch (e) {
-        print("GPA calc error: $e");
-      }
+      final response = await http.get(
+        Uri.parse(ApiConstants.dashboard),
+        headers: await _getHeaders(),
+      );
 
-      // Calculate Absence (from /education/attendance)
-      final attendanceUri = Uri.parse('${ApiConstants.baseUrl}/education/attendance');
-      int missedHours = 0;
-      try {
-        final attResponse = await http.get(attendanceUri, headers: headers);
-        if (attResponse.statusCode == 200) {
-          final data = json.decode(attResponse.body);
-          final items = data['data'] is List ? data['data'] : data['data']['items'];
-          if (items != null) {
-            for (var item in items) {
-               final off = item['absent_off'] ?? 0;
-               final on = item['absent_on'] ?? 0;
-               missedHours += (off + on) as int;
-            }
-          }
-        }
-      } catch (e) {
-        print("Absence calc error: $e");
-      }
-
-      final result = {
-        "gpa": double.parse(gpa.toStringAsFixed(2)),
-        "missed_hours": missedHours,
-        "activities_count": 0, // Placeholder
-        "clubs_count": 0
-      };
+      if (response.statusCode != 200) throw Exception('API Error');
+      final body = json.decode(response.body);
 
       // Update Cache
       _dashboardCache = result;
       _lastDashboardFetch = DateTime.now();
 
-      return result;
+      return {
+        "gpa": body['gpa'] ?? 0.0,
+        "missed_hours": body['missed_hours'] ?? 0,
+        "missed_hours_excused": body['missed_hours_excused'] ?? 0,
+        "missed_hours_unexcused": body['missed_hours_unexcused'] ?? 0,
+        "activities_count": body['activities_count'] ?? 0,
+        "clubs_count": body['clubs_count'] ?? 0,
+      };
     } catch (e) {
       print("Dashboard Error: $e");
       // Return zeros instead of crashing

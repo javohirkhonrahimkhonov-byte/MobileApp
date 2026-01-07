@@ -13,6 +13,8 @@ class _AcademicScreenState extends State<AcademicScreen> {
   bool _isLoading = true;
   double _gpa = 0.0;
   int _missedHours = 0;
+  int _excusedHours = 0;
+  int _unexcusedHours = 0;
 
   @override
   void initState() {
@@ -27,6 +29,8 @@ class _AcademicScreenState extends State<AcademicScreen> {
         setState(() {
           _gpa = (data['gpa'] ?? 0.0).toDouble();
           _missedHours = (data['missed_hours'] ?? 0).toInt();
+          _excusedHours = (data['missed_hours_excused'] ?? 0).toInt();
+          _unexcusedHours = (data['missed_hours_unexcused'] ?? 0).toInt();
           _isLoading = false;
         });
       }
@@ -112,14 +116,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
                       ? const SizedBox()
                       : Column(
                           children: [
-                            // Simplified View: API currently returns total missed hours
-                            // We can split it arbitrarily or just show total until backend improves
-                            _buildStatRow("Jami qoldirilgan", "$_missedHours soat", Colors.red),
-                            const SizedBox(height: 8),
-                            Text(
-                              "(Tafsilotlar HEMIS integratsiyasidan so'ng chiqadi)",
-                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                            )
+                            _buildStatRow("Sababsiz qoldirilgan", "$_unexcusedHours soat", Colors.red),
+                            const Divider(height: 24),
+                            _buildStatRow("Sababli qoldirilgan", "$_excusedHours soat", Colors.orange),
+                            const Divider(height: 24),
+                            _buildStatRow("Jami qoldirilgan", "$_missedHours soat", Colors.blue),
                           ],
                         ),
                 ],
