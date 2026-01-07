@@ -67,14 +67,7 @@ class Student {
       fullName: fullName.trim(),
       hemisLogin: json['login'] ?? json['hemis_login'] ?? '',
       groupNumber: (getName('group') != null) 
-          ? getName('group')! // Keep group code upper/mixed? Usually "315-21 Axborot..." -> "315-21 axborot..."
-          // User said "Bosh xarfi katta". If starts with number, it's tricky.
-          // Let's rely on sentenceCase. "315-21 AXBOROT..." -> "315-21 axborot..." (First char is 3).
-          // Wait, if first char is number, the rest becomes lowercase?
-          // "315-21 AXBOROT".substring(1) -> "15-21 axborot".
-          // Result: "315-21 axborot..." -> looks weird if "Axborot" should be cap.
-          // But user said "bosh xarfi katta, keyingilari kichkina".
-          // I will use sentenceCase.
+          ? getName('group')! 
           : json['group_number']?.toString(),
       specialtyName: getPrettyName('specialty'),
       facultyName: getPrettyName('faculty'),
@@ -83,5 +76,20 @@ class Student {
       imageUrl: json['image'] ?? json['image_url'],
       missedHours: json['missed_hours'] ?? 0,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'full_name': fullName,
+      'hemis_login': hemisLogin,
+      'group_number': groupNumber,
+      'specialty_name': specialtyName,
+      'faculty_name': facultyName,
+      'semester_name': semesterName,
+      'university_name': universityName,
+      'image_url': imageUrl,
+      'missed_hours': missedHours,
+    };
   }
 }
