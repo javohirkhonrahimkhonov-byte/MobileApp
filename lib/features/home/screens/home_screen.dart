@@ -13,6 +13,7 @@ import 'package:talabahamkor_mobile/features/social/screens/social_activity_scre
 import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 import '../../certificates/screens/certificates_screen.dart';
 import '../../clubs/screens/clubs_screen.dart';
+import '../../appeals/screens/appeals_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
