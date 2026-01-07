@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'auth_service.dart';
+import '../models/attendance.dart';
 
 class DataService {
   final AuthService _authService = AuthService();
@@ -231,7 +232,36 @@ class DataService {
     throw Exception('Failed to load documents');
   }
 
-  // 8. Request Document
+  // 9. Get Detailed Attendance List
+  Future<List<Attendance>> getAttendanceList() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.attendanceList),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        final List<dynamic> items = body['data']['items'] ?? [];
+        return items.map((json) => Attendance.fromJson(json)).toList();
+      } else {
+        throw Exception("Failed to load attendance: ${response.statusCode}");
+      }
+    } catch (e) {
+       print("DataService: Error fetching attendance: $e");
+       if (useMock) {
+          // Mock Data fallback
+          return [
+            Attendance(id: 1, subjectName: "Oliy Matematika", date: "10.01.2024", lessonTheme: "Integrallar", hours: 2, isExcused: false),
+            Attendance(id: 2, subjectName: "Fizika", date: "12.01.2024", lessonTheme: "Mexanika asoslari", hours: 2, isExcused: true),
+            Attendance(id: 3, subjectName: "Dasturlash", date: "14.01.2024", lessonTheme: "OOP tamoyillari", hours: 2, isExcused: false),
+          ];
+       }
+       return [];
+    }
+  }
+
+  // 10. Request Document (Already Exists above)
   Future<void> requestDocument(String type, String description) async {
     final response = await http.post(
       Uri.parse(ApiConstants.documents),

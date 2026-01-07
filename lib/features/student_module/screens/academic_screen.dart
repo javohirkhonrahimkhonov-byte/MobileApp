@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
+import 'attendance_screen.dart';
 
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
@@ -172,6 +173,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
         onTap: () {
+          if (title == "Davomat") {
+             Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceScreen()));
+             return;
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("$title bo'limi tez orada ishga tushadi")),
           );
