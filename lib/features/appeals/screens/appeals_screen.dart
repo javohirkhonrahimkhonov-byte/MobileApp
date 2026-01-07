@@ -59,19 +59,54 @@ class _AppealsScreenState extends State<AppealsScreen> with SingleTickerProvider
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: _appeals.isEmpty
-          ? _buildEmptyState()
-          : ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: _appeals.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) => _buildAppealCard(_appeals[index]),
+      body: Column(
+        children: [
+          Expanded(
+            child: _appeals.isEmpty
+            ? _buildEmptyState()
+            : ListView.separated(
+                padding: const EdgeInsets.all(20),
+                itemCount: _appeals.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                itemBuilder: (context, index) => _buildAppealCard(_appeals[index]),
+              ),
+          ),
+          _buildBottomButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomButton() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          )
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _showCreateAppealSheet,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateAppealSheet,
-        backgroundColor: AppTheme.primaryBlue,
-        icon: const Icon(Icons.edit_note_rounded),
-        label: const Text("Yangi murojaat"),
+            child: const Text(
+              "Yangi murojaat",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
       ),
     );
   }
