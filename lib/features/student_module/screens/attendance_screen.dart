@@ -126,7 +126,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                        style: TextStyle(
                                          color: item.isExcused ? Colors.green : Colors.red,
                                          fontWeight: FontWeight.bold,
-                                         fontSize: 12
+                                         fontSize: 14
                                        ),
                                      ),
                                    )
@@ -182,8 +182,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         child: Column(
           children: [
             Text(
-              "$value",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color),
+              "$value soat",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
             ),
             const SizedBox(height: 4),
             Text(

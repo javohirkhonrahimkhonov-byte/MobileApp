@@ -118,11 +118,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
                       ? const SizedBox()
                       : Column(
                           children: [
-                            _buildStatRow("Sababsiz qoldirilgan", "$_unexcusedHours soat", Colors.red),
+                            _buildStatRow("Sababsiz", "$_unexcusedHours soat", Colors.red),
                             const Divider(height: 24),
-                            _buildStatRow("Sababli qoldirilgan", "$_excusedHours soat", Colors.orange),
+                            _buildStatRow("Sababli", "$_excusedHours soat", Colors.orange),
                             const Divider(height: 24),
-                            _buildStatRow("Jami qoldirilgan", "$_missedHours soat", Colors.blue),
+                            _buildStatRow("Jami", "$_missedHours soat", Colors.blue),
                           ],
                         ),
                 ],
