@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
 import 'attendance_screen.dart';
+import 'schedule_screen.dart';
 
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
@@ -175,6 +176,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
         onTap: () {
           if (title == "Davomat") {
              Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceScreen()));
+             return;
+          }
+          if (title == "Dars Jadvali") {
+             Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
              return;
           }
           

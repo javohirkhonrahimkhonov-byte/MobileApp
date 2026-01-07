@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'auth_service.dart';
 import '../models/attendance.dart';
+import '../models/lesson.dart';
 
 class DataService {
   final AuthService _authService = AuthService();
@@ -261,6 +262,35 @@ class DataService {
           ];
        }
        return [];
+    }
+  }
+
+  // 11. Get Weekly Schedule
+  Future<List<Lesson>> getSchedule() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.scheduleList),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        final data = body['data'];
+        final List<dynamic> items = (data is List) ? data : (data['items'] ?? []);
+        return items.map((json) => Lesson.fromJson(json)).toList();
+      } else {
+        throw Exception("Failed to load schedule: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("DataService: Error fetching schedule: $e");
+      if (useMock) {
+        return [
+           Lesson(id: 1, subjectName: "Sun'iy Intellekt", startTime: "1688974400", endTime: "", auditorium: "204-xona", teacherName: "Alimov A.", weekDay: 1),
+           Lesson(id: 2, subjectName: "Kiberxavfsizlik", startTime: "1689060800", endTime: "", auditorium: "305-lab", teacherName: "Karimov B.", weekDay: 1),
+           Lesson(id: 3, subjectName: "Mobil Dasturlash", startTime: "1689147200", endTime: "", auditorium: "101-leksiya", teacherName: "Valiyev V.", weekDay: 2),
+        ];
+      }
+      return [];
     }
   }
 

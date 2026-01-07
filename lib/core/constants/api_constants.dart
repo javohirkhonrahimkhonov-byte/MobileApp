@@ -22,6 +22,7 @@ class ApiConstants {
   static const String taskList = '$baseUrl/data/subject-task-student-list';
   static const String documentList = '$baseUrl/data/student-certificate-list';
   static const String attendanceList = '$baseUrl/education/attendance';
+  static const String scheduleList = '$baseUrl/education/schedule';
 
   // Extended Features (Backend)
   static const String activities = '$backendUrl/activities'; 
