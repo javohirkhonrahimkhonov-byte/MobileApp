@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
             childAspectRatio: 1.1,
             children: [
               DashboardCard(
-                title: "Akademik",
+                title: "Akademik bo'lim",
                 icon: Icons.school_rounded,
                 color: Colors.green,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AcademicScreen())),
