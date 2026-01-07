@@ -37,7 +37,7 @@ class DataService {
   Map<String, dynamic>? _dashboardCache;
   DateTime? _lastDashboardFetch;
 
-  // 2. Get Dashboard Stats (Real + Cached)
+  // 2. Get Dashboard Stats (Direct HEMIS Fetch to bypass Server Block)
   Future<Map<String, dynamic>> getDashboardStats({bool forceRefresh = false}) async {
     if (useMock) return _getMockStats();
 
@@ -51,21 +51,71 @@ class DataService {
     try {
       final headers = await _getHeaders();
       
-      final response = await http.get(
-        Uri.parse(ApiConstants.dashboard),
-        headers: await _getHeaders(),
-      );
+      // A. Calculate GPA (Direct from HEMIS)
+      final performanceUri = Uri.parse('${ApiConstants.baseUrl}/education/performance'); 
+      double gpa = 0.0;
+      
+      try {
+        final perfResponse = await http.get(performanceUri, headers: headers);
+        if (perfResponse.statusCode == 200) {
+           final data = json.decode(perfResponse.body);
+           final items = data['data'] is List ? data['data'] : [];
+           if (items.isNotEmpty) {
+             double total = 0;
+             int count = 0;
+             for (var item in items) {
+               if (item['grade'] != null) {
+                 final g = double.tryParse(item['grade'].toString());
+                 if (g != null) {
+                   total += g;
+                   count++;
+                 }
+               }
+             }
+             if (count > 0) gpa = total / count;
+           }
+        }
+      } catch (e) {
+        print("GPA local calc error: $e");
+      }
 
-      if (response.statusCode != 200) throw Exception('API Error');
-      final body = json.decode(response.body);
+      // B. Calculate Absence (Direct from HEMIS)
+      final attendanceUri = Uri.parse('${ApiConstants.baseUrl}/education/attendance');
+      int missedHours = 0;
+      int missedExcused = 0;
+      int missedUnexcused = 0;
+      
+      try {
+        final attResponse = await http.get(attendanceUri, headers: headers);
+        if (attResponse.statusCode == 200) {
+          final data = json.decode(attResponse.body);
+          final items = data['data'] is List ? data['data'] : (data['data']['items'] ?? []);
+          
+          for (var item in items) {
+             final int hour = int.tryParse(item['hour'].toString()) ?? 2;
+             // Logic: 11 = Sababli, 12 = Sababsiz. Or check "is_valid"
+             final statusId = item['absent_status'];
+             final bool isValid = item['is_valid'] == true;
+             
+             if (statusId == 11 || isValid) {
+               missedExcused += hour;
+             } else {
+               missedUnexcused += hour;
+             }
+          }
+          missedHours = missedExcused + missedUnexcused;
+        }
+      } catch (e) {
+        print("Absence local calc error: $e");
+      }
 
       final result = {
-        "gpa": body['gpa'] ?? 0.0,
-        "missed_hours": body['missed_hours'] ?? 0,
-        "missed_hours_excused": body['missed_hours_excused'] ?? 0,
-        "missed_hours_unexcused": body['missed_hours_unexcused'] ?? 0,
-        "activities_count": body['activities_count'] ?? 0,
-        "clubs_count": body['clubs_count'] ?? 0,
+        "gpa": double.parse(gpa.toStringAsFixed(2)),
+        "missed_hours": missedHours,
+        "missed_hours_excused": missedExcused,
+        "missed_hours_unexcused": missedUnexcused,
+        "activities_count": 0,
+        "clubs_count": 0
       };
 
       // Update Cache
@@ -75,10 +125,11 @@ class DataService {
       return result;
     } catch (e) {
       print("Dashboard Error: $e");
-      // Return zeros instead of crashing
-       return {
+      return {
         "gpa": 0.0,
         "missed_hours": 0,
+        "missed_hours_excused": 0, 
+        "missed_hours_unexcused": 0,
         "activities_count": 0,
         "clubs_count": 0
       };
