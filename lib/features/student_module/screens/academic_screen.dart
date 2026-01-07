@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/data_service.dart';
 
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
