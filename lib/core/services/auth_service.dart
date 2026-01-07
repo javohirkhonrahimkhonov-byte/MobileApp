@@ -8,17 +8,38 @@ class AuthService {
   
   // Using DIRECT HEMIS API because Proxy Server is Geo-Blocked
   Future<Student?> login(String login, String password) async {
+    // 0. DEMO MODE (Bypass Network Block)
+    if (login == 'demo' && password == '123') {
+      print("Logging in with DEMO user");
+      const fakeToken = "student_id_99999"; 
+      await _saveToken(fakeToken);
+      
+      final demoStudent = Student(
+        id: 99999,
+        fullName: "Demo Talaba",
+        hemisId: "3902111",
+        groupNumber: "315-21 AX",
+        facultyName: "Kiberxavfsizlik",
+        universityName: "Toshkent Axborot Texnologiyalari Universiteti",
+        levelName: "Bakalavr",
+        educationForm: "Kunduzgi",
+        studentStatus: "Talaba", 
+        hemisToken: fakeToken // Save mock token so DataService knows to simulate
+      );
+      
+      await _saveProfile(demoStudent.toJson());
+      return demoStudent;
+    }
+
     final url = Uri.parse(ApiConstants.authLogin);
     try {
       print('Direct Login: $url');
-      final response = await http.post(
-        url,
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
         body: jsonEncode({'login': login, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       print('Login Response: ${response.statusCode}');
 
