@@ -242,7 +242,10 @@ class DataService {
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        final List<dynamic> items = body['data']['items'] ?? [];
+        // Robust parsing: 'data' can be a List OR a Map with 'items'
+        final data = body['data'];
+        final List<dynamic> items = (data is List) ? data : (data['items'] ?? []);
+        
         return items.map((json) => Attendance.fromJson(json)).toList();
       } else {
         throw Exception("Failed to load attendance: ${response.statusCode}");
