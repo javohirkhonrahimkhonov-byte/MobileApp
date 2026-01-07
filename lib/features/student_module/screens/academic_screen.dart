@@ -1,21 +1,46 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class AcademicScreen extends StatelessWidget {
+class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock Data
-    final double gpa = 4.8;
-    final int unexcusedHours = 12; // Sababsiz
-    final int excusedHours = 4;    // Sababli
-    final int totalMissed = unexcusedHours + excusedHours;
+  State<AcademicScreen> createState() => _AcademicScreenState();
+}
 
+class _AcademicScreenState extends State<AcademicScreen> {
+  final DataService _dataService = DataService();
+  bool _isLoading = true;
+  double _gpa = 0.0;
+  int _missedHours = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final data = await _dataService.getDashboardStats();
+      if (mounted) {
+        setState(() {
+          _gpa = (data['gpa'] ?? 0.0).toDouble();
+          _missedHours = (data['missed_hours'] ?? 0).toInt();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       appBar: AppBar(
-        title: const Text("Akademik Faoliyat", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text("Akademik bo'lim", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -53,8 +78,10 @@ class AcademicScreen extends StatelessWidget {
                           color: Colors.white,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          "$gpa",
+                        child: _isLoading 
+                          ? const CircularProgressIndicator(color: AppTheme.primaryBlue)
+                          : Text(
+                              "$_gpa",
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -81,11 +108,20 @@ class AcademicScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  _buildStatRow("Sababsiz qoldirilgan", "$unexcusedHours soat", Colors.red),
-                  const Divider(height: 24),
-                  _buildStatRow("Sababli qoldirilgan", "$excusedHours soat", Colors.orange),
-                  const Divider(height: 24),
-                  _buildStatRow("Jami qoldirilgan", "$totalMissed soat", Colors.blue),
+                  _isLoading
+                      ? const SizedBox()
+                      : Column(
+                          children: [
+                            // Simplified View: API currently returns total missed hours
+                            // We can split it arbitrarily or just show total until backend improves
+                            _buildStatRow("Jami qoldirilgan", "$_missedHours soat", Colors.red),
+                            const SizedBox(height: 8),
+                            Text(
+                              "(Tafsilotlar HEMIS integratsiyasidan so'ng chiqadi)",
+                              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                            )
+                          ],
+                        ),
                 ],
               ),
             ),
