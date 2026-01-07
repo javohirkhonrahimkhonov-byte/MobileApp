@@ -273,12 +273,12 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.teal,
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
         ),
-              DashboardCard(
-                title: "Murojaatlar",
-                icon: Icons.chat_bubble_outline_rounded,
-                color: Colors.cyan,
-                onTap: () => _showMock("Murojaatlar"),
-              ),
+                DashboardCard(
+                  title: "Murojaatlar",
+                  icon: Icons.chat_bubble_outline_rounded,
+                  color: Colors.redAccent,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppealsScreen())),
+                ),
             ],
           ),
         ],
