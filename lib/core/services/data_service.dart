@@ -59,11 +59,7 @@ class DataService {
       if (response.statusCode != 200) throw Exception('API Error');
       final body = json.decode(response.body);
 
-      // Update Cache
-      _dashboardCache = result;
-      _lastDashboardFetch = DateTime.now();
-
-      return {
+      final result = {
         "gpa": body['gpa'] ?? 0.0,
         "missed_hours": body['missed_hours'] ?? 0,
         "missed_hours_excused": body['missed_hours_excused'] ?? 0,
@@ -71,6 +67,12 @@ class DataService {
         "activities_count": body['activities_count'] ?? 0,
         "clubs_count": body['clubs_count'] ?? 0,
       };
+
+      // Update Cache
+      _dashboardCache = result;
+      _lastDashboardFetch = DateTime.now();
+
+      return result;
     } catch (e) {
       print("Dashboard Error: $e");
       // Return zeros instead of crashing

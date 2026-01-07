@@ -12,6 +12,9 @@ class ApiConstants {
   // Account
   static const String profile = '$baseUrl/account/me';
   
+  // Dashboard
+  static const String dashboard = '$backendUrl/student/dashboard';
+  
   // Data
   static const String gpaList = '$baseUrl/data/student-gpa-list';
   static const String taskList = '$baseUrl/data/subject-task-student-list';
