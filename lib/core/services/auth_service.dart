@@ -17,14 +17,12 @@ class AuthService {
       final demoStudent = Student(
         id: 99999,
         fullName: "Demo Talaba",
-        hemisId: "3902111",
+        hemisLogin: "3902111", // Mapped from hemisId
         groupNumber: "315-21 AX",
         facultyName: "Kiberxavfsizlik",
         universityName: "Toshkent Axborot Texnologiyalari Universiteti",
-        levelName: "Bakalavr",
-        educationForm: "Kunduzgi",
-        studentStatus: "Talaba", 
-        hemisToken: fakeToken // Save mock token so DataService knows to simulate
+        // levelName, educationForm, studentStatus, hemisToken are not in Student model
+        // We just need the basics for the UI
       );
       
       await _saveProfile(demoStudent.toJson());
@@ -34,6 +32,8 @@ class AuthService {
     final url = Uri.parse(ApiConstants.authLogin);
     try {
       print('Direct Login: $url');
+      final response = await http.post(
+        url,
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
