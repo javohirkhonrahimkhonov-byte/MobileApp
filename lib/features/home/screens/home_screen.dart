@@ -12,6 +12,7 @@ import 'package:talabahamkor_mobile/features/student_module/screens/academic_scr
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_screen.dart';
 import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 import '../../certificates/screens/certificates_screen.dart';
+import '../../clubs/screens/clubs_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -266,11 +267,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CertificatesScreen())),
               ),
               DashboardCard(
-                title: "Klublar",
-                icon: Icons.people_outline_rounded,
-                color: Colors.redAccent,
-                onTap: () => _showMock("Klublar"),
-              ),
+          title: "Klublar",
+          icon: Icons.groups_rounded,
+          color: Colors.teal,
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
+        ),
               DashboardCard(
                 title: "Murojaatlar",
                 icon: Icons.chat_bubble_outline_rounded,
