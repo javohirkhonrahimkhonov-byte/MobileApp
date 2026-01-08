@@ -42,9 +42,12 @@ class Lesson {
     // If not provided, might need to derive from date
     int day = 1;
     if (json['week_day_id'] != null) {
-       day = int.tryParse(json['week_day_id'].toString()) ?? 1; // standard hemis
+       int val = int.tryParse(json['week_day_id'].toString()) ?? 1;
+       // HEMIS often uses 11=Mon, 12=Tue... Normalize to 1-6
+       day = (val > 10) ? val - 10 : val;
     } else if (json['day_of_week'] != null) {
-       day = int.tryParse(json['day_of_week'].toString()) ?? 1;
+       int val = int.tryParse(json['day_of_week'].toString()) ?? 1;
+       day = (val > 10) ? val - 10 : val;
     }
 
     return Lesson(
