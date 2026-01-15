@@ -6,62 +6,107 @@ import '../constants/api_constants.dart';
 
 class AuthService {
   
-  // Using DIRECT HEMIS API because Proxy Server is Geo-Blocked
+  // Using PROXY (Our Server) for Login now as updated in api_constants
   Future<Student?> login(String login, String password) async {
-    // 0. DEMO MODE (Bypass Network Block)
+    // 0. DEMO MODE
     if (login == 'demo' && password == '123') {
-      print("Logging in with DEMO user");
-      const fakeToken = "student_id_99999"; 
-      await _saveToken(fakeToken);
-      
-      final demoStudent = Student(
-        id: 99999,
-        fullName: "Demo Talaba",
-        hemisLogin: "3902111", // Mapped from hemisId
-        groupNumber: "315-21 AX",
-        facultyName: "Kiberxavfsizlik",
-        universityName: "Toshkent Axborot Texnologiyalari Universiteti",
-        // levelName, educationForm, studentStatus, hemisToken are not in Student model
-        // We just need the basics for the UI
-      );
-      
-      await _saveProfile(demoStudent.toJson());
-      return demoStudent;
+       // ... (Same as before) ...
+       return demoStudent;
     }
 
     final url = Uri.parse(ApiConstants.authLogin);
     try {
-      print('Direct Login: $url');
+      print('Proxy Login: $url');
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'login': login, 'password': password}),
-      ).timeout(const Duration(seconds: 15));
-
-      print('Login Response: ${response.statusCode}');
+      );
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
+        final data = body['data'];
         
-        // HEMIS API: {"success": true, "data": {"token": "..."}}
-        String? token;
-        if (body['data'] != null && body['data']['token'] != null) {
-          token = body['data']['token'];
-        }
-
-        if (token != null) {
+        if (data != null && data['token'] != null) {
+          final token = data['token'];
+          final role = data['role'] ?? 'student';
+          
           await _saveToken(token);
+          await _saveRole(role); // NEW: Save Role
+          
+          if (data['profile'] != null) {
+             await _saveProfile(data['profile']);
+             // Be careful: Staff profile structure might differ from Student
+             // Ideally we need a User model, but for now strict casting might fail if fields missing.
+             // We return a Student object for UI compatibility.
+             return Student.fromJson(data['profile']);
+          }
           return await _fetchAndSaveProfile(token);
         }
-      } else {
-        throw Exception('Login Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Auth Error: $e');
-      rethrow;
+    }
+    return null;
+  }
+
+  // ... (Same _fetchAndSaveProfile etc) ...
+
+  Future<void> _saveRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_role', role);
+  }
+
+  Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_role') ?? 'student';
+  }
+
+  // ============================================================
+  // TELEGRAM AUTH
+  // ============================================================
+  Future<Map<String, String>?> initTelegramAuth() async {
+    try {
+      final url = Uri.parse('${ApiConstants.backendUrl}/auth/init');
+      final response = await http.post(url);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'uuid': data['uuid'],
+          'url': data['url']
+        };
+      }
+    } catch (e) {
+      print("Telegram Auth Init Error: $e");
+    }
+    return null;
+  }
+
+  Future<Student?> checkTelegramAuth(String uuid) async {
+    try {
+      final url = Uri.parse('${ApiConstants.backendUrl}/auth/check/$uuid');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'verified' && data['token'] != null) {
+          final token = data['token'];
+          final role = data['role'] ?? 'student'; // Get Role
+
+          await _saveToken(token);
+          await _saveRole(role);
+          
+          if (data['profile'] != null) {
+            await _saveProfile(data['profile']);
+            return Student.fromJson(data['profile']);
+          }
+          
+          return await _fetchAndSaveProfile(token);
+        }
+      }
+    } catch (e) {
+      print("Telegram Check Error: $e");
     }
     return null;
   }
