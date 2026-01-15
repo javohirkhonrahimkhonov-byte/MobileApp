@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart'; // Add url_launcher
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:http/http.dart' as http; // Needed for internal logic if not in provider, but better to use existing AuthService through provider
+import '../../../core/services/auth_service.dart'; // Import AuthService explicitly if needed for static access or distinct instance
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +34,89 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
     }
-    // Navigation is handled by Main Wrapper based on Auth State
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // Telegram Login Logic
+  Future<void> _loginWithTelegram() async {
+    final authService = AuthService(); // Create instance or get from provider
+    
+    // 1. Init
+    final data = await authService.initTelegramAuth();
+    if (data == null || !mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Telegram serveriga ulanib bo'lmadi")),
+      );
+      return;
+    }
+
+    final uuid = data['uuid']!;
+    final url = data['url']!;
+
+    // 2. Launch Telegram
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Telegram ilovasini ochib bo'lmadi")),
+      );
+    }
+
+    // 3. Poll
+    _showLoadingDialog(); // Show loading indicator
+    
+    bool verified = false;
+    int attempts = 0;
+    while (!verified && attempts < 30 && mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      attempts++;
+      
+      final student = await authService.checkTelegramAuth(uuid);
+      if (student != null) {
+        verified = true;
+        if (mounted) {
+          Navigator.pop(context); // Close dialog
+          // Update Provider Manually if needed or reload app state
+          // For now, assume global provider needs update or app reload
+          // Ideally: context.read<AuthProvider>().setStudent(student);
+           
+           // Simple Hack: Reload App Logic by popping login
+           // Or direct navigation
+           // The AuthWrapper should handle it if 'auth_token' is saved
+           // Let's notify Provider to reload
+           final authProvider = Provider.of<AuthProvider>(context, listen: false);
+           await authProvider.checkLoginStatus(); // Re-check token
+        }
+      }
+    }
+    
+    if (!verified && mounted) {
+       Navigator.pop(context); // Close dialog
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login vaqti tugadi yoki bekor qilindi.")),
+      );
+    }
+  }
+
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text("Telegram orqali tasdiqlash kutilmoqda..."),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -124,7 +210,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                       );
+                      );
                     },
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // TELEGRAM BUTTON
+                  OutlinedButton.icon(
+                    onPressed: _loginWithTelegram,
+                    icon: const Icon(Icons.telegram, color: Colors.blue),
+                    label: const Text("Telegram orqali kirish", style: TextStyle(color: Colors.blue)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: Colors.blue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ],
               ),
