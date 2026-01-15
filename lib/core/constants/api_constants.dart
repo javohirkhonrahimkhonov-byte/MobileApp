@@ -6,10 +6,10 @@ class ApiConstants {
   static const String apiToken = 'LXjqwQE0Xemgq3E7LeB0tn2yMQWY0zXW';
 
   // Backend API (Talaba Hamkor)
-  static const String backendUrl = 'http://10.0.2.2:8000/api/v1';
+  static const String backendUrl = 'https://tengdoshbozor.uz/api/v1';
   
-  // Auth
-  static const String authLogin = '$baseUrl/auth/login';
+  // Auth (Proxy via our Bot Backend)
+  static const String authLogin = '$backendUrl/auth/hemis';
   
   // Account
   static const String profile = '$baseUrl/account/me';
