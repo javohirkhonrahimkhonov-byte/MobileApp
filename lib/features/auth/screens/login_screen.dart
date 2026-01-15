@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 "Kirish",
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                      );
+                              ),
                       );
                     },
                   ),

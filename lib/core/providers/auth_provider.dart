@@ -15,10 +15,10 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
 
   AuthProvider() {
-    _loadUser();
+    loadUser();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> loadUser() async {
     try {
       _currentUser = await _authService.getSavedUser();
     } catch (e) {
@@ -29,6 +29,9 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Alias for clearer intent in UI
+  Future<void> checkLoginStatus() => loadUser();
 
   Future<String?> login(String login, String password) async {
     _isLoading = true;
