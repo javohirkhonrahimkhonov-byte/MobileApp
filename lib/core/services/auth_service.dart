@@ -10,7 +10,22 @@ class AuthService {
   Future<Student?> login(String login, String password) async {
     // 0. DEMO MODE
     if (login == 'demo' && password == '123') {
-       // ... (Same as before) ...
+       final demoStudent = Student(
+        id: 0,
+        fullName: 'Talaba Testov',
+        shortName: 'T. Testov',
+        firstName: 'Talaba',
+        lastName: 'Testov',
+        studentId_number: '123456789',
+        educationType: 'Bakalavr',
+        educationForm: 'Kunduzgi',
+        groupName: '912-21',
+        faculty: 'KIF',
+        level: '3-kurs',
+        semester: '5-semestr',
+        gpa: 4.5,
+        image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+      );
        return demoStudent;
     }
 
@@ -36,12 +51,9 @@ class AuthService {
           
           if (data['profile'] != null) {
              await _saveProfile(data['profile']);
-             // Be careful: Staff profile structure might differ from Student
-             // Ideally we need a User model, but for now strict casting might fail if fields missing.
-             // We return a Student object for UI compatibility.
              return Student.fromJson(data['profile']);
           }
-          return await _fetchAndSaveProfile(token);
+          return await fetchAndSaveProfile(token);
         }
       }
     } catch (e) {
@@ -49,8 +61,6 @@ class AuthService {
     }
     return null;
   }
-
-  // ... (Same _fetchAndSaveProfile etc) ...
 
   Future<void> _saveRole(String role) async {
     final prefs = await SharedPreferences.getInstance();
@@ -102,7 +112,7 @@ class AuthService {
             return Student.fromJson(data['profile']);
           }
           
-          return await _fetchAndSaveProfile(token);
+          return await fetchAndSaveProfile(token);
         }
       }
     } catch (e) {
@@ -111,7 +121,7 @@ class AuthService {
     return null;
   }
 
-  Future<Student?> _fetchAndSaveProfile(String token) async {
+  Future<Student?> fetchAndSaveProfile(String token) async {
     try {
       final url = Uri.parse(ApiConstants.profile);
       final response = await http.get(
@@ -162,53 +172,5 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-  }
-
-  // ============================================================
-  // TELEGRAM AUTH
-  // ============================================================
-  Future<Map<String, String>?> initTelegramAuth() async {
-    try {
-      final url = Uri.parse('${ApiConstants.backendUrl}/auth/init');
-      final response = await http.post(url);
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {
-          'uuid': data['uuid'],
-          'url': data['url']
-        };
-      }
-    } catch (e) {
-      print("Telegram Auth Init Error: $e");
-    }
-    return null;
-  }
-
-  Future<Student?> checkTelegramAuth(String uuid) async {
-    try {
-      final url = Uri.parse('${ApiConstants.backendUrl}/auth/check/$uuid');
-      final response = await http.get(url);
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 'verified' && data['token'] != null) {
-          final token = data['token'];
-          
-          await _saveToken(token);
-          
-          // If we have profile data, save it too
-          if (data['profile'] != null) {
-            await _saveProfile(data['profile']);
-            return Student.fromJson(data['profile']);
-          }
-          
-          return await _fetchAndSaveProfile(token);
-        }
-      }
-    } catch (e) {
-      print("Telegram Check Error: $e");
-    }
-    return null;
   }
 }

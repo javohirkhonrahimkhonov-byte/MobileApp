@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Fetch Profile
         // We reuse AuthService for this
         final authService = AuthService();
-        await authService.getSavedUser(); // Just checks, but we need fetch
+        await authService.fetchAndSaveProfile(token); // Force fetch & save
         
         // Trigger Provider Refresh
         if (mounted) {
