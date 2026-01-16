@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                          return first[0].toUpperCase() + first.substring(1).toLowerCase();
                       }
                       return name;
-                    }()}!",
+                    }()}! (v3)",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Row(

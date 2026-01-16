@@ -13,7 +13,9 @@ class ApiConstants {
   static const String authLogin = '$backendUrl/auth/hemis';
   
   // Account
-  static const String profile = '$baseUrl/account/me';
+  // Account
+  // FIXED: Point to our backend to get the enriched profile (with mapped Uni name & First Name)
+  static const String profile = '$backendUrl/student/me';
   
   // Dashboard
   static const String dashboard = '$backendUrl/student/dashboard';
