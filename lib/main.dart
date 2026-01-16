@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/auth_provider.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -36,6 +37,18 @@ class TalabaHamkorApp extends StatelessWidget {
     return MaterialApp(
       title: 'tengdosh',
       theme: AppTheme.lightTheme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('uz', 'UZ'), 
+        Locale('ru', 'RU'),
+        Locale('en', 'US'),
+      ],
+      // Force Uzbek as default if system is not supported or mixed
+      locale: const Locale('uz', 'UZ'),
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.isLoading) {
