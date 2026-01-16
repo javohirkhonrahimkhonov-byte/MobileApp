@@ -293,16 +293,18 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
         children: [
           Text(titleText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           const SizedBox(height: 20),
-          ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-               final item = items[index];
-               return _buildChip(item, () {
-                 if (_step == 0) _selectCategory(item);
-                 else _selectSubCategory(item);
-               });
-            },
+          Expanded(
+            child: ListView.separated(
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                 final item = items[index];
+                 return _buildChip(item, () {
+                   if (_step == 0) _selectCategory(item);
+                   else _selectSubCategory(item);
+                 });
+              },
+            ),
           ),
         ],
       );
