@@ -835,17 +835,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       setState(() => _selectedDate = picked);
     }
   }
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
+
 
   void _saveActivity() {
     if (_titleController.text.isEmpty || _descController.text.isEmpty || _selectedDate == null) {
