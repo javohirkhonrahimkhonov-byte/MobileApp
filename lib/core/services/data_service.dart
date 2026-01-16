@@ -183,12 +183,18 @@ class DataService {
   Future<List<dynamic>> getActivities() async {
     // Attempt to fetch from backend
     try {
-      final response = await http.get(Uri.parse(ApiConstants.activities), headers: await _getHeaders());
+      print("DataService: Fetching activities...");
+      final response = await http.get(
+        Uri.parse(ApiConstants.activities), 
+        headers: await _getHeaders()
+      ).timeout(const Duration(seconds: 10));
+      
+      print("DataService: Activities response: ${response.statusCode}");
       if (response.statusCode == 200) {
         return json.decode(response.body);
       }
     } catch (e) {
-      debugPrint("API error: $e");
+      debugPrint("DataService API error: $e");
     }
     
     // Fallback or empty if offline
