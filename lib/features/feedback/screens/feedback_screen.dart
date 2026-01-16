@@ -270,20 +270,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Mening Murojaatlarim")),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.construction, size: 80, color: Colors.orange),
-            SizedBox(height: 16),
-            Text(
-              "Tez orada ishga tushadi",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-      /* 
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _feedbacks.isEmpty
@@ -336,7 +322,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         backgroundColor: AppTheme.primaryBlue,
         child: const Icon(Icons.add),
       ),
-      */
     );
   }
 }
