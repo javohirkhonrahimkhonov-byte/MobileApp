@@ -806,8 +806,21 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2023),
-      lastDate: DateTime(2025),
-      // Optional: Add locale if needed, but default is fine usually
+      lastDate: DateTime(2030), // Extended range
+      locale: const Locale('uz', 'UZ'), // Ensure Uzbek
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primaryBlue, // Header and selected day color
+              onPrimary: Colors.white, 
+              surface: Colors.white, // Dialog background
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
