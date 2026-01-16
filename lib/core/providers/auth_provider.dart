@@ -62,4 +62,17 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     notifyListeners();
   }
+
+  // Allow other screens (Home) to update simple state without full re-logic
+  Future<void> updateUser(Map<String, dynamic> json) async {
+    try {
+      final updatedStudent = Student.fromJson(json);
+      _currentUser = updatedStudent;
+      // Also update local storage so it persists on restart
+      await _authService.saveProfileManually(json);
+      notifyListeners();
+    } catch (e) {
+      print("Error updating user state: $e");
+    }
+  }
 }

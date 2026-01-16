@@ -96,9 +96,13 @@ class AuthService {
     await prefs.setString('auth_token', token);
   }
 
-  Future<void> _saveProfile(Map<String, dynamic> profile) async {
+  Future<void> saveProfileManually(Map<String, dynamic> profile) async {
      final prefs = await SharedPreferences.getInstance();
      await prefs.setString('user_profile', jsonEncode(profile));
+  }
+  
+  Future<void> _saveProfile(Map<String, dynamic> profile) async {
+     await saveProfileManually(profile);
   }
   
   Future<Student?> getSavedUser() async {

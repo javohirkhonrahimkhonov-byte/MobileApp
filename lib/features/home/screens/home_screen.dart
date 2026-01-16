@@ -53,6 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _dashboard = results[1];
           _isLoading = false;
         });
+        
+        // SYNC: Update Global Auth State so Profile Screen gets new data immediately
+        if (_profile != null) {
+           Provider.of<AuthProvider>(context, listen: false).updateUser(_profile!);
+        }
       }
     } catch (e) {
       print("Error loading home data: $e");
@@ -164,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                          return first[0].toUpperCase() + first.substring(1).toLowerCase();
                       }
                       return name;
-                    }()}! (v3)",
+                    }()}!",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Row(
