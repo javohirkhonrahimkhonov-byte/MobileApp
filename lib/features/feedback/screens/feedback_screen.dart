@@ -77,11 +77,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   // Old simple dialog removed...
-  Future<void> _submitFeedback(String text, String role, String? path) async {
+  Future<void> _submitFeedback(String text, String role, String? path, bool isAnonymous) async {
     setState(() => _isLoading = true);
     // ... existing submit logic
     try {
-      await _dataService.sendFeedback(text, role, path);
+      await _dataService.sendFeedback(text, role, path, isAnonymous: isAnonymous);
       await _loadFeedbacks();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +121,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
 class _FeedbackWizard extends StatefulWidget {
   final List<Map<String, dynamic>> hierarchy;
-  final Function(String, String, String?) onSubmit;
+  final Function(String, String, String?, bool) onSubmit;
 
   const _FeedbackWizard({required this.hierarchy, required this.onSubmit});
 
@@ -133,9 +133,9 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
   int _step = 0; // 0: Category, 1: SubCategory (if any), 2: Form
   Map<String, dynamic>? _selectedCategory;
   Map<String, dynamic>? _selectedSubCategory;
+  bool _isAnonymous = false;
   
   final TextEditingController _textController = TextEditingController();
-  final TextEditingController _titleController = TextEditingController(); // Requested: Subject (Mavzu)
   String? _filePath;
   String? _fileName;
 
@@ -145,7 +145,7 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
       if (item.containsKey('children')) {
         _step = 1;
       } else {
-        _selectedSubCategory = null; // No sub-category
+        _selectedSubCategory = null; 
         _step = 2; // Jump to form
       }
     });
@@ -161,23 +161,35 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
   @override
   Widget build(BuildContext context) {
     // Determine the final role ID
-    final roleId = _selectedSubCategory?['id'] ?? _selectedCategory?['id'];
-    final label = _selectedSubCategory?['label'] ?? _selectedCategory?['label'] ?? "Murojaat";
+    final title = _step == 0 ? "Yangi murojaat" : (_step == 1 ? "Mas'ulni tanlang" : "Murojaat yozish");
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: const EdgeInsets.all(20),
-        height: 600, // Fixed height or dynamic
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        height: 650, 
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            
+            // Header with Back Button
             Row(
               children: [
                 if (_step > 0)
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       setState(() {
                         if (_step == 2) {
                            if (_selectedCategory!.containsKey('children')) {
@@ -185,6 +197,7 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
                            } else {
                              _step = 0;
                              _selectedCategory = null;
+                             _isAnonymous = false;
                            }
                         } else if (_step == 1) {
                           _step = 0;
@@ -192,18 +205,19 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
                         }
                       });
                     },
+                    child: const Padding(
+                      padding: EdgeInsets.only(right: 12),
+                      child: Icon(Icons.arrow_back, size: 24),
+                    ),
                   ),
-                Expanded(
-                  child: Text(
-                    _step == 0 ? "Bo'limni tanlang" : (_step == 1 ? "Mas'ulni tanlang" : "Murojaat yozish"),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                if (_step > 0) const SizedBox(width: 40), // Balance back button
               ],
             ),
-            const Divider(),
+            
+            const SizedBox(height: 24),
             
             Expanded(
               child: _buildContent(),
@@ -216,82 +230,105 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
 
   Widget _buildContent() {
     if (_step == 0) {
-      return ListView.builder(
-        itemCount: widget.hierarchy.length,
-        itemBuilder: (ctx, i) {
-          final item = widget.hierarchy[i];
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.account_balance, color: AppTheme.primaryBlue),
-              title: Text(item['label']),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectCategory(item),
-            ),
-          );
-        },
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Kimga yuborilsin?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: widget.hierarchy.map((item) => _buildChip(item, () => _selectCategory(item))).toList(),
+          ),
+        ],
       );
     } else if (_step == 1) {
       final children = _selectedCategory!['children'] as List;
-      return ListView.builder(
-        itemCount: children.length,
-        itemBuilder: (ctx, i) {
-          final item = children[i];
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.person, color: AppTheme.primaryBlue),
-              title: Text(item['label']),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _selectSubCategory(item),
-            ),
-          );
-        },
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("${_selectedCategory!['label']} tarkibi:", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: children.map((item) => _buildChip(item, () => _selectSubCategory(item))).toList(),
+          ),
+        ],
       );
     } else {
       // Form Step
-      final roleName = _selectedSubCategory?['label'] ?? _selectedCategory?['label'];
-      
       return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Selected Recipient Display
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                   const Icon(Icons.info_outline, color: Colors.blue),
-                   const SizedBox(width: 10),
-                   Expanded(child: Text("Qabul qiluvchi: $roleName", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue))),
+                  const Icon(Icons.check_circle, size: 16, color: AppTheme.primaryBlue),
+                  const SizedBox(width: 8),
+                  Text(
+                    _selectedSubCategory?['label'] ?? _selectedCategory?['label'],
+                    style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            
-            const Text("Mavzu (Qisqacha)", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+
+            // Anonymity Toggle
+            const Text("Maxfiylik", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: "Masalan: Sessiya vaqtlari bo'yicha",
-                border: OutlineInputBorder(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Anonim yuborish", style: TextStyle(fontSize: 16)),
+                    Text("Ism-familiyangiz ko'rinmaydi", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
+                Switch(
+                  value: _isAnonymous,
+                  onChanged: (v) => setState(() => _isAnonymous = v),
+                  activeColor: AppTheme.primaryBlue,
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Text Input
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: TextField(
+                controller: _textController,
+                maxLines: 8,
+                decoration: const InputDecoration(
+                  hintText: "Murojaat matnini yozing...",
+                  border: InputBorder.none,
+                ),
               ),
             ),
             
-            const SizedBox(height: 16),
-            const Text("Murojaat matni", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _textController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: "Batafsil tushuntiring...",
-                border: OutlineInputBorder(),
-              ),
-            ),
+            const SizedBox(height: 12),
             
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () async {
+            // File Attachment
+            GestureDetector(
+              onTap: () async {
                 FilePickerResult? result = await FilePicker.platform.pickFiles();
                 if (result != null) {
                   setState(() {
@@ -300,42 +337,72 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
                   });
                 }
               },
-              icon: const Icon(Icons.attach_file),
-               label: Text(_fileName ?? "Fayl biriktirish (Ixtiyoriy)"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[200],
-                foregroundColor: Colors.black,
-                elevation: 0,
+              child: Row(
+                children: [
+                  Icon(Icons.attach_file, color: _fileName != null ? AppTheme.primaryBlue : Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _fileName ?? "Fayl biriktirish (rasm, hujjat)",
+                      style: TextStyle(color: _fileName != null ? AppTheme.primaryBlue : Colors.grey),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_fileName != null)
+                     IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () => setState(() => _fileName = null))
+                ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
+            
+            // Submit Button
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 56,
               child: ElevatedButton(
                 onPressed: () {
                    final text = _textController.text.trim();
-                   // If backend supports title, we should prepend it or send as separate field.
-                   // Current sendFeedback takes (text, role, file).
-                   // I will prepend Title to Text: "MAVZU: Title\n\nText"
-                   final title = _titleController.text.trim();
-                   if (text.isEmpty) return;
-                   
-                   final fullText = title.isNotEmpty ? "MAVZU: $title\n\n$text" : text;
                    final roleId = _selectedSubCategory?['id'] ?? _selectedCategory?['id'];
                    
-                   Navigator.pop(context); // Close sheet
-                   widget.onSubmit(fullText, roleId, _filePath);
+                   if (text.isEmpty) return;
+                   
+                   Navigator.pop(context);
+                   widget.onSubmit(text, roleId, _filePath, _isAnonymous);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
-                child: const Text("Yuborish", style: TextStyle(color: Colors.white, fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0033FF), // Vibrant Blue
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text("Yuborish", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               ),
-            )
+            ),
+            const SizedBox(height: 16), // Bottom safety padding
           ],
         ),
       );
     }
+  }
+
+  Widget _buildChip(Map<String, dynamic> item, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black12),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          item['label'].replaceAll(RegExp(r'[^\w\s]'), '').trim(), // Remove emojis for cleaner look if standard text preferred, or keep them.
+          // User mockups show text only usually, effectively removing emojis or keeping them subtle.
+          // Let's keep distinct text.
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+      ),
+    );
   }
 
   @override
