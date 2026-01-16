@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
@@ -287,11 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: "Murojaatlar",
                   icon: Icons.chat_bubble_outline_rounded,
                   color: Colors.redAccent,
-                  onTap: () {
-                     ScaffoldMessenger.of(context).showSnackBar(
-                       const SnackBar(content: Text("Tez orada ishga tushiramiz! 🚧")),
-                     );
-                  },
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
                 ),
             ],
           ),
