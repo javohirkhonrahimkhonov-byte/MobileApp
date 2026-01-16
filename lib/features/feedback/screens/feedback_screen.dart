@@ -31,10 +31,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Xatolik: $e')),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Xatolik: $e')),
+        );
+      }
     }
   }
 
@@ -106,14 +108,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     
     if (success) {
       _loadFeedbacks();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Murojaat muvaffaqiyatli yuborildi!"), backgroundColor: Colors.green),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Murojaat muvaffaqiyatli yuborildi!"), backgroundColor: Colors.green),
+        );
+      }
     } else {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Xatolik yuz berdi. Qaytadan urinib ko'ring."), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Xatolik yuz berdi. Qaytadan urinib ko'ring."), backgroundColor: Colors.red),
+        );
+      }
     }
   }
   @override
