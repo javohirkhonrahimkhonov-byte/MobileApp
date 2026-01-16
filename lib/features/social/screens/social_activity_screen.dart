@@ -42,7 +42,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   final List<SocialActivity> _activities = [
     SocialActivity(
       id: "1",
-      category: "Tadbir",
+      category: "Volontyorlik",
       title: "Navro'z bayrami tashkilotchiligi",
       description: "Universitet miqyosidagi Navro'z bayramida faol qatnashdim. Tashkiliy ishlarda yordam berdim.",
       date: "21.03.2024",
