@@ -67,55 +67,6 @@ class AuthService {
     return prefs.getString('user_role') ?? 'student';
   }
 
-  // ============================================================
-  // TELEGRAM AUTH
-  // ============================================================
-  Future<Map<String, String>?> initTelegramAuth() async {
-    try {
-      final url = Uri.parse('${ApiConstants.backendUrl}/auth/init');
-      final response = await http.post(url);
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {
-          'uuid': data['uuid'],
-          'url': data['url']
-        };
-      }
-    } catch (e) {
-      print("Telegram Auth Init Error: $e");
-    }
-    return null;
-  }
-
-  Future<Student?> checkTelegramAuth(String uuid) async {
-    try {
-      final url = Uri.parse('${ApiConstants.backendUrl}/auth/check/$uuid');
-      final response = await http.get(url);
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 'verified' && data['token'] != null) {
-          final token = data['token'];
-          final role = data['role'] ?? 'student'; // Get Role
-
-          await _saveToken(token);
-          await _saveRole(role);
-          
-          if (data['profile'] != null) {
-            await _saveProfile(data['profile']);
-            return Student.fromJson(data['profile']);
-          }
-          
-          return await fetchAndSaveProfile(token);
-        }
-      }
-    } catch (e) {
-      print("Telegram Check Error: $e");
-    }
-    return null;
-  }
-
   Future<Student?> fetchAndSaveProfile(String token) async {
     try {
       final url = Uri.parse(ApiConstants.profile);
