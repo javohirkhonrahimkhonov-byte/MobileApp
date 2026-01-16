@@ -9,6 +9,44 @@ import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_detail_screen.dart';
 
+class SocialActivity {
+  final String id;
+  final String category;
+  final String title;
+  final String description;
+  final String date;
+  final String status; // 'approved', 'pending', 'rejected'
+  final List<String> imageUrls;
+
+  SocialActivity({
+    required this.id,
+    required this.category,
+    required this.title,
+    required this.description,
+    required this.date,
+    required this.status,
+    required this.imageUrls,
+  });
+
+  factory SocialActivity.fromJson(Map<String, dynamic> json) {
+    List<String> images = [];
+    if (json['images'] != null) {
+      for (var img in json['images']) {
+        images.add(img['file_id'] ?? ""); 
+      }
+    }
+    return SocialActivity(
+      id: json['id'].toString(),
+      category: json['category'] ?? "Boshqa",
+      title: json['name'] ?? "Nomsiz",
+      description: json['description'] ?? "",
+      date: json['date'] ?? "",
+      status: json['status'] ?? "pending",
+      imageUrls: images,
+    );
+  }
+}
+
 class AddActivitySheet extends StatefulWidget {
   final List<String> categories;
   final Function(SocialActivity) onSave;
@@ -59,24 +97,23 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       ),
       child: Column(
         children: [
-          // Handle Bar
           const SizedBox(height: 12),
           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 20),
           
-          // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                if (_step == 2) 
+                if (_step == 2) ...[
                   IconButton(
                     icon: const Icon(Icons.arrow_back), 
                     onPressed: () => setState(() => _step = 1),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                if (_step == 2) const SizedBox(width: 12),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: Text(
                     _step == 1 ? "Kategoriyani tanlang" : "Ma'lumotlarni kiriting",
@@ -94,7 +131,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           ),
           const Divider(),
           
-          // Content
           Expanded(
             child: _step == 1 ? _buildCategoryStep() : _buildFormStep(),
           ),
@@ -150,7 +186,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   }
 
   Widget _buildFormStep() {
-    // Dynamic Labels logic
     String titleLabel = "Faollik nomi";
     String titleHint = "Nomini kiriting...";
     String descLabel = "Faollik tavsifi";
@@ -205,7 +240,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Selected Category Badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -219,7 +253,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           ),
           const SizedBox(height: 24),
           
-          // Title Input
           TextField(
             controller: _titleController,
             decoration: InputDecoration(
@@ -230,7 +263,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           ),
           const SizedBox(height: 16),
           
-          // Description Input
           TextField(
             controller: _descController,
             maxLines: 4,
@@ -243,29 +275,31 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           ),
           const SizedBox(height: 16),
           
-          // Image Upload Block
           _buildImageUploadBlock(),
           const SizedBox(height: 16),
           
-          // Date Picker
           GestureDetector(
             onTap: _pickDate,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(4), // Match InputDecoration default
-                color: Colors.transparent, // Required for tap to work on empty space inside
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.transparent,
               ),
               child: Row(
                 children: [
-                   const Icon(Icons.calendar_month, color: AppTheme.primaryBlue), // Updated icon
+                   const Icon(Icons.calendar_month, color: AppTheme.primaryBlue),
                    const SizedBox(width: 12),
                    Text(
                      _selectedDate == null 
                        ? "Sana, Oy, Yilni tanlang" 
                        : DateFormat('dd.MM.yyyy').format(_selectedDate!),
-                     style: TextStyle(color: _selectedDate == null ? Colors.grey[600] : Colors.black, fontSize: 16, fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.w500),
+                     style: TextStyle(
+                       color: _selectedDate == null ? Colors.grey[600] : Colors.black, 
+                       fontSize: 16, 
+                       fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.w500
+                     ),
                    ),
                 ],
               ),
@@ -274,7 +308,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           
           const SizedBox(height: 32),
           
-          // Save Button
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -301,11 +334,10 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
             height: 100,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _selectedImages.length + 1, // +1 for "Add More" button
+              itemCount: _selectedImages.length + 1,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 if (index == _selectedImages.length) {
-                   // Add More Button
                    return GestureDetector(
                      onTap: _pickImage,
                      child: Container(
@@ -396,7 +428,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     final firstDate = DateTime(2020);
     final lastDate = DateTime(2030);
     
-    // Ensure initialDate is valid
     DateTime initialDate = _selectedDate ?? now;
     if (initialDate.isBefore(firstDate)) initialDate = firstDate;
     if (initialDate.isAfter(lastDate)) initialDate = lastDate;
@@ -439,52 +470,11 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       description: _descController.text,
       date: DateFormat('dd.MM.yyyy').format(_selectedDate!),
       status: "pending",
-      imageUrls: _selectedImages.map((e) => e.path).toList(), // Passing local paths
+      imageUrls: _selectedImages.map((e) => e.path).toList(),
     );
 
     widget.onSave(newActivity);
     Navigator.pop(context);
-  }
-}
-class SocialActivity {
-  final String id;
-  final String category;
-  final String title;
-  final String description;
-  final String date;
-  final String status; // 'approved', 'pending', 'rejected'
-  final List<String> imageUrls;
-
-  SocialActivity({
-    required this.id,
-    required this.category,
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.status,
-    required this.imageUrls,
-  });
-
-  factory SocialActivity.fromJson(Map<String, dynamic> json) {
-    // Extract images if any
-    List<String> images = [];
-    if (json['images'] != null) {
-      for (var img in json['images']) {
-         // Assuming API might return file_id or url. 
-         // Since we can't display file_id, we will just keep it. 
-         // If we had a proxy: "https://api.bot.com/file/${img['file_id']}"
-         images.add(img['file_id'] ?? ""); 
-      }
-    }
-    return SocialActivity(
-      id: json['id'].toString(),
-      category: json['category'] ?? "Boshqa",
-      title: json['name'] ?? "Nomsiz",
-      description: json['description'] ?? "",
-      date: json['date'] ?? "",
-      status: json['status'] ?? "pending",
-      imageUrls: images,
-    );
   }
 }
 
@@ -496,7 +486,6 @@ class SocialActivityScreen extends StatefulWidget {
 }
 
 class _SocialActivityScreenState extends State<SocialActivityScreen> {
-  // Filters
   String _selectedCategory = "Barchasi";
   String _selectedStatus = "Barchasi";
   bool _isLoading = false;
@@ -513,16 +502,20 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   }
 
   Future<void> _loadActivities() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final rawData = await Provider.of<DataService>(context, listen: false).getActivities();
+      if (!mounted) return;
       setState(() {
         _activities = rawData.map((e) => SocialActivity.fromJson(e)).toList();
       });
     } catch (e) {
       debugPrint("Load Error: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -543,15 +536,9 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         ? const Center(child: CircularProgressIndicator()) 
         : Column(
         children: [
-          // 1. Statistics Header (Only Statuses)
           _buildStatsHeader(),
-
           const SizedBox(height: 16),
-
-          // 2. Filters (Dropdown-like)
           _buildFilterBar(),
-
-          // 3. Activity List
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -561,8 +548,6 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
               },
             ),
           ),
-          
-          // 4. Bottom Add Button (Fixed)
           _buildBottomButton(),
         ],
       ),
@@ -587,7 +572,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _showAddActivityDialog,
+            onPressed: () => _showAddActivitySheet(),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -615,9 +600,9 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     }
 
     final stats = [
-      {"label": "Tasdiqlangan", "count": approved, "color": Colors.green, "bg": Colors.green[50]},
-      {"label": "Kutilmoqda", "count": pending, "color": Colors.orange, "bg": Colors.orange[50]},
-      {"label": "Rad etilgan", "count": rejected, "color": Colors.red, "bg": Colors.red[50]},
+      {"label": "Tasdiqlangan", "count": approved, "color": Colors.green},
+      {"label": "Kutilmoqda", "count": pending, "color": Colors.orange},
+      {"label": "Rad etilgan", "count": rejected, "color": Colors.red},
     ];
 
     return Container(
@@ -826,8 +811,6 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         statusIcon = Icons.access_time_rounded;
     }
 
-    // Attempt to parse first image URL or use placeholder
-    // If it's just a file_id, this won't work, so we fallback to icon
     bool hasValidImage = activity.imageUrls.isNotEmpty && activity.imageUrls.first.startsWith("http");
 
     return GestureDetector(
@@ -846,14 +829,13 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
             )
           ],
         ),
-        clipBehavior: Clip.antiAlias, // Clean corners
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
-            // Image with Category Overlay
             Stack(
               children: [
                 Container(
-                  height: 200, // Slightly taller
+                  height: 200,
                   width: double.infinity,
                   color: Colors.grey[200],
                   child: hasValidImage
@@ -863,7 +845,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                           placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
                           errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
                         )
-                      : const Center(child: Icon(Icons.image, color: Colors.grey, size: 40)), // Placeholder
+                      : const Center(child: Icon(Icons.image, color: Colors.grey, size: 40)),
                 ),
                 Positioned(
                   top: 12,
@@ -884,7 +866,6 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
               ],
             ),
             
-            // Content
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -932,7 +913,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     );
   }
 
-  void _showAddActivityDialog() {
+  void _showAddActivitySheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -940,14 +921,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
       builder: (ctx) => AddActivitySheet(
         categories: _categories.where((c) => c != "Barchasi").toList(),
         onSave: (activity) async {
-          // Send to API
           try {
-             // Map categories to API values if needed, otherwise send as is
-             // API expects "category", "name", "description", "date"
-             // But category needs to be lower case snake_case likely if the bot relies on it?
-             // Checking 'activities.py' line 32: CATEGORIES = ["togarak", "yutuqlar", "marifat", "volontyorlik", "madaniy", "sport", "boshqa"]
-             // So I should map user friendly names to keys.
-             
              String apiCat = activity.category.toLowerCase();
              if (activity.category == "To'garak") apiCat = "togarak";
              if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
@@ -964,14 +938,15 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                activity.date
              );
              
+             if (!mounted) return;
              ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
              );
              
-             // Reload list
              _loadActivities();
              
           } catch(e) {
+             if (!mounted) return;
              ScaffoldMessenger.of(context).showSnackBar(
                SnackBar(content: Text('Xatolik: $e')),
              );

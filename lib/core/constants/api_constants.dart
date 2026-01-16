@@ -25,8 +25,8 @@ class ApiConstants {
   static const String scheduleList = '$baseUrl/education/schedule';
 
   // Extended Features (Backend)
-  static const String activities = '$backendUrl/student/activities'; 
-  static const String clubsMy = '$backendUrl/student/clubs/my';
-  static const String feedback = '$backendUrl/student/feedback';
-  static const String documents = '$backendUrl/student/documents';
+  static const String activities = '$backendUrl/student/activities/'; 
+  static const String clubsMy = '$backendUrl/student/clubs/my/';
+  static const String feedback = '$backendUrl/student/feedback/';
+  static const String documents = '$backendUrl/student/documents/';
 }
