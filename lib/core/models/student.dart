@@ -72,7 +72,7 @@ class Student {
       specialtyName: getPrettyName('specialty'),
       facultyName: getPrettyName('faculty'),
       semesterName: getPrettyName('semester'),
-      universityName: getPrettyName('university') ?? "Jizzax davlat pedagogika universiteti",
+      universityName: json['university_name'] ?? getPrettyName('university') ?? "Jizzax davlat pedagogika universiteti",
       imageUrl: json['image'] ?? json['image_url'],
       missedHours: json['missed_hours'] ?? 0,
     );

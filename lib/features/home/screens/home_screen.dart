@@ -154,11 +154,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       
                       // Fallback logic
                       final name = _profile?['full_name'] ?? 'Talaba';
+                      
+                      // Logic: If ALL CAPS "SURNAME FIRSTNAME FATHERNAME"
                       final parts = name.split(' ');
-                      // If name is "Last First", parts[1] is First.
-                      // If name is "First Last", parts[0] is First.
-                      // Our backend now sends "Last First Father". So First is parts[1].
-                      return parts.length > 1 ? parts[1] : parts[0];
+                      if (parts.length >= 2) {
+                         // Standard Uzbek: Last First Father (e.g. Akramjonov Muxammadali Ulug'bek)
+                         // Return 2nd word
+                         final first = parts[1];
+                         return first[0].toUpperCase() + first.substring(1).toLowerCase();
+                      }
+                      return name;
                     }()}!",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
