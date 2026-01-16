@@ -469,6 +469,262 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   }
 
   void _showAddActivityDialog() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Faollik qo'shish oynasi keyingi bosqichda...")));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AddActivitySheet(
+        categories: _categories.where((c) => c != "Barchasi").toList(),
+        onSave: (activity) {
+          setState(() {
+            _activities.insert(0, activity); // Add to top
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Faollik muvaffaqiyatli qo\'shildi! ✅')),
+          );
+        },
+      ),
+    );
   }
 }
+
+class AddActivitySheet extends StatefulWidget {
+  final List<String> categories;
+  final Function(SocialActivity) onSave;
+
+  const AddActivitySheet({super.key, required this.categories, required this.onSave});
+
+  @override
+  State<AddActivitySheet> createState() => _AddActivitySheetState();
+}
+
+class _AddActivitySheetState extends State<AddActivitySheet> {
+  int _step = 1; // 1 = Category, 2 = Form
+  String? _selectedCategory;
+  
+  final _titleController = TextEditingController();
+  final _descController = TextEditingController();
+  DateTime? _selectedDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle Bar
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 20),
+          
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                if (_step == 2) 
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back), 
+                    onPressed: () => setState(() => _step = 1),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                if (_step == 2) const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _step == 1 ? "Kategoriyani tanlang" : "Ma'lumotlarni kiriting",
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          
+          // Content
+          Expanded(
+            child: _step == 1 ? _buildCategoryStep() : _buildFormStep(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryStep() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: widget.categories.length,
+      itemBuilder: (context, index) {
+        final category = widget.categories[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                _selectedCategory = category;
+                _step = 2;
+              });
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.category, color: AppTheme.primaryBlue, size: 20),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFormStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Selected Category Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _selectedCategory ?? "",
+              style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Title Input
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+               labelText: "Faollik nomi",
+               hintText: "Masalan: Navro'z bayrami",
+               border: OutlineInputBorder(),
+               prefixIcon: Icon(Icons.title),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Description Input
+          TextField(
+            controller: _descController,
+            maxLines: 4,
+            decoration: const InputDecoration(
+               labelText: "Faollik tavsifi",
+               hintText: "Faollik haqida qisqacha ma'lumot...",
+               border: OutlineInputBorder(),
+               alignLabelWithHint: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Date Picker
+          InkWell(
+            onTap: _pickDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4), // Match InputDecoration default
+              ),
+              child: Row(
+                children: [
+                   const Icon(Icons.calendar_today, color: Colors.grey),
+                   const SizedBox(width: 12),
+                   Text(
+                     _selectedDate == null 
+                       ? "Sanani tanlang" 
+                       : "${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year}",
+                     style: TextStyle(color: _selectedDate == null ? Colors.grey[600] : Colors.black, fontSize: 16),
+                   ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Save Button
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _saveActivity,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text("Saqlash", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  void _saveActivity() {
+    if (_titleController.text.isEmpty || _descController.text.isEmpty || _selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Barcha maydonlarni to'ldiring")));
+      return;
+    }
+
+    final newActivity = SocialActivity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      category: _selectedCategory!,
+      title: _titleController.text,
+      description: _descController.text,
+      date: "${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year}",
+      status: "pending",
+      imageUrls: [], // No image upload for now
+    );
+
+    widget.onSave(newActivity);
+    Navigator.pop(context);
+  }
+
