@@ -85,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildInfoRow(Icons.account_balance_rounded, "Universitet", student.universityName ?? "Jizzax davlat pedagogika universiteti"),
+                _buildInfoRow(Icons.account_balance_rounded, "Universitet", student.universityName ?? "Topilmadi"),
                 const Divider(height: 1),
                 _buildInfoRow(Icons.school_rounded, "Fakultet", student.facultyName ?? "-"),
                 const Divider(height: 1),

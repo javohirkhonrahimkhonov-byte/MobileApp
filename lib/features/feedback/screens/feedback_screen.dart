@@ -212,6 +212,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ),
         ],
       ),
+    );
   }
 }
 
