@@ -251,25 +251,28 @@ class DataService {
   }
 
   // 6. Send Feedback (Multipart)
-  Future<void> sendFeedback(String text, String role, String? filePath, {bool isAnonymous = false}) async {
-    final token = await _authService.getToken();
-    var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.feedback));
-    
-    request.headers.addAll({
-      'Authorization': 'Bearer $token',
-    });
+  Future<bool> sendFeedback(String text, String role, String? filePath, {bool isAnonymous = false}) async {
+    try {
+      final token = await _authService.getToken();
+      var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.feedback));
+      
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+      });
 
-    request.fields['text'] = text;
-    request.fields['role'] = role;
-    request.fields['is_anonymous'] = isAnonymous.toString();
+      request.fields['text'] = text;
+      request.fields['role'] = role;
+      request.fields['is_anonymous'] = isAnonymous.toString();
 
-    if (filePath != null) {
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
-    }
+      if (filePath != null) {
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      }
 
-    var response = await request.send().timeout(const Duration(seconds: 30));
-    if (response.statusCode != 200) {
-      throw Exception('Failed to send feedback');
+      var response = await request.send().timeout(const Duration(seconds: 30));
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Feedback Send Error: $e");
+      return false;
     }
   }
 

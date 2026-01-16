@@ -102,7 +102,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     setState(() => _isLoading = true);
     
     // Optimistic UI update or just wait for reload
-    final success = await _dataService.sendFeedback(text, roleId, filePath, isAnonymous);
+    final success = await _dataService.sendFeedback(text, roleId, filePath, isAnonymous: isAnonymous);
     
     if (success) {
       _loadFeedbacks();
