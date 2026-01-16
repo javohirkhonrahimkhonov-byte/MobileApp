@@ -70,16 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Xush kelibsiz Javohirxon",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.green, 
-                      fontSize: 20, 
-                      fontWeight: FontWeight.bold
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
                     "HEMIS tizimidan kirish",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600], fontSize: 16),
