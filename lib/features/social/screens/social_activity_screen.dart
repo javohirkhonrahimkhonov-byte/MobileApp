@@ -738,7 +738,6 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
                labelText: titleLabel,
                hintText: titleHint,
                border: const OutlineInputBorder(),
-               prefixIcon: const Icon(Icons.title),
             ),
           ),
           const SizedBox(height: 16),
