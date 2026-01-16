@@ -46,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _dataService.getProfile(),
         _dataService.getDashboardStats(),
       ]);
+      print("HOME SCREEN LOADED PROFILE: ${results[0]}"); // DEBUG LOG
       
       if (mounted) {
         setState(() {
