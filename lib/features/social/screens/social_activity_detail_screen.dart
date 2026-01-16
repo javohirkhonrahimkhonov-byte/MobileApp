@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_screen.dart'; // Import for SocialActivity model
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SocialActivityDetailScreen extends StatelessWidget {
   final SocialActivity activity;
@@ -42,9 +43,11 @@ class SocialActivityDetailScreen extends StatelessWidget {
                 ? PageView.builder(
                     itemCount: activity.imageUrls.length,
                     itemBuilder: (context, index) {
-                      return Image.network(
-                        activity.imageUrls[index],
+                      return CachedNetworkImage(
+                        imageUrl: activity.imageUrls[index],
                         fit: BoxFit.cover,
+                         placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                         errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
                       );
                     },
                   )
