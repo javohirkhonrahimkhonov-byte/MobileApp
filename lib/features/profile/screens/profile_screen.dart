@@ -50,8 +50,6 @@ class ProfileScreen extends StatelessWidget {
                               'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
                             },
                             errorBuilder: (ctx, err, stack) {
-                              print("IMAGE LOAD ERROR: $err"); // DEBUG LOG
-                              print("FAILED URL: ${student.imageUrl}");
                               return _buildInitials(student.fullName);
                             },
                           )

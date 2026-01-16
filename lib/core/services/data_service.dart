@@ -136,18 +136,15 @@ class DataService {
     } catch (e) {
       print("Dashboard Error: $e");
       
-      // Fallback: If Legacy Token or Timeout, return Mock/Simulated for UX
-      // The user likely needs to Re-Login to get a real HEMIS token.
-      if (e.toString().contains("Legacy Token") || e.toString().contains("Timeout")) {
-         return {
-          "gpa": 4.5, // Simulation to show UI works
-          "missed_hours": 12,
-          "missed_hours_excused": 4, 
-          "missed_hours_unexcused": 8,
-          "activities_count": 5,
-          "clubs_count": 2
-         };
-      }
+      // Fallback: Return Zeros if error
+      return {
+        "gpa": 0.0,
+        "missed_hours": 0,
+        "missed_hours_excused": 0, 
+        "missed_hours_unexcused": 0,
+        "activities_count": 0,
+        "clubs_count": 0
+      };
       
       return {
         "gpa": 0.0,
@@ -372,11 +369,7 @@ class DataService {
     } catch (e) {
       print("DataService: Error fetching schedule: $e");
       if (useMock) {
-        return [
-           Lesson(id: 1, subjectName: "Sun'iy Intellekt", startTime: "1688974400", endTime: "", auditorium: "204-xona", teacherName: "Alimov A.", weekDay: 1),
-           Lesson(id: 2, subjectName: "Kiberxavfsizlik", startTime: "1689060800", endTime: "", auditorium: "305-lab", teacherName: "Karimov B.", weekDay: 1),
-           Lesson(id: 3, subjectName: "Mobil Dasturlash", startTime: "1689147200", endTime: "", auditorium: "101-leksiya", teacherName: "Valiyev V.", weekDay: 2),
-        ];
+        return [];
       }
       return [];
     }
