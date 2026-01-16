@@ -238,12 +238,16 @@ class DataService {
 
   // 5. Get Feedback
   Future<List<dynamic>> getMyFeedback() async {
-    final response = await http.get(
-      Uri.parse(ApiConstants.feedback),
-      headers: await _getHeaders(),
-    );
-    if (response.statusCode == 200) return json.decode(response.body);
-    throw Exception('Failed to load feedback');
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.feedback),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return json.decode(response.body);
+    } catch (e) {
+      debugPrint("Feedback Load Error: $e");
+    }
+    return [];
   }
 
   // 6. Send Feedback (Multipart)
@@ -262,11 +266,46 @@ class DataService {
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
     }
 
-    var response = await request.send();
+    var response = await request.send().timeout(const Duration(seconds: 30));
     if (response.statusCode != 200) {
       throw Exception('Failed to send feedback');
     }
   }
+
+  // 6.5 Get Feedback Detail (Chat)
+  Future<Map<String, dynamic>?> getFeedbackDetail(int id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.feedback}$id'),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      debugPrint("Feedback Detail Error: $e");
+    }
+    return null;
+  }
+
+  // 6.6 Reply to Feedback
+  Future<void> replyToFeedback(int id, String text) async {
+    final token = await _authService.getToken();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.feedback}$id/reply'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {'text': text},
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to reply');
+    }
+  }
+
 
   // 7. Get Documents
   Future<List<dynamic>> getMyDocuments() async {

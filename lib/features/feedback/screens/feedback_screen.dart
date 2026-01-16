@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/features/feedback/screens/feedback_detail_screen.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -163,6 +164,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 2,
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FeedbackDetailScreen(feedbackId: fb['id']),
+                            ),
+                          );
+                        },
                         leading: CircleAvatar(
                           backgroundColor: _getStatusColor(fb['status']).withOpacity(0.2),
                           child: Icon(Icons.message, color: _getStatusColor(fb['status'])),
