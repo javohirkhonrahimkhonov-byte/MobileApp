@@ -252,6 +252,8 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
