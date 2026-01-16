@@ -664,23 +664,39 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   Widget _buildFormStep() {
     // Dynamic Labels logic
     String titleLabel = "Faollik nomi";
-    String titleHint = "Masalan: Navro'z bayrami";
-    String descLabel = "Faollik tavsifi"; // Always this as per request "ikkinchisiga faollik tavsifi bo'lsin"
+    String titleHint = "Nomini kiriting...";
+    String descLabel = "Faollik tavsifi";
+    String descHint = "Batafsil ma'lumot...";
 
-    if (_selectedCategory == "Ma'rifat darslari") {
-      titleLabel = "Ma'rifat darsi mavzusi";
-      titleHint = "Mavzuni kiriting...";
-    } else if (_selectedCategory == "To'garak") {
-      titleLabel = "To'garak nomi";
-      titleHint = "Qaysi to'garak?";
-    } else if (_selectedCategory == "Yutuqlar") {
-      titleLabel = "Yutuq nomi"; 
-    } else if (_selectedCategory == "Volontyorlik") {
-      titleLabel = "Volontyorlik nomi";
-    } else if (_selectedCategory == "Madaniy tashriflar") {
-      titleLabel = "Tashrif nomi";
+    switch (_selectedCategory) {
+      case "Ma'rifat darslari":
+        titleLabel = "Ma'rifat darsi mavzusi";
+        descLabel = "Ma'rifat darsi tavsifi";
+        break;
+      case "To'garak":
+        titleLabel = "To'garak nomi";
+        descLabel = "To'garak tavsifi";
+        break;
+      case "Yutuqlar":
+        titleLabel = "Yutuq nomi";
+        descLabel = "Yutuq tavsifi";
+        break;
+      case "Volontyorlik":
+        titleLabel = "Volontyorlik nomi";
+        descLabel = "Volontyorlik tavsifi";
+        break;
+      case "Madaniy tashriflar":
+        titleLabel = "Tashrif nomi";
+        descLabel = "Tashrif tavsifi";
+        break;
+      case "Sport":
+        titleLabel = "Sport turi / Musobaqa nomi";
+        descLabel = "Faollik tavsifi";
+        break;
+      default:
+        titleLabel = "Faollik nomi";
+        descLabel = "Faollik tavsifi";
     }
-    // Sport defaults to Faollik nomi
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -719,7 +735,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
             maxLines: 4,
             decoration: InputDecoration(
                labelText: descLabel,
-               hintText: "Batafsil ma'lumot...",
+               hintText: descHint,
                border: const OutlineInputBorder(),
                alignLabelWithHint: true,
             ),
@@ -727,14 +743,14 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           const SizedBox(height: 16),
           
           // Date Picker
-          InkWell(
+          GestureDetector(
             onTap: _pickDate,
-            borderRadius: BorderRadius.circular(4),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
                 borderRadius: BorderRadius.circular(4), // Match InputDecoration default
+                color: Colors.transparent, // Required for tap to work on empty space inside
               ),
               child: Row(
                 children: [
