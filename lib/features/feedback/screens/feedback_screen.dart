@@ -204,6 +204,7 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
   void _selectCategory(Map<String, dynamic> item) {
     setState(() {
       _selectedCategory = item;
+      _selectedSubCategory = null; // Clear previous sub-selection
       if (item.containsKey('children')) {
         _step = 1;
       } else {
