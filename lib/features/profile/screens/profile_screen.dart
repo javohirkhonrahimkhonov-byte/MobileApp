@@ -45,6 +45,7 @@ class ProfileScreen extends StatelessWidget {
                         ? Image.network(
                             student.imageUrl!, 
                             fit: BoxFit.cover,
+                            headers: const {'User-Agent': 'Mozilla/5.0'}, // Fix for some servers blocking default Dart UA
                             errorBuilder: (ctx, err, _) => _buildInitials(student.fullName),
                           )
                         : _buildInitials(student.fullName),
