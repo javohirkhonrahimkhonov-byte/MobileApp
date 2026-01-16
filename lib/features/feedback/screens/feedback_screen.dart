@@ -366,16 +366,6 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
                     },
                   ),
                 ),
-                // Filler Image for whitespace
-                Opacity(
-                  opacity: 0.8,
-                  child: Image.asset(
-                    "assets/images/education_illustration.png", // Placeholder, will need user to move file
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
