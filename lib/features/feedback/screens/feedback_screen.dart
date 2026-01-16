@@ -58,7 +58,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       ]
     },
     {"label": "💰 Buxgalteriya", "id": "buxgalter"},
-    {"label": "📚 Kutubxona", "id": "kutubxona"},
     {"label": "🧠 Psixolog", "id": "psixolog"},
     {"label": "🧑‍🏫 Tyutor", "id": "tyutor"},
   ];

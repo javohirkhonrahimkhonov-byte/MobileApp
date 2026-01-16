@@ -9,13 +9,13 @@ class ApiConstants {
   static const String backendUrl = 'https://tengdoshbozor.uz/api/v1';
   
   // Auth (Proxy via our Bot Backend)
-  static const String authLogin = '$backendUrl/auth/hemis/';
+  static const String authLogin = '$backendUrl/auth/hemis';
   
   // Account
   static const String profile = '$baseUrl/account/me';
   
   // Dashboard
-  static const String dashboard = '$backendUrl/student/dashboard/';
+  static const String dashboard = '$backendUrl/student/dashboard';
   
   // Data
   static const String gpaList = '$baseUrl/data/student-gpa-list';
@@ -25,8 +25,8 @@ class ApiConstants {
   static const String scheduleList = '$baseUrl/education/schedule';
 
   // Extended Features (Backend)
-  static const String activities = '$backendUrl/student/activities/'; 
-  static const String clubsMy = '$backendUrl/student/clubs/my/';
-  static const String feedback = '$backendUrl/student/feedback/';
-  static const String documents = '$backendUrl/student/documents/';
+  static const String activities = '$backendUrl/student/activities'; 
+  static const String clubsMy = '$backendUrl/student/clubs/my';
+  static const String feedback = '$backendUrl/student/feedback';
+  static const String documents = '$backendUrl/student/documents';
 }
