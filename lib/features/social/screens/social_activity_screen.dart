@@ -35,7 +35,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   String _selectedCategory = "Barchasi";
   String _selectedStatus = "Barchasi";
 
-  final List<String> _categories = ["Barchasi", "Tadbir", "Volontyorlik", "To'garak", "Sport", "Boshqa"];
+  final List<String> _categories = ["Barchasi", "To'garak", "Yutuqlar", "Ma'rifat darslari", "Volontyorlik", "Madaniy tashriflar", "Sport", "Boshqa"];
   final List<String> _statuses = ["Barchasi", "Tasdiqlangan", "Kutilmoqda", "Bekor qilingan"];
 
   // Mock Data

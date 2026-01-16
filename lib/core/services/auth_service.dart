@@ -13,18 +13,13 @@ class AuthService {
        final demoStudent = Student(
         id: 0,
         fullName: 'Talaba Testov',
-        shortName: 'T. Testov',
-        firstName: 'Talaba',
-        lastName: 'Testov',
-        studentId_number: '123456789',
-        educationType: 'Bakalavr',
-        educationForm: 'Kunduzgi',
-        groupName: '912-21',
-        faculty: 'KIF',
-        level: '3-kurs',
-        semester: '5-semestr',
-        gpa: 4.5,
-        image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+        hemisLogin: 'demo.student',
+        groupNumber: '912-21',
+        facultyName: 'Kompyuter injiniringi',
+        specialtyName: 'Dasturiy injiniring',
+        semesterName: '3-kurs',
+        universityName: 'Jizzax davlat pedagogika universiteti',
+        imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
       );
        return demoStudent;
     }

@@ -7,6 +7,7 @@
       "name": "talabahamkor_mobile",
       "version": "1.0.0+1",
       "dependencies": [
+        "app_links",
         "cupertino_icons",
         "file_picker",
         "flutter",
@@ -52,6 +53,16 @@
       "name": "cupertino_icons",
       "version": "1.0.8",
       "dependencies": []
+    },
+    {
+      "name": "app_links",
+      "version": "6.4.1",
+      "dependencies": [
+        "app_links_linux",
+        "app_links_platform_interface",
+        "app_links_web",
+        "flutter"
+      ]
     },
     {
       "name": "url_launcher",
@@ -245,6 +256,33 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "app_links_web",
+      "version": "1.0.4",
+      "dependencies": [
+        "app_links_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "web"
+      ]
+    },
+    {
+      "name": "app_links_platform_interface",
+      "version": "2.0.2",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "app_links_linux",
+      "version": "1.0.3",
+      "dependencies": [
+        "app_links_platform_interface",
+        "flutter",
+        "gtk"
       ]
     },
     {
@@ -563,6 +601,15 @@
       "dependencies": [
         "source_span",
         "string_scanner"
+      ]
+    },
+    {
+      "name": "gtk",
+      "version": "2.1.0",
+      "dependencies": [
+        "ffi",
+        "flutter",
+        "meta"
       ]
     },
     {
