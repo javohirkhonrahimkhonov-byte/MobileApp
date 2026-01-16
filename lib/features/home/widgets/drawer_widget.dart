@@ -31,7 +31,10 @@ class AppDrawer extends StatelessWidget {
             title: const Text("Murojaatlar"),
             onTap: () {
                Navigator.pop(context);
-               Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+               // Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+               ScaffoldMessenger.of(context).showSnackBar(
+                 const SnackBar(content: Text("Tez orada ishga tushiramiz! 🚧")),
+               );
             },
           ),
           ListTile(

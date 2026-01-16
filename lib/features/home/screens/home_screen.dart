@@ -287,7 +287,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: "Murojaatlar",
                   icon: Icons.chat_bubble_outline_rounded,
                   color: Colors.redAccent,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppealsScreen())),
+                  onTap: () {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       const SnackBar(content: Text("Tez orada ishga tushiramiz! 🚧")),
+                     );
+                  },
                 ),
             ],
           ),
