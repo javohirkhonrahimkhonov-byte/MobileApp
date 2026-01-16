@@ -37,7 +37,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     }
   }
 
-  // Bot-aligned Hierarchy
+  // Bot-aligned Hierarchy (Updated per user request)
   final List<Map<String, dynamic>> _recipientHierarchy = [
     {
       "label": "🏛 Rahbariyat",
@@ -46,7 +46,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         {"label": "🎓 Rektor", "id": "rektor"},
         {"label": "👔 O'quv ishlari prorektori", "id": "prorektor"},
         {"label": "👔 Yoshlar ishlari prorektori", "id": "yoshlar_prorektor"},
-        {"label": "🔍 Inspektor", "id": "inspektor"},
+        {"label": "🔬 Ilmiy ishlar bo'yicha prorektor", "id": "ilmiy_prorektor"},
       ]
     },
     {
@@ -54,7 +54,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       "id": "dekanat",
       "children": [
         {"label": "👤 Dekan", "id": "dekan"},
-        {"label": "👤 Dekan o'rinbosari", "id": "dekan_orinbosari"},
+        {"label": "👤 Dekan yordamchisi", "id": "dekan_orinbosari"},
       ]
     },
     {"label": "💰 Buxgalteriya", "id": "buxgalter"},
@@ -63,221 +63,60 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     {"label": "🧑‍🏫 Tyutor", "id": "tyutor"},
   ];
 
-  void _showAddFeedbackSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _FeedbackWizard(
-        hierarchy: _recipientHierarchy,
-        onSubmit: _submitFeedback,
-      ),
-    );
-  }
-
-  // Old simple dialog removed...
-  Future<void> _submitFeedback(String text, String role, String? path, bool isAnonymous) async {
-    setState(() => _isLoading = true);
-    // ... existing submit logic
-    try {
-      await _dataService.sendFeedback(text, role, path, isAnonymous: isAnonymous);
-      await _loadFeedbacks();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Murojaat yuborildi! ✅')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Xatolik: $e')),
-        );
-      }
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'pending': return Colors.orange;
-      case 'answered': return Colors.green;
-      case 'closed': return Colors.grey;
-      case 'rejected': return Colors.red;
-      default: return Colors.blue;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'pending': return "Kutilmoqda";
-      case 'answered': return "Javob berilgan";
-      case 'closed': return "Yopilgan";
-      case 'rejected': return "Rad etilgan";
-      default: return status;
-    }
-  }
-}
-
-class _FeedbackWizard extends StatefulWidget {
-  final List<Map<String, dynamic>> hierarchy;
-  final Function(String, String, String?, bool) onSubmit;
-
-  const _FeedbackWizard({required this.hierarchy, required this.onSubmit});
-
-  @override
-  State<_FeedbackWizard> createState() => _FeedbackWizardState();
-}
-
-class _FeedbackWizardState extends State<_FeedbackWizard> {
-  int _step = 0; // 0: Category, 1: SubCategory (if any), 2: Form
-  Map<String, dynamic>? _selectedCategory;
-  Map<String, dynamic>? _selectedSubCategory;
-  bool _isAnonymous = false;
-  
-  final TextEditingController _textController = TextEditingController();
-  String? _filePath;
-  String? _fileName;
-
-  void _selectCategory(Map<String, dynamic> item) {
-    setState(() {
-      _selectedCategory = item;
-      if (item.containsKey('children')) {
-        _step = 1;
-      } else {
-        _selectedSubCategory = null; 
-        _step = 2; // Jump to form
-      }
-    });
-  }
-
-  void _selectSubCategory(Map<String, dynamic> item) {
-    setState(() {
-      _selectedSubCategory = item;
-      _step = 2;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine the final role ID
-    final title = _step == 0 ? "Yangi murojaat" : (_step == 1 ? "Mas'ulni tanlang" : "Murojaat yozish");
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        height: 650, 
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            
-            // Header with Back Button
-            Row(
-              children: [
-                if (_step > 0)
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (_step == 2) {
-                           if (_selectedCategory!.containsKey('children')) {
-                             _step = 1;
-                           } else {
-                             _step = 0;
-                             _selectedCategory = null;
-                             _isAnonymous = false;
-                           }
-                        } else if (_step == 1) {
-                          _step = 0;
-                          _selectedCategory = null;
-                        }
-                      });
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 12),
-                      child: Icon(Icons.arrow_back, size: 24),
-                    ),
-                  ),
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-            
-            Expanded(
-              child: _buildContent(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+// ... existing code ...
 
   Widget _buildContent() {
-    if (_step == 0) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text("Kimga yuborilsin?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 16),
-          ...widget.hierarchy.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: InkWell(
-              onTap: () => _selectCategory(item),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset: const Offset(0, 2))
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item['label'].replaceAll(RegExp(r'[^\w\s]'), '').trim(),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                  ],
+    if (_step == 0 || _step == 1) {
+      final items = _step == 0 
+          ? widget.hierarchy 
+          : (_selectedCategory!['children'] as List).cast<Map<String, dynamic>>();
+
+      final titleText = _step == 0 ? "Kimga yuborilsin?" : "${_selectedCategory!['label']} tarkibi:";
+
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(titleText, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 16),
+            ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                onTap: () {
+                  if (_step == 0) {
+                     _selectCategory(item);
+                  } else {
+                     _selectSubCategory(item);
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset: const Offset(0, 2))
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item['label'].trim(), 
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          )).toList(),
-        ],
-      );
-    } else if (_step == 1) {
-      final children = _selectedCategory!['children'] as List;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("${_selectedCategory!['label']} tarkibi:", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: children.map((item) => _buildChip(item, () => _selectSubCategory(item))).toList(),
-          ),
-        ],
+            )).toList(),
+          ],
+        ),
       );
     } else {
       // Form Step
