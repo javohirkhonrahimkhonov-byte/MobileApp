@@ -291,7 +291,29 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(titleText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              if (_step == 1)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => setState(() => _step = 0),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: _step == 1 ? 40.0 : 0),
+                child: Text(
+                  titleText,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: ListView.separated(
