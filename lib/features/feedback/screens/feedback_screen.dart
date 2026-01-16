@@ -126,59 +126,92 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Mening Murojaatlarim")),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _feedbacks.isEmpty
-              ? const Center(child: Text("Murojaatlar mavjud emas"))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _feedbacks.length,
-                  itemBuilder: (context, index) {
-                    final fb = _feedbacks[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 2,
-                      child: ListTile(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => FeedbackDetailScreen(feedbackId: fb['id']),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _feedbacks.isEmpty
+                    ? const Center(child: Text("Murojaatlar mavjud emas"))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _feedbacks.length,
+                        itemBuilder: (context, index) {
+                          final fb = _feedbacks[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 2,
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FeedbackDetailScreen(feedbackId: fb['id']),
+                                  ),
+                                );
+                              },
+                              leading: CircleAvatar(
+                                backgroundColor: _getStatusColor(fb['status']).withOpacity(0.2),
+                                child: Icon(Icons.message, color: _getStatusColor(fb['status'])),
+                              ),
+                              title: Text(
+                                fb['text'] ?? "Matnsiz",
+                                maxLines: 1, 
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Kimga: ${fb['assigned_role']?.toUpperCase() ?? 'Noma\'lum'}"),
+                                  Text("Holati: ${_getStatusText(fb['status'])}"),
+                                ],
+                              ),
+                              trailing: Text(
+                                (fb['created_at'] as String).substring(0, 10),
+                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
                             ),
                           );
                         },
-                        leading: CircleAvatar(
-                          backgroundColor: _getStatusColor(fb['status']).withOpacity(0.2),
-                          child: Icon(Icons.message, color: _getStatusColor(fb['status'])),
-                        ),
-                        title: Text(
-                          fb['text'] ?? "Matnsiz",
-                          maxLines: 1, 
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Kimga: ${fb['assigned_role']?.toUpperCase() ?? 'Noma\'lum'}"),
-                            Text("Holati: ${_getStatusText(fb['status'])}"),
-                          ],
-                        ),
-                        trailing: Text(
-                          (fb['created_at'] as String).substring(0, 10),
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
                       ),
-                    );
-                  },
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                )
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _showAddFeedbackSheet,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0033FF), // Vibrant Blue
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddFeedbackSheet,
-        backgroundColor: AppTheme.primaryBlue,
-        child: const Icon(Icons.add),
+                child: const Text(
+                  "Murojaat yuborish",
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-    );
   }
 }
 
