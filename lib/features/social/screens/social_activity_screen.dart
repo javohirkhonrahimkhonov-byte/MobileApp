@@ -9,6 +9,8 @@ import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_detail_screen.dart';
 
+import 'package:talabahamkor_mobile/core/constants/api_constants.dart';
+
 class SocialActivity {
   final String id;
   final String category;
@@ -32,7 +34,11 @@ class SocialActivity {
     List<String> images = [];
     if (json['images'] != null) {
       for (var img in json['images']) {
-        images.add(img['file_id'] ?? ""); 
+        String fileId = img['file_id'] ?? "";
+        if (fileId.isNotEmpty) {
+          // Construct Proxy URL (The app will cache this result)
+          images.add("${ApiConstants.backendUrl}/files/$fileId");
+        }
       }
     }
     return SocialActivity(
