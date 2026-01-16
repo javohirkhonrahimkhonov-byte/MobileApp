@@ -47,6 +47,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         {"label": "👔 O'quv ishlari prorektori", "id": "prorektor"},
         {"label": "👔 Yoshlar ishlari prorektori", "id": "yoshlar_prorektor"},
         {"label": "🔬 Ilmiy ishlar bo'yicha prorektor", "id": "ilmiy_prorektor"},
+        {"label": "🔍 Inspektor", "id": "inspektor"},
       ]
     },
     {
@@ -54,7 +55,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       "id": "dekanat",
       "children": [
         {"label": "👤 Dekan", "id": "dekan"},
-        {"label": "👤 Dekan yordamchisi", "id": "dekan_orinbosari"},
+        {"label": "👤 Dekan o'rinbosari", "id": "dekan_orinbosari"},
       ]
     },
     {"label": "💰 Buxgalteriya", "id": "buxgalter"},
