@@ -27,7 +27,7 @@ class DataService {
     final response = await http.get(
       Uri.parse(ApiConstants.profile),
       headers: await _getHeaders(),
-    );
+    ).timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
@@ -251,7 +251,7 @@ class DataService {
   }
 
   // 6. Send Feedback (Multipart)
-  Future<void> sendFeedback(String text, String role, String? filePath) async {
+  Future<void> sendFeedback(String text, String role, String? filePath, {bool isAnonymous = false}) async {
     final token = await _authService.getToken();
     var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.feedback));
     
@@ -261,6 +261,7 @@ class DataService {
 
     request.fields['text'] = text;
     request.fields['role'] = role;
+    request.fields['is_anonymous'] = isAnonymous.toString();
 
     if (filePath != null) {
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
@@ -312,7 +313,7 @@ class DataService {
     final response = await http.get(
       Uri.parse(ApiConstants.documents),
       headers: await _getHeaders(),
-    );
+    ).timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) return json.decode(response.body);
     throw Exception('Failed to load documents');
   }

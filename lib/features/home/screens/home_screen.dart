@@ -32,22 +32,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // Use WidgetsBinding to avoid blocking the initial build frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
     try {
-      final profile = await _dataService.getProfile();
-      final dashboard = await _dataService.getDashboardStats();
+      // Fetch profile and dashboard concurrently for speed
+      final results = await Future.wait([
+        _dataService.getProfile(),
+        _dataService.getDashboardStats(),
+      ]);
+      
       if (mounted) {
         setState(() {
-          _profile = profile;
-          _dashboard = dashboard;
+          _profile = results[0];
+          _dashboard = results[1];
           _isLoading = false;
         });
       }
     } catch (e) {
       print("Error loading home data: $e");
+      if (mounted) {
+        setState(() => _isLoading = false); // Still stop loading to show empty UI
+      }
     }
   }
 
