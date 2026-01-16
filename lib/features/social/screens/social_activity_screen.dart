@@ -1,12 +1,239 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+// ... updates start around line 4
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
-import 'package:talabahamkor_mobile/core/services/data_service.dart';
-import 'social_activity_detail_screen.dart';
+// ...
 
-// Mock Model (Updated to match API response structure roughly)
+// ... inside _showAddActivityDialog (line ~503)
+        onSave: (activity) async {
+          // Send to API
+          try {
+             // ... existing mapping logic ...
+             
+             String apiCat = activity.category.toLowerCase();
+             if (activity.category == "To'garak") apiCat = "togarak";
+             if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
+             if (activity.category == "Ma'rifat darslari") apiCat = "marifat";
+             if (activity.category == "Volontyorlik") apiCat = "volontyorlik";
+             if (activity.category == "Madaniy tashriflar") apiCat = "madaniy";
+             if (activity.category == "Sport") apiCat = "sport";
+             if (activity.category == "Boshqa") apiCat = "boshqa";
+
+             await Provider.of<DataService>(context, listen: false).addActivity(
+               apiCat, 
+               activity.title, 
+               activity.description, 
+               activity.date,
+               imagePaths: activity.imageUrls.where((e) => !e.startsWith('http')).toList(), // passing local paths
+             );
+             
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
+             );
+             
+             // Reload list
+             _loadActivities();
+             
+          } catch(e) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text('Xatolik: $e')),
+             );
+          }
+        },
+// ...
+
+// ... AddActivitySheet definition
+class AddActivitySheet extends StatefulWidget {
+  final List<String> categories;
+  final Function(SocialActivity) onSave;
+
+  const AddActivitySheet({super.key, required this.categories, required this.onSave});
+
+  @override
+  State<AddActivitySheet> createState() => _AddActivitySheetState();
+}
+
+class _AddActivitySheetState extends State<AddActivitySheet> {
+  int _step = 1; // 1 = Category, 2 = Form
+  String? _selectedCategory;
+  
+  final _titleController = TextEditingController();
+  final _descController = TextEditingController();
+  DateTime? _selectedDate;
+  
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _selectedImages = [];
+
+  Future<void> _pickImage() async {
+    try {
+      final List<XFile> images = await _picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(images);
+        });
+      }
+    } catch (e) {
+      debugPrint("Image Pick Error: $e");
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  // ... build method ...
+
+  // ... _buildCategoryStep ...
+
+  Widget _buildFormStep() {
+    // ... dynamic labels logic ...
+    
+    // ... existing UI ...
+          // Description Input
+          TextField(
+            controller: _descController,
+            maxLines: 4,
+            decoration: InputDecoration(
+               labelText: descLabel,
+               hintText: descHint,
+               border: const OutlineInputBorder(),
+               alignLabelWithHint: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Image Upload Block
+          _buildImageUploadBlock(),
+          const SizedBox(height: 16),
+          
+          // Date Picker
+          // ...
+    // ...
+  }
+
+  Widget _buildImageUploadBlock() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedImages.isNotEmpty)
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedImages.length + 1, // +1 for "Add More" button
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                if (index == _selectedImages.length) {
+                   // Add More Button
+                   return GestureDetector(
+                     onTap: _pickImage,
+                     child: Container(
+                       width: 100,
+                       height: 100,
+                       decoration: BoxDecoration(
+                         color: Colors.grey[100],
+                         borderRadius: BorderRadius.circular(12),
+                         border: Border.all(color: Colors.grey[300]!),
+                       ),
+                       child: const Icon(Icons.add_a_photo, color: Colors.grey),
+                     ),
+                   );
+                }
+                
+                final file = File(_selectedImages[index].path);
+                return Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close, color: Colors.white, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          )
+        else
+          GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+              ),
+              child: Column(
+                children: [
+                   Container(
+                     padding: const EdgeInsets.all(12),
+                     decoration: const BoxDecoration(
+                       color: Colors.white,
+                       shape: BoxShape.circle,
+                     ),
+                     child: const Icon(Icons.camera_alt_rounded, color: AppTheme.primaryBlue, size: 28),
+                   ),
+                   const SizedBox(height: 8),
+                   const Text(
+                     "Rasm yuklash", 
+                     style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)
+                   ),
+                   const SizedBox(height: 4),
+                   Text(
+                     "JPG, PNG formatida", 
+                     style: TextStyle(color: Colors.grey[500], fontSize: 12)
+                   ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ... _pickDate ...
+
+  void _saveActivity() {
+    if (_titleController.text.isEmpty || _descController.text.isEmpty || _selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Barcha maydonlarni to'ldiring")));
+      return;
+    }
+
+    final newActivity = SocialActivity(
+      id: "0", 
+      category: _selectedCategory!,
+      title: _titleController.text,
+      description: _descController.text,
+      date: DateFormat('dd.MM.yyyy').format(_selectedDate!),
+      status: "pending",
+      imageUrls: _selectedImages.map((e) => e.path).toList(), // Passing local paths
+    );
+
+    widget.onSave(newActivity);
+    Navigator.pop(context);
+  }
+}
 class SocialActivity {
   final String id;
   final String category;

@@ -198,7 +198,7 @@ class DataService {
     return [];
   }
 
-  Future<void> addActivity(String category, String name, String description, String date) async {
+  Future<void> addActivity(String category, String name, String description, String date, {List<String>? imagePaths}) async {
     final token = await _authService.getToken();
     var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.activities));
     request.headers['Authorization'] = 'Bearer $token';
@@ -208,7 +208,11 @@ class DataService {
     request.fields['description'] = description;
     request.fields['date'] = date;
     
-    // Note: Image upload is not yet implemented in UI, sending text data only for sync.
+    if (imagePaths != null && imagePaths.isNotEmpty) {
+      for (var path in imagePaths) {
+         request.files.add(await http.MultipartFile.fromPath('files', path));
+      }
+    }
     
     final response = await request.send();
     
