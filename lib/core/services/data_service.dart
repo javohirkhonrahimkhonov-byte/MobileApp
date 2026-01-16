@@ -321,6 +321,9 @@ class DataService {
   // 9. Get Detailed Attendance List
   Future<List<Attendance>> getAttendanceList() async {
     try {
+  // 9. Get Detailed Attendance List
+  Future<List<Attendance>> getAttendanceList() async {
+    try {
       final response = await http.get(
         Uri.parse(ApiConstants.attendanceList),
         headers: await _getHeaders(),
@@ -338,14 +341,6 @@ class DataService {
       }
     } catch (e) {
        print("DataService: Error fetching attendance: $e");
-       if (useMock) {
-          // Mock Data fallback
-          return [
-            Attendance(id: 1, subjectName: "Oliy Matematika", date: "10.01.2024", lessonTheme: "Integrallar", hours: 2, isExcused: false),
-            Attendance(id: 2, subjectName: "Fizika", date: "12.01.2024", lessonTheme: "Mexanika asoslari", hours: 2, isExcused: true),
-            Attendance(id: 3, subjectName: "Dasturlash", date: "14.01.2024", lessonTheme: "OOP tamoyillari", hours: 2, isExcused: false),
-          ];
-       }
        return [];
     }
   }
