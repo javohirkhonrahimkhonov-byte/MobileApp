@@ -180,9 +180,43 @@ class DataService {
 
   // 3. Get Activities
   Future<List<dynamic>> getActivities() async {
-    if (useMock) return []; 
-    // Backend API is blocked/unavailable, so return empty for now
+    // Attempt to fetch from backend
+    try {
+      final response = await http.get(Uri.parse(ApiConstants.activities), headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      debugPrint("API error: $e");
+    }
+    
+    // Fallback or empty if offline
+    if (useMock) {
+       // ... existing mock data logic if desired, or return empty
+    }
     return [];
+  }
+
+  Future<void> addActivity(String category, String name, String description, String date) async {
+    final token = await _authService.getToken();
+    var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.activities));
+    request.headers['Authorization'] = 'Bearer $token';
+    
+    request.fields['category'] = category;
+    request.fields['name'] = name;
+    request.fields['description'] = description;
+    request.fields['date'] = date;
+    
+    // Note: Image upload is not yet implemented in UI, sending text data only for sync.
+    
+    final response = await request.send();
+    
+    if (response.statusCode != 200) {
+      // Consume response to debug
+      final respStr = await response.stream.bytesToString();
+      debugPrint("Add Activity Failed: ${response.statusCode} - $respStr");
+      throw Exception('Failed to add activity: ${response.statusCode}');
+    }
   }
 
   // 4. Get Clubs

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'social_activity_detail_screen.dart';
 
-// Mock Model
+// Mock Model (Updated to match API response structure roughly)
 class SocialActivity {
   final String id;
   final String category;
@@ -21,6 +25,28 @@ class SocialActivity {
     required this.status,
     required this.imageUrls,
   });
+
+  factory SocialActivity.fromJson(Map<String, dynamic> json) {
+    // Extract images if any
+    List<String> images = [];
+    if (json['images'] != null) {
+      for (var img in json['images']) {
+         // Assuming API might return file_id or url. 
+         // Since we can't display file_id, we will just keep it. 
+         // If we had a proxy: "https://api.bot.com/file/${img['file_id']}"
+         images.add(img['file_id'] ?? ""); 
+      }
+    }
+    return SocialActivity(
+      id: json['id'].toString(),
+      category: json['category'] ?? "Boshqa",
+      title: json['name'] ?? "Nomsiz",
+      description: json['description'] ?? "",
+      date: json['date'] ?? "",
+      status: json['status'] ?? "pending",
+      imageUrls: images,
+    );
+  }
 }
 
 class SocialActivityScreen extends StatefulWidget {
@@ -34,40 +60,32 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   // Filters
   String _selectedCategory = "Barchasi";
   String _selectedStatus = "Barchasi";
+  bool _isLoading = false;
 
   final List<String> _categories = ["Barchasi", "To'garak", "Yutuqlar", "Ma'rifat darslari", "Volontyorlik", "Madaniy tashriflar", "Sport", "Boshqa"];
   final List<String> _statuses = ["Barchasi", "Tasdiqlangan", "Kutilmoqda", "Bekor qilingan"];
 
-  // Mock Data
-  final List<SocialActivity> _activities = [
-    SocialActivity(
-      id: "1",
-      category: "Volontyorlik",
-      title: "Navro'z bayrami tashkilotchiligi",
-      description: "Universitet miqyosidagi Navro'z bayramida faol qatnashdim. Tashkiliy ishlarda yordam berdim.",
-      date: "21.03.2024",
-      status: "approved",
-      imageUrls: ["https://picsum.photos/id/1018/800/600", "https://picsum.photos/id/1015/800/600"],
-    ),
-    SocialActivity(
-      id: "2",
-      category: "Sport",
-      title: "Futbol musobaqasi",
-      description: "Fakultetlararo futbol musobaqasida 1-o'rinni oldik.",
-      date: "15.04.2024",
-      status: "pending",
-      imageUrls: ["https://picsum.photos/id/1025/800/600"],
-    ),
-    SocialActivity(
-      id: "3",
-      category: "Volontyorlik",
-      title: "Daraxt ekish aksiyasi",
-      description: "Yashil makon loyihasi doirasida 10 ta daraxt ekdim.",
-      date: "10.03.2024",
-      status: "rejected",
-      imageUrls: ["https://picsum.photos/id/1040/800/600"],
-    ),
-  ];
+  List<SocialActivity> _activities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActivities();
+  }
+
+  Future<void> _loadActivities() async {
+    setState(() => _isLoading = true);
+    try {
+      final rawData = await Provider.of<DataService>(context, listen: false).getActivities();
+      setState(() {
+        _activities = rawData.map((e) => SocialActivity.fromJson(e)).toList();
+      });
+    } catch (e) {
+      debugPrint("Load Error: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +96,13 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(onPressed: _loadActivities, icon: const Icon(Icons.refresh))
+        ],
       ),
-      body: Column(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : Column(
         children: [
           // 1. Statistics Header (Only Statuses)
           _buildStatsHeader(),
@@ -142,18 +165,15 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   }
 
   Widget _buildStatsHeader() {
-    // Calculate real counts based on _activities
     int approved = 0;
     int pending = 0;
     int rejected = 0;
 
-    // In a real app, this would come from backend logic
-    // For mock, we can just hardcode or count mock data
-    // Let's count mock data + some base values to look realistic as per user prompt stats (12, 5, 3..)
-    // User requested: "tasdiqlangan, kutilyapti, rad etilgan va ularni soni yetarli"
-    approved = 12; 
-    pending = 5;
-    rejected = 2;
+    for (var act in _activities) {
+      if (act.status == 'approved') approved++;
+      else if (act.status == 'pending') pending++;
+      else if (act.status == 'rejected') rejected++;
+    }
 
     final stats = [
       {"label": "Tasdiqlangan", "count": approved, "color": Colors.green, "bg": Colors.green[50]},
@@ -367,6 +387,10 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         statusIcon = Icons.access_time_rounded;
     }
 
+    // Attempt to parse first image URL or use placeholder
+    // If it's just a file_id, this won't work, so we fallback to icon
+    bool hasValidImage = activity.imageUrls.isNotEmpty && activity.imageUrls.first.startsWith("http");
+
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: activity))),
       child: Container(
@@ -393,13 +417,14 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                   height: 200, // Slightly taller
                   width: double.infinity,
                   color: Colors.grey[200],
-                  child: activity.imageUrls.isNotEmpty 
-                      ? Image.network(
-                          activity.imageUrls.first,
+                  child: hasValidImage
+                      ? CachedNetworkImage(
+                          imageUrl: activity.imageUrls.first,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                        ) 
-                      : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40)),
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                        )
+                      : const Center(child: Icon(Icons.image, color: Colors.grey, size: 40)), // Placeholder
                 ),
                 Positioned(
                   top: 12,
@@ -475,13 +500,43 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => AddActivitySheet(
         categories: _categories.where((c) => c != "Barchasi").toList(),
-        onSave: (activity) {
-          setState(() {
-            _activities.insert(0, activity); // Add to top
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Faollik muvaffaqiyatli qo\'shildi! ✅')),
-          );
+        onSave: (activity) async {
+          // Send to API
+          try {
+             // Map categories to API values if needed, otherwise send as is
+             // API expects "category", "name", "description", "date"
+             // But category needs to be lower case snake_case likely if the bot relies on it?
+             // Checking 'activities.py' line 32: CATEGORIES = ["togarak", "yutuqlar", "marifat", "volontyorlik", "madaniy", "sport", "boshqa"]
+             // So I should map user friendly names to keys.
+             
+             String apiCat = activity.category.toLowerCase();
+             if (activity.category == "To'garak") apiCat = "togarak";
+             if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
+             if (activity.category == "Ma'rifat darslari") apiCat = "marifat";
+             if (activity.category == "Volontyorlik") apiCat = "volontyorlik";
+             if (activity.category == "Madaniy tashriflar") apiCat = "madaniy";
+             if (activity.category == "Sport") apiCat = "sport";
+             if (activity.category == "Boshqa") apiCat = "boshqa";
+
+             await Provider.of<DataService>(context, listen: false).addActivity(
+               apiCat, 
+               activity.title, 
+               activity.description, 
+               activity.date
+             );
+             
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
+             );
+             
+             // Reload list
+             _loadActivities();
+             
+          } catch(e) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text('Xatolik: $e')),
+             );
+          }
         },
       ),
     );
@@ -607,6 +662,26 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   }
 
   Widget _buildFormStep() {
+    // Dynamic Labels logic
+    String titleLabel = "Faollik nomi";
+    String titleHint = "Masalan: Navro'z bayrami";
+    String descLabel = "Faollik tavsifi"; // Always this as per request "ikkinchisiga faollik tavsifi bo'lsin"
+
+    if (_selectedCategory == "Ma'rifat darslari") {
+      titleLabel = "Ma'rifat darsi mavzusi";
+      titleHint = "Mavzuni kiriting...";
+    } else if (_selectedCategory == "To'garak") {
+      titleLabel = "To'garak nomi";
+      titleHint = "Qaysi to'garak?";
+    } else if (_selectedCategory == "Yutuqlar") {
+      titleLabel = "Yutuq nomi"; 
+    } else if (_selectedCategory == "Volontyorlik") {
+      titleLabel = "Volontyorlik nomi";
+    } else if (_selectedCategory == "Madaniy tashriflar") {
+      titleLabel = "Tashrif nomi";
+    }
+    // Sport defaults to Faollik nomi
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -629,11 +704,11 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           // Title Input
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(
-               labelText: "Faollik nomi",
-               hintText: "Masalan: Navro'z bayrami",
-               border: OutlineInputBorder(),
-               prefixIcon: Icon(Icons.title),
+            decoration: InputDecoration(
+               labelText: titleLabel,
+               hintText: titleHint,
+               border: const OutlineInputBorder(),
+               prefixIcon: const Icon(Icons.title),
             ),
           ),
           const SizedBox(height: 16),
@@ -642,10 +717,10 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           TextField(
             controller: _descController,
             maxLines: 4,
-            decoration: const InputDecoration(
-               labelText: "Faollik tavsifi",
-               hintText: "Faollik haqida qisqacha ma'lumot...",
-               border: OutlineInputBorder(),
+            decoration: InputDecoration(
+               labelText: descLabel,
+               hintText: "Batafsil ma'lumot...",
+               border: const OutlineInputBorder(),
                alignLabelWithHint: true,
             ),
           ),
@@ -654,7 +729,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
           // Date Picker
           InkWell(
             onTap: _pickDate,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(4),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
@@ -668,7 +743,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
                    Text(
                      _selectedDate == null 
                        ? "Sanani tanlang" 
-                       : "${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year}",
+                       : DateFormat('dd.MM.yyyy').format(_selectedDate!),
                      style: TextStyle(color: _selectedDate == null ? Colors.grey[600] : Colors.black, fontSize: 16),
                    ),
                 ],
@@ -702,6 +777,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2023),
       lastDate: DateTime(2025),
+      // Optional: Add locale if needed, but default is fine usually
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -714,18 +790,20 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       return;
     }
 
+    // Creating object to return to parent for saving
     final newActivity = SocialActivity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: "0", // Temp ID
       category: _selectedCategory!,
       title: _titleController.text,
       description: _descController.text,
-      date: "${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year}",
+      date: DateFormat('dd.MM.yyyy').format(_selectedDate!),
       status: "pending",
-      imageUrls: [], // No image upload for now
+      imageUrls: [],
     );
 
     widget.onSave(newActivity);
     Navigator.pop(context);
   }
 }
+
 
