@@ -671,31 +671,45 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     switch (_selectedCategory) {
       case "Ma'rifat darslari":
         titleLabel = "Ma'rifat darsi mavzusi";
+        titleHint = "Mavzuni kiriting (masalan: Odob-axloq)";
         descLabel = "Ma'rifat darsi tavsifi";
+        descHint = "Dars haqida qisqacha yozing...";
         break;
       case "To'garak":
         titleLabel = "To'garak nomi";
+        titleHint = "Qaysi to'garakka qatnashdingiz?";
         descLabel = "To'garak tavsifi";
+        descHint = "Mashg'ulot haqida ma'lumot...";
         break;
       case "Yutuqlar":
         titleLabel = "Yutuq nomi";
+        titleHint = "Qanday yutuqqa erishdingiz?";
         descLabel = "Yutuq tavsifi";
+        descHint = "Musobaqa yoki tadbir haqida...";
         break;
       case "Volontyorlik":
         titleLabel = "Volontyorlik nomi";
+        titleHint = "Qanday ishda yordam berdingiz?";
         descLabel = "Volontyorlik tavsifi";
+        descHint = "Bajarilgan ishlar haqida...";
         break;
       case "Madaniy tashriflar":
         titleLabel = "Tashrif nomi";
+        titleHint = "Qayerga tashrif buyurdingiz?";
         descLabel = "Tashrif tavsifi";
+        descHint = "Tashrifdan olgan taassurotlaringiz...";
         break;
       case "Sport":
         titleLabel = "Sport turi / Musobaqa nomi";
+        titleHint = "Futbol, Shaxmat yoki musobaqa nomi...";
         descLabel = "Faollik tavsifi";
+        descHint = "Musobaqa natijalari...";
         break;
       default:
         titleLabel = "Faollik nomi";
+        titleHint = "Faollik nomini kiriting...";
         descLabel = "Faollik tavsifi";
+        descHint = "Faollik haqida ma'lumot...";
     }
 
     return SingleChildScrollView(
@@ -754,13 +768,13 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
               ),
               child: Row(
                 children: [
-                   const Icon(Icons.calendar_today, color: Colors.grey),
+                   const Icon(Icons.calendar_month, color: AppTheme.primaryBlue), // Updated icon
                    const SizedBox(width: 12),
                    Text(
                      _selectedDate == null 
-                       ? "Sanani tanlang" 
+                       ? "Sana, Oy, Yilni tanlang" 
                        : DateFormat('dd.MM.yyyy').format(_selectedDate!),
-                     style: TextStyle(color: _selectedDate == null ? Colors.grey[600] : Colors.black, fontSize: 16),
+                     style: TextStyle(color: _selectedDate == null ? Colors.grey[600] : Colors.black, fontSize: 16, fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.w500),
                    ),
                 ],
               ),
