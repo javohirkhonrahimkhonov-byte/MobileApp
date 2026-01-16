@@ -9,13 +9,13 @@ class ApiConstants {
   static const String backendUrl = 'https://tengdoshbozor.uz/api/v1';
   
   // Auth (Proxy via our Bot Backend)
-  static const String authLogin = '$backendUrl/auth/hemis';
+  static const String authLogin = '$backendUrl/auth/hemis/';
   
   // Account
   static const String profile = '$baseUrl/account/me';
   
   // Dashboard
-  static const String dashboard = '$backendUrl/student/dashboard';
+  static const String dashboard = '$backendUrl/student/dashboard/';
   
   // Data
   static const String gpaList = '$baseUrl/data/student-gpa-list';
