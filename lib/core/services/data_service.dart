@@ -319,8 +319,6 @@ class DataService {
   }
 
   // 9. Get Detailed Attendance List
-  Future<List<Attendance>> getAttendanceList() async {
-    try {
   // 9. Get Detailed Attendance List
   Future<List<Attendance>> getAttendanceList() async {
     try {
