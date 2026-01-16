@@ -147,8 +147,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     "Salom, ${() {
+                      final firstName = _profile?['first_name'] ?? _profile?['short_name'];
+                      if (firstName != null && firstName.toString().isNotEmpty) {
+                        return firstName.toString();
+                      }
+                      
+                      // Fallback logic
                       final name = _profile?['full_name'] ?? 'Talaba';
                       final parts = name.split(' ');
+                      // If name is "Last First", parts[1] is First.
+                      // If name is "First Last", parts[0] is First.
+                      // Our backend now sends "Last First Father". So First is parts[1].
                       return parts.length > 1 ? parts[1] : parts[0];
                     }()}!",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
