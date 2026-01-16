@@ -802,19 +802,39 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   }
   
   Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final firstDate = DateTime(2020);
+    final lastDate = DateTime(2030);
+    
+    // Ensure initialDate is valid
+    DateTime initialDate = _selectedDate ?? now;
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2023),
-      lastDate: DateTime(2030), // Extended range
-      locale: const Locale('uz', 'UZ'), // Ensure Uzbek
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      locale: const Locale('uz', 'UZ'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryBlue, // Header and selected day color
+              primary: AppTheme.primaryBlue,
               onPrimary: Colors.white, 
-              surface: Colors.white, // Dialog background
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
               onSurface: Colors.black,
             ),
           ),
