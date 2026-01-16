@@ -66,208 +66,56 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
 // ... existing code ...
 
-  Widget _buildContent() {
-    if (_step == 0 || _step == 1) {
-      final items = _step == 0 
-          ? widget.hierarchy 
-          : (_selectedCategory!['children'] as List).cast<Map<String, dynamic>>();
-
-      final titleText = _step == 0 ? "Kimga yuborilsin?" : "${_selectedCategory!['label']} tarkibi:";
-
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(titleText, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 16),
-            ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: InkWell(
-                onTap: () {
-                  if (_step == 0) {
-                     _selectCategory(item);
-                  } else {
-                     _selectSubCategory(item);
-                  }
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset: const Offset(0, 2))
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item['label'].trim(), 
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    ],
-                  ),
-                ),
-              ),
-            )).toList(),
-          ],
-        ),
-      );
-    } else {
-      // Form Step
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Selected Recipient Display
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.check_circle, size: 16, color: AppTheme.primaryBlue),
-                  const SizedBox(width: 8),
-                  Text(
-                    _selectedSubCategory?['label'] ?? _selectedCategory?['label'],
-                    style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Anonymity Toggle
-            const Text("Maxfiylik", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Anonim yuborish", style: TextStyle(fontSize: 16)),
-                    Text("Ism-familiyangiz ko'rinmaydi", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
-                ),
-                Switch(
-                  value: _isAnonymous,
-                  onChanged: (v) => setState(() => _isAnonymous = v),
-                  activeColor: AppTheme.primaryBlue,
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Text Input
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: TextField(
-                controller: _textController,
-                maxLines: 8,
-                decoration: const InputDecoration(
-                  hintText: "Murojaat matnini yozing...",
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // File Attachment
-            GestureDetector(
-              onTap: () async {
-                FilePickerResult? result = await FilePicker.platform.pickFiles();
-                if (result != null) {
-                  setState(() {
-                    _filePath = result.files.single.path;
-                    _fileName = result.files.single.name;
-                  });
-                }
-              },
-              child: Row(
-                children: [
-                  Icon(Icons.attach_file, color: _fileName != null ? AppTheme.primaryBlue : Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _fileName ?? "Fayl biriktirish (rasm, hujjat)",
-                      style: TextStyle(color: _fileName != null ? AppTheme.primaryBlue : Colors.grey),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (_fileName != null)
-                     IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () => setState(() => _fileName = null))
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                   final text = _textController.text.trim();
-                   final roleId = _selectedSubCategory?['id'] ?? _selectedCategory?['id'];
-                   
-                   if (text.isEmpty) return;
-                   
-                   Navigator.pop(context);
-                   widget.onSubmit(text, roleId, _filePath, _isAnonymous);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0033FF), // Vibrant Blue
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: const Text("Yuborish", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(height: 16), // Bottom safety padding
-          ],
-        ),
-      );
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'open': return Colors.blue;
+      case 'process': return Colors.orange;
+      case 'completed': return Colors.green;
+      case 'cancelled': return Colors.red;
+      default: return Colors.grey;
     }
   }
 
-  Widget _buildChip(Map<String, dynamic> item, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          item['label'].replaceAll(RegExp(r'[^\w\s]'), '').trim(), // Remove emojis for cleaner look if standard text preferred, or keep them.
-          // User mockups show text only usually, effectively removing emojis or keeping them subtle.
-          // Let's keep distinct text.
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
+  String _getStatusText(String? status) {
+    switch (status) {
+      case 'open': return "Yangi";
+      case 'process': return "Jarayonda";
+      case 'completed': return "Bajarildi";
+      case 'cancelled': return "Bekor qilingan";
+      default: return "Noma'lum";
+    }
+  }
+
+  void _showAddFeedbackSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _FeedbackWizard(
+        hierarchy: _recipientHierarchy,
+        onSubmit: _submitFeedback,
       ),
     );
   }
 
+  Future<void> _submitFeedback(String text, String roleId, String? filePath, bool isAnonymous) async {
+    setState(() => _isLoading = true);
+    
+    // Optimistic UI update or just wait for reload
+    final success = await _dataService.sendFeedback(text, roleId, filePath, isAnonymous);
+    
+    if (success) {
+      _loadFeedbacks();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Murojaat muvaffaqiyatli yuborildi!"), backgroundColor: Colors.green),
+      );
+    } else {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Xatolik yuz berdi. Qaytadan urinib ko'ring."), backgroundColor: Colors.red),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -326,4 +174,298 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       ),
     );
   }
+}
+
+class _FeedbackWizard extends StatefulWidget {
+  final List<Map<String, dynamic>> hierarchy;
+  final Function(String, String, String?, bool) onSubmit;
+
+  const _FeedbackWizard({required this.hierarchy, required this.onSubmit});
+
+  @override
+  State<_FeedbackWizard> createState() => _FeedbackWizardState();
+}
+
+class _FeedbackWizardState extends State<_FeedbackWizard> {
+  int _step = 0;
+  Map<String, dynamic>? _selectedCategory;
+  Map<String, dynamic>? _selectedSubCategory;
+  bool _isAnonymous = false;
+  final TextEditingController _textController = TextEditingController();
+  String? _filePath;
+  String? _fileName;
+
+  void _selectCategory(Map<String, dynamic> item) {
+    setState(() {
+      _selectedCategory = item;
+      if (item.containsKey('children')) {
+        _step = 1;
+      } else {
+        _step = 2; // Direct to form
+      }
+    });
+  }
+
+  void _selectSubCategory(Map<String, dynamic> item) {
+    setState(() {
+      _selectedSubCategory = item;
+      _step = 2;
+    });
+  }
+
+  Widget _buildChip(Map<String, dynamic> item, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+             BoxShadow(
+               color: Colors.grey.withOpacity(0.05),
+               blurRadius: 10,
+               offset: const Offset(0, 4),
+             )
+          ]
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              item['label'], 
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0), // Bottom padding handled by safe area/keyboard
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40, 
+              height: 4, 
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_step == 0 || _step == 1) {
+      final items = _step == 0 
+          ? widget.hierarchy 
+          : (_selectedCategory!['children'] as List).cast<Map<String, dynamic>>();
+
+      final titleText = _step == 0 ? "Kimga yuborilsin?" : "${_selectedCategory!['label']} tarkibi:";
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(titleText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          const SizedBox(height: 20),
+          ListView.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+               final item = items[index];
+               return _buildChip(item, () {
+                 if (_step == 0) _selectCategory(item);
+                 else _selectSubCategory(item);
+               });
+            },
+          ),
+        ],
+      );
+    } else {
+      // Form Step
+      return SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header with selected role
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back), 
+                  onPressed: () => setState(() => _step = _selectedCategory!.containsKey('children') ? 1 : 0),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.person, size: 16, color: AppTheme.primaryBlue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _selectedSubCategory?['label'] ?? _selectedCategory?['label'],
+                            style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Anonymity Toggle
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.visibility_off_outlined, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Anonim yuborish", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Ismingiz sir saqlanadi", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _isAnonymous,
+                    onChanged: (v) => setState(() => _isAnonymous = v),
+                    activeColor: AppTheme.primaryBlue,
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Text Input
+            TextField(
+              controller: _textController,
+              maxLines: 6,
+              decoration: InputDecoration(
+                hintText: "Murojaatingizni batafsil yozing...",
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // File Attachment
+            InkWell(
+              onTap: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles();
+                if (result != null) {
+                  setState(() {
+                    _filePath = result.files.single.path;
+                    _fileName = result.files.single.name;
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: _fileName != null ? AppTheme.primaryBlue : Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                  color: _fileName != null ? AppTheme.primaryBlue.withOpacity(0.05) : null,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.attach_file, color: _fileName != null ? AppTheme.primaryBlue : Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _fileName ?? "Fayl biriktirish (ixtiyoriy)",
+                        style: TextStyle(
+                          color: _fileName != null ? AppTheme.primaryBlue : Colors.grey,
+                          fontWeight: _fileName != null ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (_fileName != null)
+                       IconButton(
+                         icon: const Icon(Icons.close, size: 18, color: Colors.red), 
+                         onPressed: () => setState(() { _fileName = null; _filePath = null; }),
+                         constraints: const BoxConstraints(),
+                         padding: EdgeInsets.zero,
+                       )
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                   final text = _textController.text.trim();
+                   final roleId = _selectedSubCategory?['id'] ?? _selectedCategory?['id'];
+                   
+                   if (text.isEmpty) {
+                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, murojaat matnini yozing")));
+                     return;
+                   }
+                   
+                   Navigator.pop(context);
+                   widget.onSubmit(text, roleId, _filePath, _isAnonymous);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 2,
+                ),
+                child: const Text("YUBORISH", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
 }
