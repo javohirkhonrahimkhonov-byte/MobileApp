@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../auth/auth_provider.dart';
-import '../../core/theme/app_theme.dart';
-import '../../feedback/screens/feedback_screen.dart';
-import '../../documents/screens/documents_screen.dart';
+import 'package:talabahamkor_mobile/features/auth/auth_provider.dart';
+import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
+import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});

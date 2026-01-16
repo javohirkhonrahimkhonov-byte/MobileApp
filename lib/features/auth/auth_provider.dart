@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import 'package:talabahamkor_mobile/core/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum AuthStatus { initial, authenticating, authenticated, unauthenticated }

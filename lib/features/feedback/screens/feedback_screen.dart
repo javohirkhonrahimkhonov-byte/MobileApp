@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/services/data_service.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:talabahamkor_mobile/core/services/data_service.dart';
+import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -190,7 +190,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddFeedbackDialog,
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: AppTheme.primaryBlue,
         child: const Icon(Icons.add),
       ),
     );
