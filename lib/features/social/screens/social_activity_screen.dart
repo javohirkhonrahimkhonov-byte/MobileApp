@@ -727,4 +727,5 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     widget.onSave(newActivity);
     Navigator.pop(context);
   }
+}
 
