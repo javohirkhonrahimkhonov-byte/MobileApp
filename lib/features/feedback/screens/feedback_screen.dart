@@ -252,34 +252,29 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40, 
-                height: 4, 
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))
-              ),
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40, 
+              height: 4, 
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))
             ),
-            const SizedBox(height: 20),
-            
-            Flexible(
-              child: _buildContent(),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          
+          Expanded(
+            child: _buildContent(),
+          ),
+        ],
       ),
     );
   }
@@ -319,19 +314,33 @@ class _FeedbackWizardState extends State<_FeedbackWizard> {
             ],
           ),
           const SizedBox(height: 20),
-          Flexible(
-            child: ListView.separated(
-              physics: const ClampingScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                 final item = items[index];
-                 return _buildChip(item, () {
-                   if (_step == 0) _selectCategory(item);
-                   else _selectSubCategory(item);
-                 });
-              },
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                       final item = items[index];
+                       return _buildChip(item, () {
+                         if (_step == 0) _selectCategory(item);
+                         else _selectSubCategory(item);
+                       });
+                    },
+                  ),
+                ),
+                // Filler Image for whitespace
+                Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    "assets/images/education_illustration.png", // Placeholder, will need user to move file
+                    height: 150,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
         ],
