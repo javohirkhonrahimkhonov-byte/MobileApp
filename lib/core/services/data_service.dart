@@ -40,10 +40,8 @@ class DataService {
   Map<String, dynamic>? _dashboardCache;
   DateTime? _lastDashboardFetch;
 
-  // 2. Get Dashboard Stats (Direct HEMIS Fetch to bypass Server Block)
+  // 2. Get Dashboard Stats (Via Backend Proxy for Real Data)
   Future<Map<String, dynamic>> getDashboardStats({bool forceRefresh = false}) async {
-    if (useMock) return _getMockStats();
-
     // Check Cache (valid for 5 mins)
     if (!forceRefresh && _dashboardCache != null && _lastDashboardFetch != null) {
       if (DateTime.now().difference(_lastDashboardFetch!).inMinutes < 5) {
@@ -52,109 +50,42 @@ class DataService {
     }
 
     try {
-      final headers = await _getHeaders();
-      final token = headers['Authorization']?.replaceFirst('Bearer ', '') ?? '';
+      final response = await http.get(
+        Uri.parse(ApiConstants.dashboard),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 10));
 
-      // Check for Legacy/Mock Token
-      if (token.startsWith('student_id_') || token.startsWith('jwt_token_')) {
-        print("Legacy Token Detected. Skipping Real Fetch.");
-        throw Exception("Legacy Token");
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        // Backend returns top-level fields directly in current Schema
+        final result = {
+          "gpa": double.tryParse(data['gpa']?.toString() ?? "0") ?? 0.0,
+          "missed_hours": data['missed_hours'] ?? 0,
+          "missed_hours_excused": data['missed_hours_excused'] ?? 0,
+          "missed_hours_unexcused": data['missed_hours_unexcused'] ?? 0,
+          "activities_count": data['activities_count'] ?? 0,
+          "clubs_count": data['clubs_count'] ?? 0,
+          "activities_approved_count": data['activities_approved_count'] ?? 0
+        };
+
+        // Update Cache
+        _dashboardCache = result;
+        _lastDashboardFetch = DateTime.now();
+        return result;
       }
-      
-      // A. Calculate GPA (Direct from HEMIS)
-      final performanceUri = Uri.parse('${ApiConstants.baseUrl}/education/performance'); 
-      double gpa = 0.0;
-      
-      try {
-        final perfResponse = await http.get(performanceUri, headers: headers).timeout(const Duration(seconds: 10));
-        if (perfResponse.statusCode == 200) {
-           final data = json.decode(perfResponse.body);
-           final items = data['data'] is List ? data['data'] : [];
-           if (items.isNotEmpty) {
-             double total = 0;
-             int count = 0;
-             for (var item in items) {
-               if (item['grade'] != null) {
-                 final g = double.tryParse(item['grade'].toString());
-                 if (g != null) {
-                   total += g;
-                   count++;
-                 }
-               }
-             }
-             if (count > 0) gpa = total / count;
-           }
-        }
-      } catch (e) {
-        print("GPA local calc error: $e");
-      }
-
-      // B. Calculate Absence (Direct from HEMIS)
-      final attendanceUri = Uri.parse('${ApiConstants.baseUrl}/education/attendance');
-      int missedHours = 0;
-      int missedExcused = 0;
-      int missedUnexcused = 0;
-      
-      try {
-        final attResponse = await http.get(attendanceUri, headers: headers).timeout(const Duration(seconds: 10));
-        if (attResponse.statusCode == 200) {
-          final data = json.decode(attResponse.body);
-          final items = data['data'] is List ? data['data'] : (data['data']['items'] ?? []);
-          
-          for (var item in items) {
-             final int hour = int.tryParse(item['hour'].toString()) ?? 2;
-             // Logic: 11 = Sababli, 12 = Sababsiz. Or check "is_valid"
-             final statusId = item['absent_status'];
-             final bool isValid = item['is_valid'] == true;
-             
-             if (statusId == 11 || isValid) {
-               missedExcused += hour;
-             } else {
-               missedUnexcused += hour;
-             }
-          }
-          missedHours = missedExcused + missedUnexcused;
-        }
-      } catch (e) {
-        print("Absence local calc error: $e");
-      }
-
-      final result = {
-        "gpa": double.parse(gpa.toStringAsFixed(2)),
-        "missed_hours": missedHours,
-        "missed_hours_excused": missedExcused,
-        "missed_hours_unexcused": missedUnexcused,
-        "activities_count": 0,
-        "clubs_count": 0
-      };
-
-      // Update Cache
-      _dashboardCache = result;
-      _lastDashboardFetch = DateTime.now();
-
-      return result;
     } catch (e) {
       print("Dashboard Error: $e");
-      
-      // Fallback: Return Zeros if error
-      return {
-        "gpa": 0.0,
-        "missed_hours": 0,
-        "missed_hours_excused": 0, 
-        "missed_hours_unexcused": 0,
-        "activities_count": 0,
-        "clubs_count": 0
-      };
-      
-      return {
-        "gpa": 0.0,
-        "missed_hours": 0,
-        "missed_hours_excused": 0, 
-        "missed_hours_unexcused": 0,
-        "activities_count": 0,
-        "clubs_count": 0
-      };
     }
+
+    // Fallback: Real 0s (Clean Data Policy)
+    return {
+      "gpa": 0.0,
+      "missed_hours": 0,
+      "missed_hours_excused": 0, 
+      "missed_hours_unexcused": 0,
+      "activities_count": 0,
+      "clubs_count": 0
+    };
   }
 
   Map<String, dynamic> _getMockProfile() {
