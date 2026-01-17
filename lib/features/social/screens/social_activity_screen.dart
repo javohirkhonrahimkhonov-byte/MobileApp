@@ -536,7 +536,10 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: _getFilteredActivities().length,
               itemBuilder: (context, index) {
-                return _buildActivityCard(_getFilteredActivities()[index]);
+                return ActivityCard(
+                  activity: _getFilteredActivities()[index],
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: _getFilteredActivities()[index]))),
+                );
               },
             ),
           ),
@@ -781,12 +784,56 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     }).toList();
   }
 
-  Widget _buildActivityCard(SocialActivity activity) {
+  // _buildActivityCard REMOVED - Replaced by ActivityCard class below
+}
+
+class ActivityCard extends StatefulWidget {
+  final SocialActivity activity;
+  final VoidCallback onTap;
+
+  const ActivityCard({super.key, required this.activity, required this.onTap});
+
+  @override
+  State<ActivityCard> createState() => _ActivityCardState();
+}
+
+class _ActivityCardState extends State<ActivityCard> {
+  int _currentIndex = 0;
+  Timer? _timer;
+  final PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.activity.imageUrls.length > 1) {
+      _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+        if (!mounted) return;
+        setState(() {
+          _currentIndex = (_currentIndex + 1) % widget.activity.imageUrls.length;
+        });
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Color statusColor;
     String statusText;
     IconData statusIcon;
 
-    switch(activity.status) {
+    switch(widget.activity.status) {
       case "approved":
         statusColor = Colors.green;
         statusText = "Tasdiqlangan";
@@ -803,10 +850,10 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         statusIcon = Icons.access_time_rounded;
     }
 
-    bool hasValidImage = activity.imageUrls.isNotEmpty && activity.imageUrls.first.startsWith("http");
+    bool hasValidImage = widget.activity.imageUrls.isNotEmpty && widget.activity.imageUrls.first.startsWith("http");
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: activity))),
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
@@ -831,32 +878,62 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                   width: double.infinity,
                   color: Colors.grey[200],
                   child: hasValidImage
-                      ? CachedNetworkImage(
-                          imageUrl: activity.imageUrls.first,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                      ? PageView.builder(
+                          controller: _pageController,
+                          physics: const NeverScrollableScrollPhysics(), // Disable manual swipe on list
+                          itemCount: widget.activity.imageUrls.length,
+                          itemBuilder: (context, index) {
+                             return CachedNetworkImage(
+                               imageUrl: widget.activity.imageUrls[index],
+                               fit: BoxFit.cover,
+                               placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                               errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                             );
+                          },
                         )
                       : const Center(child: Icon(Icons.image, color: Colors.grey, size: 40)),
                 ),
+                // Category Label
                 Positioned(
                   top: 12,
                   left: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.95),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
                     ),
                     child: Text(
-                      activity.category.isNotEmpty 
-                        ? "${activity.category[0].toUpperCase()}${activity.category.substring(1)}"
-                        : activity.category, 
+                      widget.activity.category.isNotEmpty 
+                        ? "${widget.activity.category[0].toUpperCase()}${widget.activity.category.substring(1)}"
+                        : widget.activity.category, 
                       style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)
                     ),
                   ),
                 ),
+                // Pagination Dots (if multiple)
+                if (widget.activity.imageUrls.length > 1)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(widget.activity.imageUrls.length, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          height: 6,
+                          width: _currentIndex == index ? 16 : 6,
+                          decoration: BoxDecoration(
+                            color: _currentIndex == index ? Colors.white : Colors.white.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
               ],
             ),
             
@@ -872,7 +949,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                         children: [
                           Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[500]),
                           const SizedBox(width: 6),
-                          Text(activity.date, style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500)),
+                          Text(widget.activity.date, style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500)),
                         ],
                       ),
                       Container(

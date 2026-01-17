@@ -38,20 +38,46 @@ class SocialActivityDetailScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            automaticallyImplyLeading: false, // Custom back button
             flexibleSpace: FlexibleSpaceBar(
-              background: activity.imageUrls.isNotEmpty 
-                ? PageView.builder(
-                    itemCount: activity.imageUrls.length,
-                    itemBuilder: (context, index) {
-                      return CachedNetworkImage(
-                        imageUrl: activity.imageUrls[index],
-                        fit: BoxFit.cover,
-                         placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                         errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                      );
-                    },
-                  )
-                : Container(color: Colors.grey[300], child: const Icon(Icons.image, size: 50, color: Colors.grey)),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                   activity.imageUrls.isNotEmpty 
+                    ? PageView.builder(
+                        itemCount: activity.imageUrls.length > 1 ? 10000 : 1, // Infinite loop if > 1
+                        onPageChanged: (index) {}, // Optional: Add indicator logic if needed
+                        itemBuilder: (context, index) {
+                          final imgIndex = index % activity.imageUrls.length;
+                          return CachedNetworkImage(
+                            imageUrl: activity.imageUrls[imgIndex],
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                          );
+                        },
+                      )
+                    : Container(color: Colors.grey[300], child: const Icon(Icons.image, size: 50, color: Colors.grey)),
+                    
+                   // Custom Back Button
+                   Positioned(
+                     top: 40, // Safer area approximation or use SafeArea wrapper
+                     left: 16,
+                     child: GestureDetector(
+                       onTap: () => Navigator.pop(context),
+                       child: Container(
+                         padding: const EdgeInsets.all(8),
+                         decoration: BoxDecoration(
+                           color: Colors.black.withOpacity(0.5),
+                           shape: BoxShape.circle,
+                           border: Border.all(color: Colors.white.withOpacity(0.2), width: 1)
+                         ),
+                         child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                       ),
+                     ),
+                   ),
+                ],
+              ),
             ),
           ),
 
@@ -67,7 +93,11 @@ class SocialActivityDetailScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Chip(
-                        label: Text(activity.category),
+                        label: Text(
+                          activity.category.isNotEmpty 
+                            ? "${activity.category[0].toUpperCase()}${activity.category.substring(1)}"
+                            : activity.category
+                        ),
                         backgroundColor: Colors.blue[50],
                         labelStyle: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                       ),
