@@ -286,18 +286,22 @@ class DataService {
   }
 
   // 9. Get Detailed Attendance List
-  // 9. Get Detailed Attendance List
-  Future<List<Attendance>> getAttendanceList() async {
+  Future<List<Attendance>> getAttendanceList({String? semester}) async {
     try {
+      String url = ApiConstants.attendanceList;
+      if (semester != null && semester.isNotEmpty) {
+        url += "?semester=$semester";
+      }
+
       final response = await http.get(
-        Uri.parse(ApiConstants.attendanceList),
+        Uri.parse(url),
         headers: await _getHeaders(),
       );
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         // Robust parsing: 'data' can be a List OR a Map with 'items'
-        final data = body['data'];
+        final data = body is Map && body.containsKey('data') ? body['data'] : body;
         final List<dynamic> items = (data is List) ? data : (data['items'] ?? []);
         
         return items.map((json) => Attendance.fromJson(json)).toList();
