@@ -4,7 +4,8 @@ import '../models/community_models.dart';
 import '../services/community_service.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  const CreatePostScreen({super.key});
+  final String? initialScope;
+  const CreatePostScreen({super.key, this.initialScope});
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -18,8 +19,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     TextEditingController()
   ];
 
-  String _selectedScope = 'university'; // university, specialty
+  late String _selectedScope; // initialized in initState
   bool _isPoll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedScope = widget.initialScope ?? 'university';
+  }
 
   void _addPollOption() {
     setState(() {

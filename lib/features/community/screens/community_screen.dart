@@ -14,15 +14,34 @@ class CommunityScreen extends StatefulWidget {
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> {
+class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProviderStateMixin {
   final CommunityService _service = CommunityService();
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  String _getCurrentScope() {
+    switch (_tabController.index) {
+      case 0: return 'university';
+      case 1: return 'specialty';
+      case 2: return 'faculty';
+      default: return 'university';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      initialIndex: 0, // Default: Universitet
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: AppTheme.backgroundWhite,
         appBar: AppBar(
           title: const Text("Choyxona", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
@@ -39,6 +58,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TabBar(
+                controller: _tabController,
                 labelColor: Colors.black,
                 unselectedLabelColor: Colors.grey[600],
                 indicator: BoxDecoration(
@@ -86,6 +106,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ],
         ),
         body: TabBarView(
+          controller: _tabController,
           children: [
             _buildFeed("university"), // Default
             _buildFeed("specialty"),
@@ -96,17 +117,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
           onPressed: () async {
             final result = await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+              MaterialPageRoute(builder: (context) => CreatePostScreen(initialScope: _getCurrentScope())),
             );
             if (result == true) {
               setState(() {}); // Refresh FutureBuilder
+              // Also refresh services if needed, but FutureBuilder handles logic
             }
           },
           backgroundColor: AppTheme.primaryBlue,
           child: const Icon(Icons.edit, color: Colors.white),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildFeed(String scope) {
@@ -165,7 +186,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+                  MaterialPageRoute(builder: (context) => CreatePostScreen(initialScope: _getCurrentScope())),
                 );
                 if (result == true) {
                   setState(() {}); // Refresh FutureBuilder
