@@ -19,6 +19,8 @@ class ResourcesScreen extends StatefulWidget {
 
 class _ResourcesScreenState extends State<ResourcesScreen> {
   final DataService _dataService = DataService();
+  bool _isLoading = true;
+  List<dynamic> _topics = [];
   Map<String, dynamic>? _subjectDetails;
 
   @override
