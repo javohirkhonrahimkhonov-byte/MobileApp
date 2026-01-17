@@ -19,8 +19,7 @@ class ResourcesScreen extends StatefulWidget {
 
 class _ResourcesScreenState extends State<ResourcesScreen> {
   final DataService _dataService = DataService();
-  bool _isLoading = true;
-  List<dynamic> _topics = [];
+  Map<String, dynamic>? _subjectDetails;
 
   @override
   void dispose() {
@@ -32,6 +31,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   void initState() {
     super.initState();
     _loadResources();
+    _loadDetails();
   }
 
   Future<void> _loadResources() async {
@@ -40,6 +40,15 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       setState(() {
         _topics = data;
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadDetails() async {
+    final details = await _dataService.getSubjectDetails(widget.subjectId);
+    if (mounted && details != null) {
+      setState(() {
+        _subjectDetails = details;
       });
     }
   }
@@ -65,8 +74,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
              content: const Text("Xatolik: Bot ishga tushganligini tekshiring ❌"), 
              backgroundColor: Colors.red,
              action: SnackBarAction(label: "Botni ochish", onPressed: () async {
-                 // Try to open bot link if possible, or just instruction
-                 final botUrl = Uri.parse("https://t.me/talabahamkorbot"); // Replace with actual bot user
+                 final botUrl = Uri.parse("https://t.me/talabahamkorbot"); 
                  if (await canLaunchUrl(botUrl)) launchUrl(botUrl, mode: LaunchMode.externalApplication);
              }),
            ),
@@ -80,23 +88,56 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       appBar: AppBar(
-        title: Text(widget.subjectName, style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(widget.subjectName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold), maxLines: 2),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _topics.isEmpty
-              ? const Center(child: Text("Mavzular topilmadi"))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  itemCount: _topics.length,
-                  itemBuilder: (context, index) {
-                    final topic = _topics[index];
-                    return _buildTopicItem(topic, index + 1);
-                  },
+          : Column(
+              children: [
+                if (_subjectDetails != null) _buildSubjectHeader(),
+                Expanded(
+                  child: _topics.isEmpty
+                    ? const Center(child: Text("Mavzular topilmadi"))
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        itemCount: _topics.length,
+                        itemBuilder: (context, index) {
+                          final topic = _topics[index];
+                          return _buildTopicItem(topic, index + 1);
+                        },
+                      ),
                 ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSubjectHeader() {
+    final teachers = (_subjectDetails!['teachers'] as List?)?.join(", ") ?? "Biriktirilmagan";
+    final missed = _subjectDetails!['attendance']?['total_missed'] ?? 0;
+    
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Fan haqida", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          const SizedBox(height: 4),
+          Text("👨‍🏫 O'qituvchi: $teachers", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          const SizedBox(height: 4),
+          Text("❌ Qoldirilgan darslar: $missed soat", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 14)),
+        ],
+      ),
     );
   }
 

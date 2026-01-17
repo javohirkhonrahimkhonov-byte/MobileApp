@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
+import 'subject_detail_screen.dart';
 
 class GradesScreen extends StatefulWidget {
   const GradesScreen({super.key});
@@ -62,12 +63,16 @@ class _GradesScreenState extends State<GradesScreen> {
     final onVal = on['val_5'] ?? 0;
     final ynVal = yn['val_5'] ?? 0;
     final ynRaw = yn['raw'] ?? 0;
+    
+    // For navigation
+    final name = item['name'] ?? item['subject'] ?? "Fan";
+    final id = item['id'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18), // Slightly larger for Variant 2
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -81,7 +86,21 @@ class _GradesScreenState extends State<GradesScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () {}, // For ripple effect
+          onTap: () {
+            if (id != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SubjectDetailScreen(
+                    subjectId: id.toString(),
+                    subjectName: name,
+                  ),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fan ID topilmadi")));
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -106,8 +125,8 @@ class _GradesScreenState extends State<GradesScreen> {
                         subject,
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600, // Semi-bold
-                          color: Color(0xFF2D2D2D), // Dark grey
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2D2D2D),
                           letterSpacing: -0.3,
                         ),
                         maxLines: 2,
@@ -148,7 +167,7 @@ class _GradesScreenState extends State<GradesScreen> {
   Widget _buildScorePart(String label, dynamic score) {
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontSize: 13, fontFamily: 'Inter'), // Use default or Inter if available
+        style: const TextStyle(fontSize: 13, fontFamily: 'Inter', color: Colors.black), 
         children: [
           TextSpan(
             text: "$label ",
@@ -157,7 +176,7 @@ class _GradesScreenState extends State<GradesScreen> {
           TextSpan(
             text: "$score/5",
             style: const TextStyle(
-              color: AppTheme.primaryBlue, // Premium blue accent
+              color: AppTheme.primaryBlue,
               fontWeight: FontWeight.w600,
             ),
           ),

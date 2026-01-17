@@ -450,5 +450,26 @@ class DataService {
       return false;
     }
   }
+
+  // 16. Get Subject Details
+  Future<Map<String, dynamic>?> getSubjectDetails(String subjectId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiConstants.academic}/subject/$subjectId/details"),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+          return body['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print("DataService: Error fetching subject details: $e");
+      return null;
+    }
+  }
 }
 
