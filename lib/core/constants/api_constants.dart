@@ -32,5 +32,8 @@ class ApiConstants {
   static const String clubsMy = '$backendUrl/student/clubs/my';
   static const String feedback = '$backendUrl/student/feedback';
   static const String documents = '$backendUrl/student/documents';
-  static const String grades = '$backendUrl/education/grades';
+  static const String academic = '$backendUrl/education';
+  static const String grades = '$academic/grades';
+  static const String subjects = '$academic/subjects';
+  static const String resources = '$academic/resources';
 }

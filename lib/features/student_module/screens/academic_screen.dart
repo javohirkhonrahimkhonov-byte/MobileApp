@@ -4,6 +4,7 @@ import '../../../../core/services/data_service.dart';
 import 'attendance_screen.dart';
 import 'schedule_screen.dart';
 import 'grades_screen.dart';
+import 'subjects_screen.dart';
 
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
@@ -185,6 +186,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
           }
           if (title == "O'zlashtirish") { 
              Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
+             return;
+          }
+          if (title == "Fanlar va Resurslar") {
+             Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()));
              return;
           }
           

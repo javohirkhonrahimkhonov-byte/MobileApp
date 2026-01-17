@@ -387,5 +387,43 @@ class DataService {
       return [];
     }
   }
+
+  // 13. Get Detailed Subjects
+  Future<List<dynamic>> getSubjects() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.subjects),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 20));
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) return body['data'];
+      }
+      return [];
+    } catch (e) {
+      print("DataService: Error fetching subjects: $e");
+      return [];
+    }
+  }
+
+  // 14. Get Subject Resources
+  Future<List<dynamic>> getResources(String subjectId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiConstants.resources}/$subjectId"),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 20));
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) return body['data'];
+      }
+      return [];
+    } catch (e) {
+      print("DataService: Error fetching resources: $e");
+      return [];
+    }
+  }
 }
 
