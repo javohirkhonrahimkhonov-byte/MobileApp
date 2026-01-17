@@ -529,5 +529,29 @@ class DataService {
       return false;
     }
   }
+
+  // 20. Request Document
+  Future<String?> requestDocument(String type) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.documentsSend),
+        headers: await _getHeaders(),
+        body: json.encode({'type': type}),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+           return body['message'];
+        } else {
+           return body['message']; // Return error message from server
+        }
+      }
+      return null;
+    } catch (e) {
+      print("DataService: Error requesting document: $e");
+      return null;
+    }
+  }
 }
 

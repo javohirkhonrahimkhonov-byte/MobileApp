@@ -125,10 +125,32 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
             ),
             trailing: IconButton(
               icon: const Icon(Icons.download_rounded, color: AppTheme.primaryBlue),
-              onPressed: () {
+              onPressed: () async {
+                final typeMap = {
+                  "O'qish joyidan ma'lumotnoma": "reference",
+                  "Reyting daftarchasi (Transkript)": "transcript",
+                  "Buyruqlar ko'chirmasi": "orders",
+                  "To'lov kontrakt shartnomasi": "contract"
+                };
+                
+                final type = typeMap[doc['title']] ?? "reference";
+                
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Yuklab olish jarayoni boshlandi... (Mock)"))
+                  const SnackBar(content: Text("So'rov yuborilmoqda..."))
                 );
+                
+                final DataService ds = DataService();
+                final msg = await ds.requestDocument(type);
+                
+                if (context.mounted && msg != null) {
+                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(
+                        content: Text(msg), 
+                        backgroundColor: msg.contains("Xatolik") ? Colors.red : Colors.green
+                     )
+                   );
+                }
               },
             ),
           ),
