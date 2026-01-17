@@ -57,90 +57,112 @@ class _GradesScreenState extends State<GradesScreen> {
 
   Widget _buildGradeCard(dynamic item) {
     final subject = item['subject'] ?? "Fan";
-    
-    // Values from API are {"val_5": x, "raw": y} or null if we changed logic.
-    // Wait, backend logic:
-    // "on": {"val_5": on_5, "raw": on_data['grade']},
-    // "yn": {"val_5": yn_5, "raw": yn_data['grade']}
-    
     final on = item['on'] ?? {};
     final yn = item['yn'] ?? {};
-    
     final onVal = on['val_5'] ?? 0;
     final ynVal = yn['val_5'] ?? 0;
-    final ynRaw = yn['raw'] ?? 0; // Check raw to hide/show
-    
+    final ynRaw = yn['raw'] ?? 0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18), // Slightly larger for Variant 2
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Icon + Name
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.book, color: Colors.blue, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  subject,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {}, // For ripple effect
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                // Neutral Icon Container
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.menu_book_rounded, color: Colors.grey, size: 18),
+                ),
+                const SizedBox(width: 16),
+                
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subject,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600, // Semi-bold
+                          color: Color(0xFF2D2D2D), // Dark grey
+                          letterSpacing: -0.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      
+                      // Scores Row: ON 5/5  ·  YN 5/5
+                      Row(
+                        children: [
+                          _buildScorePart("ON", onVal),
+                          if (ynRaw > 0) ...[
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                "·",
+                                style: TextStyle(
+                                  color: Colors.grey.withOpacity(0.5),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            _buildScorePart("YN", ynVal),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          // Scores Row
-          Row(
-            children: [
-             const SizedBox(width: 32), // Indent to align with text
-              _buildScoreBadge("ON", onVal, Colors.orange),
-              if (ynRaw > 0) ...[
-                 Container(
-                   margin: const EdgeInsets.symmetric(horizontal: 12),
-                   height: 20, 
-                   width: 1, 
-                   color: Colors.grey.shade300
-                 ),
-                _buildScoreBadge("YN", ynVal, Colors.blue),
               ],
-            ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScorePart(String label, dynamic score) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 13, fontFamily: 'Inter'), // Use default or Inter if available
+        children: [
+          TextSpan(
+            text: "$label ",
+            style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
+          ),
+          TextSpan(
+            text: "$score/5",
+            style: const TextStyle(
+              color: AppTheme.primaryBlue, // Premium blue accent
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
     );
-  }
-  
-  Widget _buildScoreBadge(String label, dynamic score, Color color) {
-      return Row(
-          children: [
-              Text(
-                  label, 
-                  style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)
-              ),
-              const SizedBox(width: 6),
-              Text(
-                  "$score/5", 
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)
-              ),
-          ],
-      );
   }
 }
