@@ -49,7 +49,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     setState(() {
       _uploadSessionId = sessionId;
       _isUploading = true;
-      _isUploaded = false;
+      _uploadedCount = 0;
     });
 
     try {
