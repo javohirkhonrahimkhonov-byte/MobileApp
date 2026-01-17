@@ -130,7 +130,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade600,
-                                fontWeight: FontWeight.medium,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
