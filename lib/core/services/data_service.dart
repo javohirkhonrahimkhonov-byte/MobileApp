@@ -339,37 +339,7 @@ class DataService {
     }
   }
 
-  // 10. Request Document (Already Exists above)
-  Future<void> requestDocument(String type, String description) async {
-    final response = await http.post(
-      Uri.parse(ApiConstants.documents),
-      headers: await _getHeaders(),
-      body: json.encode({
-        // Note: API expects Form data normally, but standard HTTP post often sends JSON.
-        // Let's check api/documents.py again. It uses Form(...). 
-        // So we must use form-urlencoded or multipart.
-        // Simple body maps in http package for POST are x-www-form-urlencoded by default if body is map.
-      }), 
-    );
-    
-    // Correct way for Form Data
-    final token = await _authService.getToken();
-    final formResponse = await http.post(
-      Uri.parse(ApiConstants.documents),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'type': type,
-        'description': description,
-      },
-    );
 
-    if (formResponse.statusCode != 200) {
-      throw Exception('Failed to request document');
-    }
-  }
 
   // 12. Get Detailed Grades (O'zlashtirish)
   Future<List<dynamic>> getGrades() async {
