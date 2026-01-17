@@ -784,7 +784,55 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     }).toList();
   }
 
-  // _buildActivityCard REMOVED - Replaced by ActivityCard class below
+  void _showAddActivitySheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AddActivitySheet(
+        categories: _categories.where((c) => c != "Barchasi").toList(),
+        onSave: (activity, sessionId) async {
+          try {
+             String apiCat = activity.category.toLowerCase();
+             if (activity.category == "To'garak") apiCat = "togarak";
+             if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
+             if (activity.category == "Ma'rifat darslari") apiCat = "marifat";
+             if (activity.category == "Volontyorlik") apiCat = "volontyorlik";
+             if (activity.category == "Madaniy tashriflar") apiCat = "madaniy";
+             if (activity.category == "Sport") apiCat = "sport";
+             if (activity.category == "Boshqa") apiCat = "boshqa";
+
+             final newActivity = await Provider.of<DataService>(context, listen: false).addActivity(
+               apiCat, 
+               activity.title, 
+               activity.description, 
+               activity.date,
+               sessionId: sessionId
+             );
+             
+             if (!mounted) return;
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
+             );
+             
+             if (newActivity != null) {
+                setState(() {
+                  _activities.insert(0, newActivity);
+                });
+             } else {
+                _loadActivities();
+             }
+             
+          } catch(e) {
+             if (!mounted) return;
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text('Xatolik: $e')),
+             );
+          }
+        },
+      ),
+    );
+  }
 }
 
 class ActivityCard extends StatefulWidget {
@@ -970,7 +1018,7 @@ class _ActivityCardState extends State<ActivityCard> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    activity.title, 
+                    widget.activity.title, 
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2), 
                     maxLines: 2, 
                     overflow: TextOverflow.ellipsis
@@ -984,53 +1032,4 @@ class _ActivityCardState extends State<ActivityCard> {
     );
   }
 
-  void _showAddActivitySheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => AddActivitySheet(
-        categories: _categories.where((c) => c != "Barchasi").toList(),
-        onSave: (activity, sessionId) async {
-          try {
-             String apiCat = activity.category.toLowerCase();
-             if (activity.category == "To'garak") apiCat = "togarak";
-             if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
-             if (activity.category == "Ma'rifat darslari") apiCat = "marifat";
-             if (activity.category == "Volontyorlik") apiCat = "volontyorlik";
-             if (activity.category == "Madaniy tashriflar") apiCat = "madaniy";
-             if (activity.category == "Sport") apiCat = "sport";
-             if (activity.category == "Boshqa") apiCat = "boshqa";
 
-             final newActivity = await Provider.of<DataService>(context, listen: false).addActivity(
-               apiCat, 
-               activity.title, 
-               activity.description, 
-               activity.date,
-               sessionId: sessionId
-             );
-             
-             if (!mounted) return;
-             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
-             );
-             
-             if (newActivity != null) {
-                setState(() {
-                  _activities.insert(0, newActivity);
-                });
-             } else {
-                _loadActivities();
-             }
-             
-          } catch(e) {
-             if (!mounted) return;
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(content: Text('Xatolik: $e')),
-             );
-          }
-        },
-      ),
-    );
-  }
-}
