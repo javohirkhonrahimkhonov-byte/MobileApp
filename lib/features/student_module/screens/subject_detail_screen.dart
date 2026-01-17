@@ -72,7 +72,11 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                       _buildInfoCard(teachers, totalHours, type),
                       const SizedBox(height: 20),
                       
-                      // 2. Attendance Stat Card
+                      // 2. Grades Card (NEW)
+                      _buildGradesCard(subj['grades']),
+                      const SizedBox(height: 20),
+                      
+                      // 3. Attendance Stat Card
                       _buildAttendanceCard(missed, percent, totalHours),
                       const SizedBox(height: 20),
                       
@@ -133,6 +137,53 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildGradesCard(dynamic grades) {
+    if (grades == null) return const SizedBox();
+    
+    final overall = grades['overall'] ?? 0;
+    final on = grades['on']?['val_5'] ?? 0;
+    final yn = grades['yn']?['val_5'] ?? 0;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("O'zlashtirish", style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildGradeItem("Joriy Baho", "$overall", isMain: true),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
+              _buildGradeItem("ON", "$on"),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
+              _buildGradeItem("YN", "$yn"),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeItem(String label, String val, {bool isMain = false}) {
+    return Column(
+      children: [
+        Text(val, style: TextStyle(
+          fontWeight: FontWeight.bold, 
+          fontSize: isMain ? 24 : 18, 
+          color: isMain ? AppTheme.primaryBlue : Colors.black87
+        )),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
     );
   }
