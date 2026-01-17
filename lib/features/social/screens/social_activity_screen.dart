@@ -497,6 +497,10 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   String _selectedCategory = "Barchasi";
   String _selectedStatus = "Barchasi";
   bool _isLoading = false;
+  
+  // Registration Check
+  bool _isRegisteredBot = false;
+  bool _isCheckingReg = true;
 
   final List<String> _categories = ["Barchasi", "To'garak", "Yutuqlar", "Ma'rifat darslari", "Volontyorlik", "Madaniy tashriflar", "Sport", "Boshqa"];
   final List<String> _statuses = ["Barchasi", "Tasdiqlangan", "Kutilayotgan", "Rad etilgan"];
@@ -514,9 +518,15 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     setState(() => _isLoading = true);
     try {
       final rawData = await Provider.of<DataService>(context, listen: false).getActivities();
+      
+      // Check Registration
+      final profile = await Provider.of<DataService>(context, listen: false).getProfile();
+      
       if (!mounted) return;
       setState(() {
         _activities = rawData.map((e) => SocialActivity.fromJson(e)).toList();
+        _isRegisteredBot = profile['is_registered_bot'] ?? false;
+        _isCheckingReg = false;
       });
     } catch (e) {
       debugPrint("Load Error: $e");
@@ -585,7 +595,15 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () => _showAddActivitySheet(),
+            onPressed: () {
+               if (_isCheckingReg) return;
+               
+               if (!_isRegisteredBot) {
+                 _showRegistrationAlert();
+               } else {
+                 _showAddActivitySheet();
+               }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -873,6 +891,31 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
       }
       return true;
     }).toList();
+  }
+
+  void _showRegistrationAlert() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Diqqat! 🔒"),
+        content: const Text("Faollik qo'shish uchun avval Telegram botimizdan ro'yxatdan o'tishingiz kerak.\n\nBu sizning shaxsingizni tasdiqlash uchun zarur."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Yopish", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            onPressed: () {
+                Navigator.pop(ctx);
+                // Open Bot Link (using url_launcher or similar if available, or just copy link)
+                // For now, simple implicit instruction
+            }, 
+            child: const Text("Botga o'tish", style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
+    );
   }
 
   void _showAddActivitySheet() {
