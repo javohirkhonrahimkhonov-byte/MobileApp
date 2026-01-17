@@ -483,7 +483,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
   bool _isLoading = false;
 
   final List<String> _categories = ["Barchasi", "To'garak", "Yutuqlar", "Ma'rifat darslari", "Volontyorlik", "Madaniy tashriflar", "Sport", "Boshqa"];
-  final List<String> _statuses = ["Barchasi", "Tasdiqlangan", "Kutilmoqda", "Bekor qilingan"];
+  final List<String> _statuses = ["Barchasi", "Tasdiqlangan", "Kutilayotgan", "Rad etilgan"];
 
   List<SocialActivity> _activities = [];
 
@@ -607,7 +607,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
 
     final stats = [
       {"label": "Tasdiqlangan", "count": approved, "color": Colors.green},
-      {"label": "Kutilmoqda", "count": pending, "color": Colors.orange},
+      {"label": "Kutilayotgan", "count": pending, "color": Colors.orange},
       {"label": "Rad etilgan", "count": rejected, "color": Colors.red},
     ];
 
@@ -846,13 +846,16 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
          }
       }
       
-      bool statusMatch = true;
       if (_selectedStatus != "Barchasi") {
-        if (_selectedStatus == "Tasdiqlangan" && a.status != "approved") statusMatch = false;
-        if (_selectedStatus == "Kutilmoqda" && a.status != "pending") statusMatch = false;
-        if (_selectedStatus == "Bekor qilingan" && a.status != "rejected") statusMatch = false;
+        if (_selectedStatus == "Tasdiqlangan") {
+            if (a.status != "approved") return false;
+        } else if (_selectedStatus == "Kutilayotgan") {
+            if (a.status != "pending") return false;
+        } else if (_selectedStatus == "Rad etilgan") {
+            if (a.status != "rejected") return false;
+        }
       }
-      return statusMatch;
+      return true;
     }).toList();
   }
 
@@ -971,7 +974,7 @@ class _ActivityCardState extends State<ActivityCard> {
         break;
       default:
         statusColor = Colors.orange;
-        statusText = "Kutilmoqda";
+        statusText = "Kutilayotgan";
         statusIcon = Icons.access_time_rounded;
     }
 
