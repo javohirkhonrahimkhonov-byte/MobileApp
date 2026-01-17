@@ -33,7 +33,7 @@ class SocialActivity {
     }
     return SocialActivity(
       id: json['id'].toString(),
-      category: json['category'] ?? "Boshqa",
+      category: (json['category'] ?? "Boshqa").toString().toLowerCase(),
       title: json['name'] ?? "Nomsiz",
       description: json['description'] ?? "",
       date: json['date'] ?? "",

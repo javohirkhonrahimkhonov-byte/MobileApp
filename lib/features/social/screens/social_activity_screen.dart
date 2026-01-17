@@ -814,9 +814,28 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     );
   }
 
+  String _getCategoryKey(String uiLabel) {
+    if (uiLabel == "To'garak") return "togarak";
+    if (uiLabel == "Ma'rifat darslari") return "marifat";
+    if (uiLabel == "Madaniy tashriflar") return "madaniy";
+    if (uiLabel == "Sport") return "sport";
+    if (uiLabel == "Volontyorlik") return "volontyorlik";
+    if (uiLabel == "Yutuqlar") return "yutuqlar";
+    if (uiLabel == "Boshqa") return "boshqa";
+    return uiLabel.toLowerCase();
+  }
+
   List<SocialActivity> _getFilteredActivities() {
     return _activities.where((a) {
-      final categoryMatch = _selectedCategory == "Barchasi" || a.category == _selectedCategory;
+      if (_selectedCategory == "Barchasi") {
+         // Keep going
+      } else {
+         final requiredKey = _getCategoryKey(_selectedCategory);
+         // Backend ensures lowercase, but let's be safe
+         if (a.category.toLowerCase() != requiredKey.toLowerCase()) {
+           return false;
+         }
+      }
       
       bool statusMatch = true;
       if (_selectedStatus != "Barchasi") {
@@ -824,7 +843,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         if (_selectedStatus == "Kutilmoqda" && a.status != "pending") statusMatch = false;
         if (_selectedStatus == "Bekor qilingan" && a.status != "rejected") statusMatch = false;
       }
-      return categoryMatch && statusMatch;
+      return statusMatch;
     }).toList();
   }
 
@@ -837,14 +856,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
         categories: _categories.where((c) => c != "Barchasi").toList(),
         onSave: (activity, sessionId) async {
           try {
-             String apiCat = activity.category.toLowerCase();
-             if (activity.category == "To'garak") apiCat = "togarak";
-             if (activity.category == "Yutuqlar") apiCat = "yutuqlar";
-             if (activity.category == "Ma'rifat darslari") apiCat = "marifat";
-             if (activity.category == "Volontyorlik") apiCat = "volontyorlik";
-             if (activity.category == "Madaniy tashriflar") apiCat = "madaniy";
-             if (activity.category == "Sport") apiCat = "sport";
-             if (activity.category == "Boshqa") apiCat = "boshqa";
+             String apiCat = _getCategoryKey(activity.category);
 
              final newActivity = await Provider.of<DataService>(context, listen: false).addActivity(
                apiCat, 
