@@ -75,7 +75,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             _buildFeed("republic"),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.push(
               context,
@@ -83,14 +83,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
             );
           },
           backgroundColor: AppTheme.primaryBlue,
-          icon: const Icon(Icons.edit, color: Colors.white),
-          label: const Text("Fikr bildirish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: const Icon(Icons.edit, color: Colors.white),
         ),
       ),
     );
   }
-
-
 
   Widget _buildFeed(String scope) {
     return FutureBuilder<List<Post>>(
@@ -108,75 +105,22 @@ class _CommunityScreenState extends State<CommunityScreen> {
         }
         final posts = snapshot.data ?? [];
         
-        // Combine Input Widget + Posts
-        final int itemCount = posts.isEmpty ? 2 : posts.length + 1; // 1 for Input
+        if (posts.isEmpty) {
+           return _buildEmptyState();
+        }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Extra bottom padding for FAB
-          itemCount: itemCount,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+          itemCount: posts.length,
           itemBuilder: (context, index) {
-            // Index 0: Write Post Input
-            if (index == 0) {
-              return _buildWritePostInput();
-            }
-
-            // Empty State (if no posts)
-            if (posts.isEmpty) {
-               return _buildEmptyState();
-            }
-
-            // Posts (index - 1 because of Input widget)
-            return PostCard(post: posts[index - 1]);
+            return PostCard(post: posts[index]);
           },
         );
       },
     );
   }
 
-  Widget _buildWritePostInput() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CreatePostScreen()),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 20,
-                  backgroundColor: AppTheme.backgroundWhite,
-                  child: Icon(Icons.person, color: Colors.grey),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Nima haqida o'ylayapsiz?",
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16),
-                  ),
-                ),
-                Icon(Icons.edit_note_rounded, color: AppTheme.primaryBlue.withOpacity(0.8)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildEmptyState() {
     return Center(
