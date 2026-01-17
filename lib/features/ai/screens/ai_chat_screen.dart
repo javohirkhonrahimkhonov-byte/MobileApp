@@ -15,11 +15,48 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final DataService _dataService = DataService();
   
-  final List<Map<String, String>> _messages = [
-    {"role": "assistant", "content": "Assalomu alaykum! Men TalabaHamkor AI yordamchisiman. Sizga qanday yordam bera olaman?"}
-  ];
-  
+  List<Map<String, String>> _messages = [];
+  bool _isLoading = true;
   bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final history = await _dataService.getAiHistory();
+    if (history != null && history.isNotEmpty) {
+      setState(() {
+        _messages = history.map<Map<String, String>>((m) => {
+          "role": m['role'].toString(),
+          "content": m['content'].toString()
+        }).toList();
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    } else {
+      setState(() {
+         // Default greeting if no history
+         _messages = [
+           {"role": "assistant", "content": "Assalomu alaykum! Men TalabaHamkor AI yordamchisiman. Sizga qanday yordam bera olaman?"}
+         ];
+         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _clearHistory() async {
+    final success = await _dataService.clearAiHistory();
+    if (success) {
+      setState(() {
+        _messages = [
+           {"role": "assistant", "content": "Chat tozalandi. Yangi suhbat boshlashingiz mumkin."}
+        ];
+      });
+    }
+  }
 
   void _sendMessage() async {
     final text = _controller.text.trim();
@@ -32,7 +69,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     });
     _scrollToBottom();
     
-    // Call API
+    // Call API (Backend now saves history automatically)
     final response = await _dataService.sendAiMessage(text);
     
     if (mounted) {
@@ -41,7 +78,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
         if (response != null) {
           _messages.add({"role": "assistant", "content": response});
         } else {
-           _messages.add({"role": "assistant", "content": "⚠️ Kechirasiz, xatolik yuz berdi. Iltimos qayta urinib ko'ring."});
+           _messages.add({"role": "assistant", "content": "⚠️ Kechirasiz, xatolik yuz berdi."});
         }
       });
       _scrollToBottom();
@@ -69,11 +106,37 @@ class _AiChatScreenState extends State<AiChatScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            onPressed: () {
+               showDialog(
+                 context: context,
+                 builder: (ctx) => AlertDialog(
+                   title: const Text("Yangi Suhbat"),
+                   content: const Text("Chat tarixini o'chirib, yangi suhbat boshlamoqchimisiz?"),
+                   actions: [
+                     TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish")),
+                     TextButton(
+                       onPressed: () {
+                         Navigator.pop(ctx);
+                         _clearHistory();
+                       }, 
+                       child: const Text("Ha, tozalash", style: TextStyle(color: Colors.red)),
+                     ),
+                   ],
+                 )
+               );
+            },
+          )
+        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
+            child: _isLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length + (_isTyping ? 1 : 0),

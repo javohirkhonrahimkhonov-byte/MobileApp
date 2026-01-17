@@ -493,5 +493,41 @@ class DataService {
       return null;
     }
   }
+
+  // 18. Get AI History
+  Future<List<dynamic>?> getAiHistory() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/ai/history'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+           return body['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print("DataService: Error fetching AI history: $e");
+      return null;
+    }
+  }
+
+  // 19. Clear AI History
+  Future<bool> clearAiHistory() async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.backendUrl}/ai/history'),
+        headers: await _getHeaders(),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("DataService: Error clearing AI history: $e");
+      return false;
+    }
+  }
 }
 
