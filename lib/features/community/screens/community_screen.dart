@@ -20,7 +20,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         backgroundColor: AppTheme.backgroundWhite,
         appBar: AppBar(
@@ -37,7 +37,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Tab(text: "Yo'nalish"),
               Tab(text: "Fakultet"),
               Tab(text: "Universitet"),
-              Tab(text: "Respublika"),
             ],
           ),
           actions: [
@@ -72,7 +71,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
             _buildFeed("specialty"),
             _buildFeed("faculty"),
             _buildFeed("university"),
-            _buildFeed("republic"),
           ],
         ),
         floatingActionButton: FloatingActionButton(
