@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
 import 'package:talabahamkor_mobile/core/theme/app_theme.dart';
@@ -906,10 +907,16 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
-            onPressed: () {
+            onPressed: () async {
                 Navigator.pop(ctx);
-                // Open Bot Link (using url_launcher or similar if available, or just copy link)
-                // For now, simple implicit instruction
+                final Uri url = Uri.parse("https://t.me/talabahamkorbot");
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  if (ctx.mounted) {
+                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("Botni ochib bo'lmadi. @talabahamkorbot ni qidiring.")));
+                  }
+                }
             }, 
             child: const Text("Botga o'tish", style: TextStyle(color: Colors.white)),
           )
