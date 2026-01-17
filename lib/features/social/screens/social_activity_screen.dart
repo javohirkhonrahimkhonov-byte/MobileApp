@@ -532,16 +532,18 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           const SizedBox(height: 16),
           _buildFilterBar(),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _getFilteredActivities().length,
-              itemBuilder: (context, index) {
-                return ActivityCard(
-                  activity: _getFilteredActivities()[index],
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: _getFilteredActivities()[index]))),
-                );
-              },
-            ),
+            child: _getFilteredActivities().isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: _getFilteredActivities().length,
+                    itemBuilder: (context, index) {
+                      return ActivityCard(
+                        activity: _getFilteredActivities()[index],
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SocialActivityDetailScreen(activity: _getFilteredActivities()[index]))),
+                      );
+                    },
+                  ),
           ),
           _buildBottomButton(),
         ],
@@ -605,41 +607,83 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: stats.map((item) {
+          final isSelected = _selectedStatus == item['label'];
+          final color = item['color'] as Color;
+          
           return Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    "${item['count']}", 
-                    style: TextStyle(
-                      fontSize: 22, 
-                      fontWeight: FontWeight.bold, 
-                      color: item['color'] as Color
-                    )
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  // Toggle logic: if already selected, go back to "Barchasi", else select this status
+                  if (_selectedStatus == item['label']) {
+                    _selectedStatus = "Barchasi";
+                  } else {
+                    _selectedStatus = item['label'] as String;
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: isSelected ? color.withOpacity(0.1) : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected ? color : Colors.transparent,
+                    width: 2
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item['label'] as String, 
-                    style: TextStyle(
-                      fontSize: 12, 
-                      fontWeight: FontWeight.w600, 
-                      color: Colors.grey[600]
-                    )
-                  ),
-                ],
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "${item['count']}", 
+                      style: TextStyle(
+                        fontSize: 22, 
+                        fontWeight: FontWeight.bold, 
+                        color: color
+                      )
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item['label'] as String, 
+                      style: TextStyle(
+                        fontSize: 12, 
+                        fontWeight: FontWeight.w600, 
+                        color: Colors.grey[600]
+                      )
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            "Hech narsa topilmadi",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Filterlarni o'zgartirib ko'ring yoki\nyangi faollik qo'shing",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[500]),
+          ),
+        ],
       ),
     );
   }
