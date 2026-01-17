@@ -591,6 +591,15 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
     int rejected = 0;
 
     for (var act in _activities) {
+      // Filter by Category
+      if (_selectedCategory != "Barchasi") {
+         final requiredKey = _getCategoryKey(_selectedCategory);
+         if (act.category.toLowerCase() != requiredKey.toLowerCase()) {
+           continue; 
+         }
+      }
+
+      // Count Statuses
       if (act.status == 'approved') approved++;
       else if (act.status == 'pending') pending++;
       else if (act.status == 'rejected') rejected++;

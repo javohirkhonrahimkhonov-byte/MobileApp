@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
 import 'attendance_screen.dart';
 import 'schedule_screen.dart';
+import 'grades_screen.dart';
 
 class AcademicScreen extends StatefulWidget {
   const AcademicScreen({super.key});
@@ -180,6 +181,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
           }
           if (title == "Dars Jadvali") {
              Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
+             return;
+          }
+          if (title.contains("Baholar")) { // Matches "Nazorat va Baholar"
+             Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
              return;
           }
           

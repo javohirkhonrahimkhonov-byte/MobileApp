@@ -366,5 +366,26 @@ class DataService {
       throw Exception('Failed to request document');
     }
   }
+
+  // 12. Get Detailed Grades (O'zlashtirish)
+  Future<List<dynamic>> getGrades() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.grades),
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+           return body['data'];
+        }
+      } 
+      return [];
+    } catch (e) {
+      print("DataService: Error fetching grades: $e");
+      return [];
+    }
+  }
 }
 
