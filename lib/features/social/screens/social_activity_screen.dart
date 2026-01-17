@@ -242,93 +242,109 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
         descHint = "Faollik haqida ma'lumot...";
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              _selectedCategory ?? "",
-              style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _selectedCategory ?? "",
+                    style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                TextField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                     labelText: titleLabel,
+                     hintText: titleHint,
+                     border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                TextField(
+                  controller: _descController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                     labelText: descLabel,
+                     hintText: descHint,
+                     border: const OutlineInputBorder(),
+                     alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                _buildImageUploadBlock(),
+                const SizedBox(height: 16),
+                
+                GestureDetector(
+                  onTap: _pickDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                      color: Colors.transparent,
+                    ),
+                    child: Row(
+                      children: [
+                         const Icon(Icons.calendar_month, color: AppTheme.primaryBlue),
+                         const SizedBox(width: 12),
+                         Text(
+                           _selectedDate == null 
+                             ? "Sana, Oy, Yilni tanlang" 
+                             : DateFormat('dd.MM.yyyy').format(_selectedDate!),
+                           style: TextStyle(
+                             color: _selectedDate == null ? Colors.grey[600] : Colors.black, 
+                             fontSize: 16, 
+                             fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.w500
+                           ),
+                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-          
-          TextField(
-            controller: _titleController,
-            decoration: InputDecoration(
-               labelText: titleLabel,
-               hintText: titleHint,
-               border: const OutlineInputBorder(),
-            ),
+        ),
+        
+        // Stuck at bottom
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
           ),
-          const SizedBox(height: 16),
-          
-          TextField(
-            controller: _descController,
-            maxLines: 4,
-            decoration: InputDecoration(
-               labelText: descLabel,
-               hintText: descHint,
-               border: const OutlineInputBorder(),
-               alignLabelWithHint: true,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          _buildImageUploadBlock(),
-          const SizedBox(height: 16),
-          
-          GestureDetector(
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(4),
-                color: Colors.transparent,
+          child: SafeArea(
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _saveActivity,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text("Saqlash", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
-              child: Row(
-                children: [
-                   const Icon(Icons.calendar_month, color: AppTheme.primaryBlue),
-                   const SizedBox(width: 12),
-                   Text(
-                     _selectedDate == null 
-                       ? "Sana, Oy, Yilni tanlang" 
-                       : DateFormat('dd.MM.yyyy').format(_selectedDate!),
-                     style: TextStyle(
-                       color: _selectedDate == null ? Colors.grey[600] : Colors.black, 
-                       fontSize: 16, 
-                       fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.w500
-                     ),
-                   ),
-                ],
-              ),
             ),
           ),
-          
-          const SizedBox(height: 32),
-          
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _saveActivity,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text("Saqlash", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

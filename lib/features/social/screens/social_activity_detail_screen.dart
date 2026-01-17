@@ -38,7 +38,7 @@ class SocialActivityDetailScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            automaticallyImplyLeading: false, // Custom back button
+            automaticallyImplyLeading: true, // Standard back button
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -58,24 +58,6 @@ class SocialActivityDetailScreen extends StatelessWidget {
                         },
                       )
                     : Container(color: Colors.grey[300], child: const Icon(Icons.image, size: 50, color: Colors.grey)),
-                    
-                   // Custom Back Button
-                   Positioned(
-                     top: 40, // Safer area approximation or use SafeArea wrapper
-                     left: 16,
-                     child: GestureDetector(
-                       onTap: () => Navigator.pop(context),
-                       child: Container(
-                         padding: const EdgeInsets.all(8),
-                         decoration: BoxDecoration(
-                           color: Colors.black.withOpacity(0.5),
-                           shape: BoxShape.circle,
-                           border: Border.all(color: Colors.white.withOpacity(0.2), width: 1)
-                         ),
-                         child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                       ),
-                     ),
-                   ),
                 ],
               ),
             ),
