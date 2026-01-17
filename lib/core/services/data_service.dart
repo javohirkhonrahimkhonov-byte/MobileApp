@@ -133,7 +133,38 @@ class DataService {
     return [];
   }
 
-  Future<SocialActivity?> addActivity(String category, String name, String description, String date, {List<String>? imagePaths}) async {
+  // NEW: Init Upload Session
+  Future<void> initUploadSession(String sessionId) async {
+    final token = await _authService.getToken();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.activities}/upload/init'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {'session_id': sessionId},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to init session: ${response.body}');
+    }
+  }
+
+  // NEW: Check Upload Status
+  Future<Map<String, dynamic>> checkUploadStatus(String sessionId) async {
+    final token = await _authService.getToken();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.activities}/upload/status/$sessionId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    return {"status": "pending"};
+  }
+
+  Future<SocialActivity?> addActivity(String category, String name, String description, String date, {String? sessionId}) async {
     final token = await _authService.getToken();
     var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.activities));
     request.headers['Authorization'] = 'Bearer $token';
@@ -143,10 +174,8 @@ class DataService {
     request.fields['description'] = description;
     request.fields['date'] = date;
     
-    if (imagePaths != null && imagePaths.isNotEmpty) {
-      for (var path in imagePaths) {
-         request.files.add(await http.MultipartFile.fromPath('files', path));
-      }
+    if (sessionId != null) {
+      request.fields['session_id'] = sessionId;
     }
     
     final response = await request.send();

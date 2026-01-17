@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +16,7 @@ import 'package:talabahamkor_mobile/features/social/models/social_activity.dart'
 
 class AddActivitySheet extends StatefulWidget {
   final List<String> categories;
-  final Function(SocialActivity) onSave;
+  final Function(SocialActivity, String?) onSave;
 
   const AddActivitySheet({super.key, required this.categories, required this.onSave});
 
@@ -31,19 +32,56 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   final _descController = TextEditingController();
   DateTime? _selectedDate;
   
-  final ImagePicker _picker = ImagePicker();
-  final List<XFile> _selectedImages = [];
+  // NEW STATE
+  String? _uploadSessionId;
+  bool _isUploading = false; // Waiting for bot
+  bool _isUploaded = false; // Bot confirmed
+  Timer? _pollingTimer;
 
-  Future<void> _pickImage() async {
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initUpload() async {
+    final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+    setState(() {
+      _uploadSessionId = sessionId;
+      _isUploading = true;
+      _isUploaded = false;
+    });
+
     try {
-      final List<XFile> images = await _picker.pickMultiImage();
-      if (images.isNotEmpty) {
-        setState(() {
-          _selectedImages.addAll(images);
-        });
+      await Provider.of<DataService>(context, listen: false).initUploadSession(sessionId);
+      
+      // Start Polling
+      _pollingTimer?.cancel();
+      _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+         _checkStatus(sessionId);
+      });
+      
+    } catch (e) {
+      debugPrint("Upload Init Error: $e");
+      setState(() => _isUploading = false);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
+    }
+  }
+  
+  Future<void> _checkStatus(String sessionId) async {
+    try {
+      final res = await Provider.of<DataService>(context, listen: false).checkUploadStatus(sessionId);
+      if (res['status'] == 'uploaded') {
+        _pollingTimer?.cancel();
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+            _isUploaded = true;
+          });
+        }
       }
     } catch (e) {
-      debugPrint("Image Pick Error: $e");
+      debugPrint("Polling Error: $e");
     }
   }
 
@@ -295,91 +333,65 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedImages.isNotEmpty)
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _selectedImages.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                if (index == _selectedImages.length) {
-                   return GestureDetector(
-                     onTap: _pickImage,
-                     child: Container(
-                       width: 100,
-                       height: 100,
-                       decoration: BoxDecoration(
-                         color: Colors.grey[100],
-                         borderRadius: BorderRadius.circular(12),
-                         border: Border.all(color: Colors.grey[300]!),
-                       ),
-                       child: const Icon(Icons.add_a_photo, color: Colors.grey),
-                     ),
-                   );
-                }
-                
-                final file = File(_selectedImages[index].path);
-                return Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
-                      ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => _removeImage(index),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.close, color: Colors.white, size: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          )
+        if (_isUploaded)
+           Container(
+             width: double.infinity,
+             padding: const EdgeInsets.symmetric(vertical: 24),
+             decoration: BoxDecoration(
+               color: Colors.green[50],
+               borderRadius: BorderRadius.circular(12),
+               border: Border.all(color: Colors.green[300]!),
+             ),
+             child: const Column(
+               children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 40),
+                  SizedBox(height: 8),
+                  Text("Rasm muvaffaqiyatli yuklandi!", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+               ],
+             ),
+           )
+        else if (_isUploading)
+           Container(
+             width: double.infinity,
+             padding: const EdgeInsets.symmetric(vertical: 24),
+             decoration: BoxDecoration(
+               color: Colors.orange[50],
+               borderRadius: BorderRadius.circular(12),
+               border: Border.all(color: Colors.orange[300]!),
+             ),
+             child: const Column(
+               children: [
+                  CircularProgressIndicator(color: Colors.orange),
+                  SizedBox(height: 12),
+                  Text("Botga rasmni yuboring...", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
+                  Text("Telegramdan xabar kutilyapti", style: TextStyle(color: Colors.grey, fontSize: 12)),
+               ],
+             ),
+           )
         else
           GestureDetector(
-            onTap: _pickImage,
+            onTap: _initUpload,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Colors.blue[50], // AppTheme.primaryBlue logic
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+                border: Border.all(color: Colors.blue[200]!),
               ),
-              child: Column(
+              child: const Column(
                 children: [
-                   Container(
-                     padding: const EdgeInsets.all(12),
-                     decoration: const BoxDecoration(
-                       color: Colors.white,
-                       shape: BoxShape.circle,
-                     ),
-                     child: const Icon(Icons.camera_alt_rounded, color: AppTheme.primaryBlue, size: 28),
-                   ),
-                   const SizedBox(height: 8),
-                   const Text(
-                     "Rasm yuklash", 
-                     style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)
-                   ),
-                   const SizedBox(height: 4),
+                   Icon(Icons.telegram, color: Colors.blue, size: 40),
+                   SizedBox(height: 8),
                    Text(
-                     "JPG, PNG formatida", 
-                     style: TextStyle(color: Colors.grey[500], fontSize: 12)
+                     "Rasm yuklash (Telegram orqali)", 
+                     style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)
+                   ),
+                   SizedBox(height: 4),
+                   Text(
+                     "Tugmani bosing va Botga rasm yuboring", 
+                     style: TextStyle(color: Colors.grey, fontSize: 12)
                    ),
                 ],
               ),
@@ -428,6 +440,12 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Barcha maydonlarni to'ldiring")));
       return;
     }
+    
+    // Check if image uploaded
+    if (!_isUploaded) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, avval rasm yuklang!")));
+      return;
+    }
 
     final newActivity = SocialActivity(
       id: "0", 
@@ -436,10 +454,10 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
       description: _descController.text,
       date: DateFormat('dd.MM.yyyy').format(_selectedDate!),
       status: "pending",
-      imageUrls: _selectedImages.map((e) => e.path).toList(),
+      imageUrls: [], // No local images
     );
 
-    widget.onSave(newActivity);
+    widget.onSave(newActivity, _uploadSessionId);
     Navigator.pop(context);
   }
 }
@@ -886,7 +904,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => AddActivitySheet(
         categories: _categories.where((c) => c != "Barchasi").toList(),
-        onSave: (activity) async {
+        onSave: (activity, sessionId) async {
           try {
              String apiCat = activity.category.toLowerCase();
              if (activity.category == "To'garak") apiCat = "togarak";
@@ -902,7 +920,7 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                activity.title, 
                activity.description, 
                activity.date,
-               imagePaths: activity.imageUrls
+               sessionId: sessionId
              );
              
              if (!mounted) return;
