@@ -1,0 +1,13 @@
+{
+    "python.defaultInterpreterPath": "venv/bin/python",
+    "python.analysis.extraPaths": [
+        "./",
+        "./talabahamkorbot",
+        "./handlers",
+        "./models",
+        "./database",
+        "./keyboards"
+    ],
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.languageServer": "Pylance"
+}

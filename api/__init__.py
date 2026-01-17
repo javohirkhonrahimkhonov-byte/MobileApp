@@ -1,0 +1,27 @@
+from fastapi import APIRouter
+
+router = APIRouter()
+
+from .auth import router as auth_router
+from .student import router as student_router
+from .activities import router as activities_router
+from .dashboard import router as dashboard_router
+from .clubs import router as clubs_router
+from .feedback import router as feedback_router
+from .documents import router as documents_router
+from .certificates import router as certificates_router
+from .academic import router as academic_router
+from .oauth import router as oauth_router
+from .files import router as files_router
+
+router.include_router(auth_router, prefix="/auth", tags=["Auth"])
+router.include_router(oauth_router, tags=["OAuth"]) # Prefix is already /oauth in the router itself
+router.include_router(student_router, prefix="/student", tags=["Student"])
+router.include_router(dashboard_router, prefix="/student/dashboard", tags=["Dashboard"])
+router.include_router(activities_router, prefix="/student/activities", tags=["Activities"])
+router.include_router(clubs_router, prefix="/student/clubs", tags=["Clubs"])
+router.include_router(feedback_router, prefix="/student/feedback", tags=["Feedback"])
+router.include_router(documents_router, prefix="/student/documents", tags=["Documents"])
+router.include_router(certificates_router, prefix="/student/certificates", tags=["Certificates"])
+router.include_router(academic_router, prefix="/education", tags=["Education"])
+router.include_router(files_router, prefix="/files", tags=["Files"])
