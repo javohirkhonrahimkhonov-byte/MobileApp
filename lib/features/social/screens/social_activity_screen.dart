@@ -41,6 +41,7 @@ class SocialActivity {
           images.add("${ApiConstants.backendUrl}/files/$fileId");
         }
       }
+      print("SOCIAL ACTIVITY IMAGES: $images"); // DEBUG LOG
     }
     return SocialActivity(
       id: json['id'].toString(),
