@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:talabahamkor_mobile/features/social/screens/social_activity_screen.dart'; // Import for SocialActivity model
+import 'package:talabahamkor_mobile/features/social/models/social_activity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class SocialActivityDetailScreen extends StatelessWidget {

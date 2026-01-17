@@ -5,6 +5,7 @@ import '../constants/api_constants.dart';
 import 'auth_service.dart';
 import '../models/attendance.dart';
 import '../models/lesson.dart';
+import 'package:talabahamkor_mobile/features/social/models/social_activity.dart';
 
 class DataService {
   final AuthService _authService = AuthService();
@@ -132,7 +133,7 @@ class DataService {
     return [];
   }
 
-  Future<void> addActivity(String category, String name, String description, String date, {List<String>? imagePaths}) async {
+  Future<SocialActivity?> addActivity(String category, String name, String description, String date, {List<String>? imagePaths}) async {
     final token = await _authService.getToken();
     var request = http.MultipartRequest('POST', Uri.parse(ApiConstants.activities));
     request.headers['Authorization'] = 'Bearer $token';
@@ -150,7 +151,10 @@ class DataService {
     
     final response = await request.send();
     
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final respStr = await response.stream.bytesToString();
+      return SocialActivity.fromJson(json.decode(respStr));
+    } else {
       // Consume response to debug
       final respStr = await response.stream.bytesToString();
       debugPrint("Add Activity Failed: ${response.statusCode} - $respStr");

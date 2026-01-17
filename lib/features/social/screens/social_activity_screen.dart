@@ -11,49 +11,7 @@ import 'package:talabahamkor_mobile/features/social/screens/social_activity_deta
 
 import 'package:talabahamkor_mobile/core/constants/api_constants.dart';
 
-class SocialActivity {
-  final String id;
-  final String category;
-  final String title;
-  final String description;
-  final String date;
-  final String status; // 'approved', 'pending', 'rejected'
-  final List<String> imageUrls;
-
-  SocialActivity({
-    required this.id,
-    required this.category,
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.status,
-    required this.imageUrls,
-  });
-
-  factory SocialActivity.fromJson(Map<String, dynamic> json) {
-    List<String> images = [];
-    if (json['images'] != null) {
-      for (var img in json['images']) {
-        String fileId = img['file_id'] ?? "";
-        if (fileId.isNotEmpty) {
-          // Construct Proxy URL (The app will cache this result)
-          // PROXY FIX APPLIED
-          images.add("${ApiConstants.backendUrl}/files/$fileId");
-        }
-      }
-      print("SOCIAL ACTIVITY IMAGES: $images"); // DEBUG LOG
-    }
-    return SocialActivity(
-      id: json['id'].toString(),
-      category: json['category'] ?? "Boshqa",
-      title: json['name'] ?? "Nomsiz",
-      description: json['description'] ?? "",
-      date: json['date'] ?? "",
-      status: json['status'] ?? "pending",
-      imageUrls: images,
-    );
-  }
-}
+import 'package:talabahamkor_mobile/features/social/models/social_activity.dart';
 
 class AddActivitySheet extends StatefulWidget {
   final List<String> categories;
@@ -939,11 +897,12 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
              if (activity.category == "Sport") apiCat = "sport";
              if (activity.category == "Boshqa") apiCat = "boshqa";
 
-             await Provider.of<DataService>(context, listen: false).addActivity(
+             final newActivity = await Provider.of<DataService>(context, listen: false).addActivity(
                apiCat, 
                activity.title, 
                activity.description, 
-               activity.date
+               activity.date,
+               imagePaths: activity.imageUrls
              );
              
              if (!mounted) return;
@@ -951,7 +910,13 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
               const SnackBar(content: Text('Faollik muvaffaqiyatli yuborildi! Xodim tasdiqlashini kuting. ⏳')),
              );
              
-             _loadActivities();
+             if (newActivity != null) {
+                setState(() {
+                  _activities.insert(0, newActivity);
+                });
+             } else {
+                _loadActivities();
+             }
              
           } catch(e) {
              if (!mounted) return;
