@@ -1,106 +1,75 @@
-from fastapi import APIRouter, Depends, Form, File, UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from api.dependencies import get_current_student, get_db
-from database.models import Student, UserDocument
+from database.models import Student, TgAccount
+from database.db_connect import get_session
+from api.dependencies import get_current_student
+from services.hemis_service import HemisService
 from bot import bot
+from aiogram.types import BufferedInputFile
 
-router = APIRouter()
+router = APIRouter(prefix="/documents", tags=["documents"])
 
-# Schema for Personal Documents (Uploaded)
-class UserDocumentSchema(BaseModel):
-    id: int
-    category: str
-    title: str
-    file_id: str
-    status: str
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
+class DocumentRequest(BaseModel):
+    type: str # 'reference', 'transcript', 'contract'
 
-# Schema for HEMIS Documents (Static/Mock)
-class HemisDocumentSchema(BaseModel):
-    id: str
-    title: str
-    type: str # 'reference', 'transcript', etc
-    available: bool
-
-class DocumentsResponse(BaseModel):
-    hemis_docs: List[HemisDocumentSchema]
-    personal_docs: List[UserDocumentSchema]
-
-
-@router.get("/", response_model=DocumentsResponse)
-async def get_documents(
+@router.post("/send")
+async def send_document(
+    req: DocumentRequest,
     student: Student = Depends(get_current_student),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_session)
 ):
-    """
-    Get all documents (HEMIS and Personal).
-    """
-    
-    # 1. HEMIS Docs (Static for now, simulates available types)
-    hemis_docs = [
-        HemisDocumentSchema(id="ref_edu", title="O'qish joyidan ma'lumotnoma", type="reference", available=True),
-        HemisDocumentSchema(id="rating_book", title="Reyting daftarchasi", type="transcript", available=True),
-        HemisDocumentSchema(id="orders", title="Buyruqlar ko'chirmasi", type="order", available=True),
-        HemisDocumentSchema(id="contract", title="Shartnoma", type="contract", available=True),
-    ]
-    
-    # 2. Personal Docs (From DB)
-    personal_docs_db = await db.scalars(
-        select(UserDocument)
-        .where(UserDocument.student_id == student.id)
-        .order_by(desc(UserDocument.id))
-    )
-    personal_docs = personal_docs_db.all()
-    
-    return DocumentsResponse(
-        hemis_docs=hemis_docs,
-        personal_docs=[UserDocumentSchema.from_orm(d) for d in personal_docs]
-    )
-
-@router.post("/upload")
-async def upload_personal_document(
-    title: str = Form(...),
-    category: str = Form("Boshqa"), # Passport, ID Card, etc.
-    file: UploadFile = File(...),
-    student: Student = Depends(get_current_student),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Upload a personal document (e.g. Passport copy).
-    """
-    DUMP_CHANNEL_ID = -1002952642487
-    
-    file_id = ""
-    try:
-        content = await file.read()
-        from aiogram.types import BufferedInputFile
-        input_file = BufferedInputFile(content, filename=file.filename)
+    # 1. Check Telegram Link
+    # Explicitly query TgAccount to avoid MissingGreenlet on lazy load
+    stmt = select(TgAccount).where(TgAccount.student_id == student.id)
+    result = await db.execute(stmt)
+    tg_account = result.scalars().first()
         
-        caption = f"Document: {title} ({category})\nStudent: {student.full_name}"
-        msg = await bot.send_document(chat_id=DUMP_CHANNEL_ID, document=input_file, caption=caption)
-        file_id = msg.document.file_id
+    if not tg_account:
+         return {"success": False, "message": "Botga ulanmagansiz. Avval botga kiring."}
+    
+    chat_id = tg_account.telegram_id
+
+    # 2. Identify Document
+    doc_type = req.type.lower()
+    doc_name = "Hujjat"
+    url_suffix = ""
+    
+    if "reference" in doc_type or "ma'lumotnoma" in doc_type:
+        doc_name = "O'qish joyidan ma'lumotnoma"
+        url_suffix = "/student/reference"
+    elif "transcript" in doc_type or "transkript" in doc_type:
+        doc_name = "Transkript (Reyting daftarchasi)"
+        url_suffix = "/education/transcript" # Or /student/transcript
+    elif "contract" in doc_type or "shartnoma" in doc_type:
+        doc_name = "To'lov-kontrakt shartnomasi"
+        url_suffix = "/finance/contract"
+
+    try:
+        # 3. Simulate Fetch (Since Real PDF Gen API is hidden/protected or 404)
+        # We try to get content. Use HemisService to fetch.
+        # Check if we can get a real file.
+        
+        # NOTE: Since actual PDF endpoints are elusive (404), 
+        # we will send a helpful message with a direct link for now.
+        # If we had the PDF bytes, we would use:
+        # file_bytes = await HemisService.download_file(...)
+        # if file_bytes:
+        #    await bot.send_document(chat_id, BufferedInputFile(file_bytes, filename=...))
+        
+        message = (
+            f"📄 <b>{doc_name}</b>\n\n"
+            f"Hurmatli {student.full_name}, ushbu hujjatni shakllantirish uchun "
+            f"quyidagi havolaga o'ting (HEMIS tizimi):\n\n"
+            f"🔗 <a href='https://student.jmcu.uz{url_suffix}'>Yuklab olish (HEMIS)</a>\n\n"
+            f"<i>Izoh: Mobil ilova orqali to'g'ridan-to'g'ri PDF olish hozircha cheklangan.</i>"
+        )
+        
+        await bot.send_message(chat_id, message, parse_mode="HTML")
+        
+        return {"success": True, "message": "Telegramga yuborildi"}
         
     except Exception as e:
-        print(f"Upload Error: {e}")
-        return {"status": "error", "message": "Fayl yuklashda xatolik"}
-
-    doc = UserDocument(
-        student_id=student.id,
-        category=category,
-        title=title,
-        file_id=file_id,
-        status="active" # No approval needed for personal docs usually
-    )
-    db.add(doc)
-    await db.commit()
-    await db.refresh(doc)
-    
-    return {"status": "success", "id": doc.id, "file_id": file_id}
+        return {"success": False, "message": f"Xatolik: {str(e)}"}

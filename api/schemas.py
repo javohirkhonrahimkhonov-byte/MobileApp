@@ -114,3 +114,23 @@ class DocumentRequestSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PostCreateSchema(BaseModel):
+    content: str
+    category_type: str # 'university', 'faculty', 'specialty'
+
+class PostResponseSchema(BaseModel):
+    id: int
+    content: str
+    category_type: str
+    author_name: str
+    author_role: str
+    created_at: datetime
+    
+    # Context (Debugging mostly, but useful)
+    target_university_id: Optional[int]
+    target_faculty_id: Optional[int]
+    target_specialty_name: Optional[str]
+
+    class Config:
+        from_attributes = True

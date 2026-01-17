@@ -25,3 +25,12 @@ router.include_router(documents_router, prefix="/student/documents", tags=["Docu
 router.include_router(certificates_router, prefix="/student/certificates", tags=["Certificates"])
 router.include_router(academic_router, prefix="/education", tags=["Education"])
 router.include_router(files_router, prefix="/files", tags=["Files"])
+
+from .ai import router as ai_router
+router.include_router(ai_router)
+
+from .documents import router as documents_router
+router.include_router(documents_router)
+
+from .community import router as community_router
+router.include_router(community_router, prefix="/community", tags=["Community"])

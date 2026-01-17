@@ -681,3 +681,55 @@ class PendingUpload(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
 
     student: Mapped["Student"] = relationship("Student")
+
+
+# ============================================================
+# AI CHAT HISTORY (PERSISTENT)
+# ============================================================
+class AiMessage(Base):
+    __tablename__ = "ai_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    role: Mapped[str] = mapped_column(String(20), nullable=False) # 'user' or 'assistant'
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+
+    student: Mapped["Student"] = relationship("Student")
+
+
+# ============================================================
+# CHOYXONA (COMMUNITY)
+# ============================================================
+
+class ChoyxonaPost(Base):
+    __tablename__ = "choyxona_posts"
+
+    # ID va User
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+
+    # Content
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    # Kategoriya (universitet | fakultet | yonalish)
+    category_type: Mapped[str] = mapped_column(String(32), nullable=False) 
+    
+    # Target Context (Access Control)
+    # Qaysi auditoriya uchun mo'ljallangan?
+    target_university_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("universities.id", ondelete="CASCADE"), nullable=True)
+    target_faculty_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("faculties.id", ondelete="CASCADE"), nullable=True)
+    target_specialty_name: Mapped[str | None] = mapped_column(String(255), nullable=True) # Direction ID o'rniga name ishlatilmoqda chunki alohida jadval yo'q
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student")
+    university: Mapped["University"] = relationship("University")
+    faculty: Mapped["Faculty"] = relationship("Faculty")
+
+    def __repr__(self):
+        return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
+

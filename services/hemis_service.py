@@ -231,28 +231,31 @@ class HemisService:
                 logger.error(f"Resources Error: {e}")
                 return []
 
-    async def download_resource_file(self, token: str, resource_id: str, url: str):
+    @staticmethod
+    async def download_resource_file(token: str, url: str):
         async with httpx.AsyncClient() as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
                 
-                # If URL is full absolute path, use it. Otherwise construct.
-                # Hemis usually returns valid URLs or relative.
+                # Handle relative URLs
                 if not url.startswith("http"):
-                    # Logic to construct if needed, but usually url is enough or we use file-download endpoint
-                    # Actually standard endpoint is /education/file/download/{id} usually
-                    pass
+                   # Basic assumption: if starts with /, append to host. 
+                   # BASE_URL is https://student.jmcu.uz/rest/v1
+                   # We probably need https://student.jmcu.uz + url
+                   base = "https://student.jmcu.uz"
+                   if not url.startswith("/"):
+                       url = "/" + url
+                   url = base + url
 
                 response = await client.get(url, headers=headers, timeout=60)
                 if response.status_code == 200:
-                    # Content-Disposition for filename
-                    filename = None
+                    filename = "document" # default
                     cd = response.headers.get("content-disposition")
                     if cd:
                         import re
-                        fname = re.findall('filename=(.+)', cd)
-                        if fname: filename = fname[0].strip('"')
+                        fname = re.findall('filename="?([^"]+)"?', cd)
+                        if fname: filename = fname[0]
                         
                     return response.content, filename
                 return None, None
