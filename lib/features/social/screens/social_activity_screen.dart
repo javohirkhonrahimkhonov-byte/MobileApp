@@ -37,6 +37,7 @@ class SocialActivity {
         String fileId = img['file_id'] ?? "";
         if (fileId.isNotEmpty) {
           // Construct Proxy URL (The app will cache this result)
+          // PROXY FIX APPLIED
           images.add("${ApiConstants.backendUrl}/files/$fileId");
         }
       }
