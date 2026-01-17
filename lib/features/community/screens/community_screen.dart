@@ -21,6 +21,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
+      initialIndex: 0, // Default: Universitet
       child: Scaffold(
         backgroundColor: AppTheme.backgroundWhite,
         appBar: AppBar(
@@ -28,16 +29,34 @@ class _CommunityScreenState extends State<CommunityScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           centerTitle: false,
-          bottom: const TabBar(
-            labelColor: AppTheme.primaryBlue,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: AppTheme.primaryBlue,
-            isScrollable: true,
-            tabs: [
-              Tab(text: "Yo'nalish"),
-              Tab(text: "Fakultet"),
-              Tab(text: "Universitet"),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TabBar(
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey[600],
+                indicator: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))
+                  ]
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelPadding: EdgeInsets.zero,
+                tabs: const [
+                  Tab(child: Text("Universitet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                  Tab(child: Text("Yo'nalish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                  Tab(child: Text("Fakultet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                ],
+              ),
+            ),
           ),
           actions: [
             IconButton(
@@ -68,9 +87,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         body: TabBarView(
           children: [
+            _buildFeed("university"), // Default
             _buildFeed("specialty"),
             _buildFeed("faculty"),
-            _buildFeed("university"),
           ],
         ),
         floatingActionButton: FloatingActionButton(

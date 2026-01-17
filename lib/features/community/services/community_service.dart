@@ -127,47 +127,22 @@ class CommunityService {
   Future<List<Post>> getPosts({required String scope}) async {
     await Future.delayed(const Duration(milliseconds: 200));
     
-    if (scope == 'republic') { // Fallback for old calls if any
-       return _mockPosts; // Just return all for now or filter
+    // Return all if no scope or special 'all' scope (optional, but sticking to requested logic)
+    // The tabs send 'university', 'faculty', 'specialty'.
+    // If scope is 'university', commonly it implies "General/University-wide" posts.
+    // If scope is 'republic', it is "All/Global".
+    
+    // However, the prompt says: "university" tab -> show "university" posts.
+    
+    if (scope == 'republic') { // Maybe treating as "All" or "Global"
+       // Actually user removed 'republic' tab. 
+       // If we want 'Universitet' to be the default/main one showing everything, we can do that.
+       // But user asked for Strict Filtering: "Universitet bosilsa -> faqat Universitet".
+       return _mockPosts.where((p) => p.scope == 'republic' || p.scope == 'university').toList(); 
+       // Compatibility for old 'republic' data which might be merged into University view
     }
 
-    // Filter by scope
-    // Note: Since we are mocking, we map 'faculty' to 'university' if needed, or strict filtering
-    // Let's implement simple filtering based on a new 'scope' field in Post model or just some logic
-    // For now, I added 'scope' to the mock data above. However, the Post model might not have 'scope'.
-    // Let's just return all for simplicity or filter if property exists. 
-    // Since I can't easily change Model in this single file edit safely without checking Model file first,
-    // I will use a simple heuristic or just return subsets.
-    
-    // Better Approach: Filter by the 'scope' property I just added in the initializer.
-    // Wait, the Post model definition is in another file. I should assume it DOES NOT have 'scope' yet unless I added it.
-    // I did NOT add 'scope' to the model in previous steps. 
-    // So I will store them in separate lists internally OR just return based on ID ranges for now to be safe?
-    // actually, let's just ignore scope filtering for the newly created post (it will show everywhere) 
-    // or better: The prompt asked for "Create Post -> Feed Update".
-    
-    // Let's rely on the internal list order.
-    // To properly support filtering, I should ideally update the Model, but to avoid breaking things:
-    // I will just return the full list relative to the requested scope by "simulating" it.
-    
-    // Quick Fix: Just return the whole `_mockPosts` list for ANY scope for now, 
-    // BUT filtered by what "Looks like" that scope. 
-    // Actually, making it simple:
-    // If scope is University, return all. 
-    
-    // Let's stick to the previous hardcoded logic BUT use the `_mockPosts` list as the source.
-    // I need to tag the mock posts in `_mockPosts` with their scope. 
-    // Since `Post` model likely doesn't have `scope`, I will use a Map or Tuple? 
-    // No, `_mockPosts` is `List<Post>`.
-    
-    // OK, I will Modify the Post Model in the NEXT step to include `scope`. 
-    // For now, I will assume the `createPost` adds it to the list, and `getPosts` returns the *entire* list 
-    // if I can't filter easily. 
-    // Wait, I can just use a `List<Map<String, dynamic>>` locally or similar?
-    // No, let's simply return `_mockPosts` for now. 
-    // If the user selects "University", they see all posts. 
-    
-    return _mockPosts;
+    return _mockPosts.where((p) => p.scope == scope).toList();
   }
 
   Future<List<Comment>> getComments(String postId) async {
