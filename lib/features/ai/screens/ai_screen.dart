@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'ai_chat_screen.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
@@ -35,7 +36,7 @@ class AiScreen extends StatelessWidget {
             _buildAiButton(context, "Konspekt qilish (File/Matn)", Icons.note_alt, () {}),
             const Divider(height: 30),
             _buildAiButton(context, "AI bilan suhbat", Icons.chat_bubble, () {
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tez orada...")));
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatScreen()));
             }, isPrimary: true),
           ],
         ),

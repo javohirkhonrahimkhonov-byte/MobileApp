@@ -36,4 +36,5 @@ class ApiConstants {
   static const String grades = '$academic/grades';
   static const String subjects = '$academic/subjects';
   static const String resources = '$academic/resources';
+  static const String aiChat = '$backendUrl/ai/chat';
 }

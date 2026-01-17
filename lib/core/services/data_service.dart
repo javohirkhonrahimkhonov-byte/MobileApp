@@ -471,5 +471,27 @@ class DataService {
       return null;
     }
   }
+
+  // 17. Send AI Message
+  Future<String?> sendAiMessage(String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.aiChat),
+        headers: await _getHeaders(),
+        body: json.encode({'message': message}),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+           return body['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print("DataService: Error sending AI message: $e");
+      return null;
+    }
+  }
 }
 
