@@ -136,7 +136,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
             _buildMenuItem(context, "Davomat", Icons.calendar_month_rounded, Colors.green),
             _buildMenuItem(context, "Dars Jadvali", Icons.schedule_rounded, Colors.blue),
             _buildMenuItem(context, "Fanlar va Resurslar", Icons.library_books_rounded, Colors.orange),
-            _buildMenuItem(context, "Nazorat va Baholar", Icons.grade_rounded, Colors.purple),
+            _buildMenuItem(context, "O'zlashtirish", Icons.grade_rounded, Colors.purple),
             _buildMenuItem(context, "Imtihonlar", Icons.edit_document, Colors.redAccent),
             _buildMenuItem(context, "Reyting Daftarchasi", Icons.history_edu_rounded, Colors.teal),
           ],
@@ -183,7 +183,7 @@ class _AcademicScreenState extends State<AcademicScreen> {
              Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
              return;
           }
-          if (title.contains("Baholar")) { // Matches "Nazorat va Baholar"
+          if (title == "O'zlashtirish") { 
              Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
              return;
           }

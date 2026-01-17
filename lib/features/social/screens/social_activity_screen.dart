@@ -913,24 +913,36 @@ class ActivityCard extends StatefulWidget {
 class _ActivityCardState extends State<ActivityCard> {
   int _currentIndex = 0;
   Timer? _timer;
-  final PageController _pageController = PageController();
+  late PageController _pageController;
+  int _virtualIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    // Start in the middle for infinite scrolling feel
+    _virtualIndex = widget.activity.imageUrls.length > 1 ? 5000 : 0;
+    _pageController = PageController(initialPage: _virtualIndex);
+    
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
     if (widget.activity.imageUrls.length > 1) {
+      _timer?.cancel();
       _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
         if (!mounted) return;
-        setState(() {
-          _currentIndex = (_currentIndex + 1) % widget.activity.imageUrls.length;
-        });
+        _virtualIndex++;
         _pageController.animateToPage(
-          _currentIndex,
+          _virtualIndex,
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeInOut,
         );
       });
     }
+  }
+
+  void _stopAutoSlide() {
+    _timer?.cancel();
   }
 
   @override
@@ -964,6 +976,7 @@ class _ActivityCardState extends State<ActivityCard> {
     }
 
     bool hasValidImage = widget.activity.imageUrls.isNotEmpty && widget.activity.imageUrls.first.startsWith("http");
+    int imageCount = widget.activity.imageUrls.length;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -991,18 +1004,30 @@ class _ActivityCardState extends State<ActivityCard> {
                   width: double.infinity,
                   color: Colors.grey[200],
                   child: hasValidImage
-                      ? PageView.builder(
-                          controller: _pageController,
-                          physics: const NeverScrollableScrollPhysics(), // Disable manual swipe on list
-                          itemCount: widget.activity.imageUrls.length,
-                          itemBuilder: (context, index) {
-                             return CachedNetworkImage(
-                               imageUrl: widget.activity.imageUrls[index],
-                               fit: BoxFit.cover,
-                               placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                               errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                             );
-                          },
+                      ? Listener(
+                          onPointerDown: (_) => _stopAutoSlide(),
+                          onPointerUp: (_) => _startAutoSlide(),
+                          onPointerCancel: (_) => _startAutoSlide(),
+                          child: PageView.builder(
+                            controller: _pageController,
+                            // Enable manual swipe (default physics)
+                            itemCount: imageCount > 1 ? 10000 : 1, 
+                            onPageChanged: (index) {
+                               setState(() {
+                                 _virtualIndex = index;
+                                 _currentIndex = index % imageCount;
+                               });
+                            },
+                            itemBuilder: (context, index) {
+                               final realIndex = index % imageCount;
+                               return CachedNetworkImage(
+                                 imageUrl: widget.activity.imageUrls[realIndex],
+                                 fit: BoxFit.cover,
+                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                 errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                               );
+                            },
+                          ),
                         )
                       : const Center(child: Icon(Icons.image, color: Colors.grey, size: 40)),
                 ),
@@ -1026,14 +1051,14 @@ class _ActivityCardState extends State<ActivityCard> {
                   ),
                 ),
                 // Pagination Dots (if multiple)
-                if (widget.activity.imageUrls.length > 1)
+                if (imageCount > 1)
                   Positioned(
                     bottom: 12,
                     left: 0,
                     right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(widget.activity.imageUrls.length, (index) {
+                      children: List.generate(imageCount, (index) {
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.symmetric(horizontal: 3),
