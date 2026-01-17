@@ -85,11 +85,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     }
   }
 
-  void _removeImage(int index) {
-    setState(() {
-      _selectedImages.removeAt(index);
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
