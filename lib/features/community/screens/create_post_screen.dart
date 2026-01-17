@@ -35,10 +35,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-import '../models/community_models.dart';
-import '../services/community_service.dart'; // Import service
 
-// ...
 
   void _publish() async {
     final title = _titleController.text.trim();
