@@ -596,11 +596,33 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
                if (_isCheckingReg) return;
                
                if (!_isRegisteredBot) {
-                 _showRegistrationAlert();
+                 // Double check (User might have just registered)
+                 setState(() => _isCheckingReg = true); 
+                 
+                 try {
+                    final profile = await Provider.of<DataService>(context, listen: false).getProfile();
+                    if (mounted) {
+                       setState(() {
+                          _isRegisteredBot = profile['is_registered_bot'] ?? false;
+                          _isCheckingReg = false;
+                       });
+                       
+                       if (_isRegisteredBot) {
+                          _showAddActivitySheet();
+                          return;
+                       }
+                    }
+                 } catch (e) {
+                    if (mounted) setState(() => _isCheckingReg = false);
+                 }
+                 
+                 if (mounted && !_isRegisteredBot) {
+                    _showRegistrationAlert();
+                 }
                } else {
                  _showAddActivitySheet();
                }
