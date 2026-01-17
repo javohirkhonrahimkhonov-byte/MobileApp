@@ -21,6 +21,9 @@ class Post {
   final List<int>? pollVotes; // Vote counts per option
   final int? userVote; // Index of option user voted for (or null)
   final String? scope; // 'university', 'faculty', 'specialty'
+  final String? targetUniversityId;
+  final String? targetFacultyId;
+  final String? targetSpecialtyId;
 
   Post({
     required this.id,
@@ -45,6 +48,9 @@ class Post {
     this.pollVotes,
     this.userVote,
     this.scope,
+    this.targetUniversityId,
+    this.targetFacultyId,
+    this.targetSpecialtyId,
   });
 }
 

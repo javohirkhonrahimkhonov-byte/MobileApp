@@ -15,6 +15,11 @@ class CommunityService {
   // In-Memory Storage
   final List<Post> _mockPosts = [];
 
+  // Mock Current User Context (Usually from AuthService)
+  final String _currentUniversityId = "univ_tatu";
+  final String _currentFacultyId = "fac_cyber";
+  final String _currentSpecialtyId = "spec_infosec";
+
   void _initializeMockData() {
     _mockPosts.addAll([
         // Specialty Posts
@@ -35,6 +40,9 @@ class CommunityService {
           usefulScore: 50,
           mediaUrls: [],
           scope: 'specialty',
+          targetUniversityId: "univ_tatu",
+          targetFacultyId: "fac_cyber",
+          targetSpecialtyId: "spec_infosec",
         ),
         Post(
           id: '6',
@@ -48,6 +56,9 @@ class CommunityService {
           commentsCount: 3,
           timeAgo: "1 soat oldin",
           scope: 'specialty',
+          targetUniversityId: "univ_tatu",
+          targetFacultyId: "fac_cyber",
+          targetSpecialtyId: "spec_infosec",
         ),
         // University Posts
         Post(
@@ -66,6 +77,7 @@ class CommunityService {
           pollVotes: [12, 45, 20, 8, 3],
           userVote: null,
           scope: 'university',
+          targetUniversityId: "univ_tatu",
         ),
         Post(
           id: '1',
@@ -80,9 +92,9 @@ class CommunityService {
           timeAgo: "2 soat oldin",
           usefulScore: 12, 
           scope: 'university',
+          targetUniversityId: "univ_tatu",
         ),
-        // Faculty (Mocking as University for now or Republic)
-        // Republic / Global
+        // Republic / Global (treated as general)
         Post(
           id: '3',
           authorName: 'Uzbekistan Youth Union',
@@ -99,20 +111,8 @@ class CommunityService {
           timeAgo: "1 kun oldin",
           isVerified: true, 
           views: 5400,
-          scope: 'republic', // Or fallback
-        ),
-        Post(
-          id: '4',
-          authorName: 'Google DSC Lead',
-          authorUsername: '@gdsc_lead',
-          authorAvatar: '',
-          authorRole: 'Community',
-          content: 'Google Solution Challenge 2026 uchun jamoalar yig\'yapmiz. Flutter va Python biladiganlar kerak. DM yozing. 🚀',
-          tags: ['#hackathon', '#google', '#team'],
-          likes: 56,
-          commentsCount: 12,
-          timeAgo: "3 kun oldin",
-          scope: 'republic',
+          scope: 'university', // fallback to university for now as republic tab is gone
+          targetUniversityId: "univ_tatu", // Make visible to TATU
         ),
     ]);
   }
@@ -120,29 +120,59 @@ class CommunityService {
   Future<void> createPost(Post post) async {
     // Simulate Network Delay
     await Future.delayed(const Duration(milliseconds: 300));
+    
+    // Enrich Post with Current User Context
+    final enrichedPost = Post(
+      id: post.id,
+      authorName: post.authorName,
+      authorUsername: post.authorUsername,
+      authorAvatar: post.authorAvatar,
+      authorRole: post.authorRole,
+      content: post.content,
+      tags: post.tags,
+      timeAgo: post.timeAgo,
+      scope: post.scope,
+      pollOptions: post.pollOptions,
+      pollVotes: post.pollVotes,
+      
+      // Strict Context Assignment
+      targetUniversityId: _currentUniversityId,
+      targetFacultyId: post.scope == 'faculty' || post.scope == 'specialty' ? _currentFacultyId : null,
+      targetSpecialtyId: post.scope == 'specialty' ? _currentSpecialtyId : null,
+    );
+
     // Add to top
-    _mockPosts.insert(0, post);
+    _mockPosts.insert(0, enrichedPost);
   }
 
   Future<List<Post>> getPosts({required String scope}) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    
-    // Return all if no scope or special 'all' scope (optional, but sticking to requested logic)
-    // The tabs send 'university', 'faculty', 'specialty'.
-    // If scope is 'university', commonly it implies "General/University-wide" posts.
-    // If scope is 'republic', it is "All/Global".
-    
-    // However, the prompt says: "university" tab -> show "university" posts.
-    
-    if (scope == 'republic') { // Maybe treating as "All" or "Global"
-       // Actually user removed 'republic' tab. 
-       // If we want 'Universitet' to be the default/main one showing everything, we can do that.
-       // But user asked for Strict Filtering: "Universitet bosilsa -> faqat Universitet".
-       return _mockPosts.where((p) => p.scope == 'republic' || p.scope == 'university').toList(); 
-       // Compatibility for old 'republic' data which might be merged into University view
-    }
 
-    return _mockPosts.where((p) => p.scope == scope).toList();
+    // Strict Filtering Logic
+    return _mockPosts.where((p) {
+      // 1. Filter by requested Scope (Tab)
+      if (p.scope != scope && !(scope == 'university' && p.scope == 'republic')) return false;
+
+      // 2. Filter by User Context
+      // University Tab -> Show only my University posts (and Global/Republic if mapped)
+      if (scope == 'university') {
+         return p.targetUniversityId == _currentUniversityId || p.targetUniversityId == null; // null means global
+      }
+      
+      // Faculty Tab -> Show only my Faculty posts
+      if (scope == 'faculty') {
+         return p.targetUniversityId == _currentUniversityId && p.targetFacultyId == _currentFacultyId;
+      }
+      
+      // Specialty Tab -> Show only my Specialty posts
+      if (scope == 'specialty') {
+         return p.targetUniversityId == _currentUniversityId && 
+                p.targetFacultyId == _currentFacultyId &&
+                p.targetSpecialtyId == _currentSpecialtyId;
+      }
+
+      return false;
+    }).toList();
   }
 
   Future<List<Comment>> getComments(String postId) async {
