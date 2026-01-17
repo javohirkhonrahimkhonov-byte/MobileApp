@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../screens/post_detail_screen.dart';
+import '../screens/user_profile_screen.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -71,9 +72,18 @@ class _PostCardState extends State<PostCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header (Avatar + Names)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          GestureDetector(
+            onTap: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                 authorName: widget.post.authorName,
+                 authorUsername: widget.post.authorUsername,
+                 authorAvatar: widget.post.authorAvatar,
+                 authorRole: widget.post.authorRole,
+               )));
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Hero(
                 tag: "avatar_${widget.post.id}",
                 child: CircleAvatar(
@@ -120,6 +130,7 @@ class _PostCardState extends State<PostCard> {
                 padding: EdgeInsets.zero,
               )
             ],
+          ),
           ),
           
           // Body content
