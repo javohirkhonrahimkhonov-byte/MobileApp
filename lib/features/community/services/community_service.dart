@@ -2,7 +2,6 @@ import '../models/community_models.dart';
 
 class CommunityService {
   Future<List<Post>> getPosts({required String scope}) async {
-    // Mock API Delay
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (scope == "specialty") {
@@ -10,96 +9,63 @@ class CommunityService {
         Post(
           id: '5',
           authorName: 'Sardor aka (Mentor)',
+          authorUsername: '@sardor_dev',
           authorAvatar: '',
           authorRole: 'Dasturlash Kafedrasi',
           content: 'Python bo\'yicha qo\'shimcha darslar har chorshanba 14:00 da 204-xonada bo\'ladi.',
           tags: ['#python', '#dars', '#elon'],
           likes: 25,
           commentsCount: 8,
+          sharesCount: 12,
+          repostsCount: 3,
           timeAgo: "45 daqiqa oldin",
           isVerified: true,
           usefulScore: 50,
+          mediaUrls: [],
         ),
         Post(
           id: '6',
           authorName: '315-21 Guruh sardori',
+          authorUsername: '@leader_315',
           authorAvatar: '',
           authorRole: 'Guruh',
-          content: 'Javalar darsiga vazifani gruppaga tashlab qo\'ydim. Ko\'rib olinglar.',
+          content: 'Javalar darsiga vazifani gruppaga tashlab qo\'ydim. Ko\'rib olinglar.\n\nErtaga soat 10:00 da zoom bor.',
           tags: ['#java', '#vazifa'],
           likes: 12,
           commentsCount: 3,
           timeAgo: "1 soat oldin",
         ),
       ];
-    } else if (scope == "faculty") {
-      return [
-        Post(
-          id: '20',
-          authorName: 'Fakultet Dekani',
-          authorAvatar: '',
-          authorRole: 'Dekanat',
-          content: 'Hurmatli talabalar! Kelasi hafta "Fakultet kuni" tadbiri bo\'lib o\'tadi. Barcha faol talabalarni taklif qilamiz.',
-          tags: ['#tadbir', '#dekanat', '#elon'],
-          likes: 156,
-          commentsCount: 34,
-          timeAgo: "1 kun oldin",
-          isVerified: true,
-          views: 1200,
-        ),
-        Post(
-          id: '21',
-          authorName: 'O\'quv bo\'limi',
-          authorAvatar: '',
-          authorRole: 'Admin',
-          content: 'Imtihon jadvalsari doskaga ilindi. Iltimos, tanishib chiqing.',
-          tags: ['#imtihon', '#jadval'],
-          likes: 89,
-          commentsCount: 5,
-          timeAgo: "3 soat oldin",
-        ),
-      ];
     } else if (scope == "university") {
       return [
         Post(
-          id: '10', // ID 10 for Poll
+          id: '10', // Poll
           authorName: 'Talabalar Kengashi',
+          authorUsername: '@kengash_official',
           authorAvatar: '',
           authorRole: 'Rasmiy',
-          content: 'Hurmatli talabalar! Universitet oshxonasidagi ovqatlar sifati va narxi sizni qoniqtiradimi? Sizning fikringiz muhim!',
+          content: 'Universitet oshxonasidagi ovqatlar sifati va narxi sizni qoniqtiradimi? Sizning fikringiz muhim! 🍲',
           tags: ['#sorovnoma', '#oshxona', '#muhim'],
           likes: 88,
           commentsCount: 15,
           timeAgo: "30 daqiqa oldin",
           isVerified: true,
           pollOptions: ["Ha, juda zo'r", "Yomon emas, bo'ladi", "Narxi qimmat", "Sifatsiz", "Oshxona bormi? 😅"],
-          pollVotes: [12, 45, 20, 8, 3], // Mock votes
-          userVote: null, // User hasn't voted yet
+          pollVotes: [12, 45, 20, 8, 3],
+          userVote: null,
         ),
         Post(
           id: '1',
           authorName: 'Akramjonov Muhammadali',
+          authorUsername: '@akramjonov_m',
           authorAvatar: '',
           authorRole: '315-21 Axborot Xavfsizligi',
-          content: 'Ertaga birinchi parada "Kiberxavfsizlik asoslari" darsi bo\'ladimi yoki bekor qilindimi? Domla kasal deb eshitgandim.',
+          content: 'Ertaga birinchi parada "Kiberxavfsizlik asoslari" darsi bo\'ladimi yoki bekor qilindimi? Domla kasal deb eshitgandim. 🤔',
           tags: ['#dars', '#savol', '#jadval'],
           likes: 5,
           commentsCount: 2,
           timeAgo: "2 soat oldin",
           usefulScore: 12, 
-        ),
-        Post(
-          id: '2',
-          authorName: 'Abdullayeva Zarnigor',
-          authorAvatar: '',
-          authorRole: 'Tyutor',
-          content: 'Hurmatli talabalar! Kontrakt to\'lovining oxirgi muddati 15-martgacha uzaytirildi. Iltimos, to\'lov kvitansiyalarini dekanatga topshiring.',
-          tags: ['#kontrakt', '#muhim', '#dekanat'],
-          likes: 42,
-          commentsCount: 0,
-          timeAgo: "5 soat oldin",
-          isTyutor: true, // Shows badge
-          isVerified: true,
         ),
       ];
     } else {
@@ -108,22 +74,27 @@ class CommunityService {
         Post(
           id: '3',
           authorName: 'Uzbekistan Youth Union',
+          authorUsername: '@yoshlar_ittifoqi',
           authorAvatar: '',
           authorRole: 'Respublika',
-          content: 'Yozgi "Raqamli Avlod" oromgohiga qabul boshlandi! Ishtirok etish uchun arizalarni @digitalcampbot orqali yuboring.',
+          content: 'Yozgi "Raqamli Avlod" oromgohiga qabul boshlandi! Ishtirok etish uchun arizalarni @digitalcampbot orqali yuboring. \n\nJoylar soni cheklangan! 🏕️💻',
           tags: ['#lager', '#yoshlar', '#it'],
+          mediaUrls: ['https://example.com/camp.jpg'], // Mock URL, in reality handled by widget
           likes: 128,
           commentsCount: 45,
+          sharesCount: 100,
+          repostsCount: 50,
           timeAgo: "1 kun oldin",
-          isVerified: true, // Official
+          isVerified: true, 
           views: 5400,
         ),
         Post(
           id: '4',
           authorName: 'Google DSC Lead',
+          authorUsername: '@gdsc_lead',
           authorAvatar: '',
           authorRole: 'Community',
-          content: 'Google Solution Challenge 2026 uchun jamoalar yig\'yapmiz. Flutter va Python biladiganlar kerak. DM yozing.',
+          content: 'Google Solution Challenge 2026 uchun jamoalar yig\'yapmiz. Flutter va Python biladiganlar kerak. DM yozing. 🚀',
           tags: ['#hackathon', '#google', '#team'],
           likes: 56,
           commentsCount: 12,
@@ -144,30 +115,54 @@ class CommunityService {
           content: 'Ha, domla kasal ekanlar, dars bo\'lmaydi.',
           timeAgo: '1 soat oldin',
         ),
-        Comment(
-          id: '102',
-          authorName: 'Karimova Gulnoza',
-          content: 'Rahmat, men endi yo\'lga chiqmoqchi edim!',
-          timeAgo: '50 daqiqa oldin',
-        ),
       ];
-    } else if (postId == '3') {
+    } 
+    return [];
+  }
+
+  // --- New Chat Methods ---
+
+  Future<List<Chat>> getChats() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return [
+      Chat(
+        id: '1',
+        partnerName: 'Akramjonov Muhammadali',
+        partnerAvatar: '',
+        lastMessage: 'Ertaga darsga borasanmi?',
+        timeAgo: '5 daqiqa',
+        unreadCount: 2,
+        isOnline: true,
+      ),
+      Chat(
+        id: '2',
+        partnerName: 'Sardor aka (Mentor)',
+        partnerAvatar: '',
+        lastMessage: 'Rahmat, tushundim.',
+        timeAgo: '1 soat',
+        isOnline: false,
+      ),
+      Chat(
+        id: '3',
+        partnerName: 'Google DSC Lead',
+        partnerAvatar: '',
+        lastMessage: 'Jamoaga qabul qilindingiz!',
+        timeAgo: 'Kecha',
+      ),
+    ];
+  }
+
+  Future<List<Message>> getMessages(String chatId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (chatId == '1') {
       return [
-        Comment(
-          id: '301',
-          authorName: 'Rustamov Sardor',
-          content: 'Narxi qancha ekan?',
-          timeAgo: '5 soat oldin',
-        ),
-        Comment(
-          id: '302',
-          authorName: 'Uzbekistan Youth Union',
-          authorAvatar: '', // Not used in Comment yet but could be
-          content: 'Oromgoh bepul! Faqat saralashdan o\'tish kerak.',
-          timeAgo: '4 soat oldin',
-        ),
+         Message(id: '1', content: 'Salom, qalaysan?', isMe: false, timestamp: '10:00'),
+         Message(id: '2', content: 'Yaxshi rahmat, o\'zingchi?', isMe: true, timestamp: '10:01', isRead: true),
+         Message(id: '3', content: 'Ertaga darsga borasanmi?', isMe: false, timestamp: '10:05'),
+         Message(id: '4', content: 'Ha, albatta. 1-para muhim.', isMe: true, timestamp: '10:06', isRead: false),
       ];
     }
     return [];
   }
 }
+

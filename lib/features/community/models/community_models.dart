@@ -1,13 +1,17 @@
 class Post {
   final String id;
   final String authorName;
+  final String authorUsername; // @handle
   final String authorAvatar; // Url or Initials
   final String authorRole; // e.g. "315-21 Guruh", "Dekan"
   final String content;
   final String? timeAgo;
   final int likes;
   final int commentsCount;
+  final int sharesCount;
+  final int repostsCount;
   final List<String> tags;
+  final List<String> mediaUrls; // Images/Videos
   final bool isLiked; // by current user
   final bool isVerified; // Blue checkmark (Official)
   final bool isTyutor; // Special badge
@@ -20,13 +24,17 @@ class Post {
   Post({
     required this.id,
     required this.authorName,
+    this.authorUsername = "@student",
     required this.authorAvatar,
     required this.authorRole,
     required this.content,
     this.timeAgo = "Hozirgina",
     this.likes = 0,
     this.commentsCount = 0,
+    this.sharesCount = 0,
+    this.repostsCount = 0,
     this.tags = const [],
+    this.mediaUrls = const [],
     this.isLiked = false,
     this.isVerified = false,
     this.isTyutor = false,
@@ -41,7 +49,7 @@ class Post {
 class Comment {
   final String id;
   final String authorName;
-  final String authorAvatar; // Initials or URL
+  final String authorAvatar;
   final String content;
   final String timeAgo;
 
@@ -51,5 +59,43 @@ class Comment {
     this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
+  });
+}
+
+class Chat {
+  final String id;
+  final String partnerName;
+  final String partnerAvatar;
+  final String lastMessage;
+  final String timeAgo;
+  final int unreadCount;
+  final bool isOnline;
+
+  Chat({
+    required this.id,
+    required this.partnerName,
+    required this.partnerAvatar,
+    required this.lastMessage,
+    required this.timeAgo,
+    this.unreadCount = 0,
+    this.isOnline = false,
+  });
+}
+
+class Message {
+  final String id;
+  final String content;
+  final bool isMe;
+  final String timestamp;
+  final bool isRead;
+  final String? mediaUrl;
+
+  Message({
+    required this.id,
+    required this.content,
+    required this.isMe,
+    required this.timestamp,
+    this.isRead = false,
+    this.mediaUrl,
   });
 }

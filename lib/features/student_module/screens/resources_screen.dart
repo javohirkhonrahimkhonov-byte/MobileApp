@@ -38,14 +38,32 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     }
   }
 
-  Future<void> _openFile(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
+  Future<void> _sendFileToBot(String url, String name) async {
+    if (url.isEmpty) return;
+    
+    // Show Loading Feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Botga yuborilmoqda... ⏳"), duration: Duration(seconds: 1)),
+    );
+
+    final success = await _dataService.sendResourceToBot(url, name);
+    
+    if (mounted) {
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Faylni ochib bo'lmadi")),
+          const SnackBar(content: Text("Fayl Telegram botingizga yuborildi ✅"), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: const Text("Xatolik: Bot ishga tushganligini tekshiring ❌"), 
+             backgroundColor: Colors.red,
+             action: SnackBarAction(label: "Botni ochish", onPressed: () async {
+                 // Try to open bot link if possible, or just instruction
+                 final botUrl = Uri.parse("https://t.me/talabahamkorbot"); // Replace with actual bot user
+                 if (await canLaunchUrl(botUrl)) launchUrl(botUrl, mode: LaunchMode.externalApplication);
+             }),
+           ),
         );
       }
     }
@@ -134,7 +152,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         style: const TextStyle(fontSize: 14, color: Colors.blue, fontWeight: FontWeight.w500),
       ),
       trailing: const Icon(Icons.download_rounded, color: Colors.grey, size: 20),
-      onTap: () => _openFile(url),
+      onTap: () => _sendFileToBot(url, name),
     );
   }
 }

@@ -429,5 +429,26 @@ class DataService {
       return [];
     }
   }
+
+  // 15. Send Resource to Bot
+  Future<bool> sendResourceToBot(String url, String name) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConstants.resources}/send"),
+        headers: await _getHeaders(),
+        body: json.encode({"url": url, "name": name})
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        print("Bot Send Response: $body");
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print("DataService: Error sending resource: $e");
+      return false;
+    }
+  }
 }
 

@@ -5,6 +5,7 @@ import '../services/community_service.dart';
 import '../widgets/post_card.dart';
 import '../widgets/shimmer_post.dart';
 import '../screens/create_post_screen.dart';
+import 'chat_list_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -44,6 +45,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
               icon: const Icon(Icons.search, color: Colors.black),
               onPressed: () {},
             ),
+            IconButton(
+              icon: Stack(
+                children: [
+                   const Icon(Icons.chat_bubble_outline_rounded, color: Colors.black),
+                   Positioned(
+                     right: 0,
+                     top: 0,
+                     child: Container(
+                       width: 8,
+                       height: 8,
+                       decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                     ),
+                   )
+                ],
+              ),
+              onPressed: () {
+                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
+              },
+            ),
+            const SizedBox(width: 8),
           ],
         ),
         body: TabBarView(

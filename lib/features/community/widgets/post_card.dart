@@ -16,6 +16,8 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   late bool _isLiked;
   late int _likeCount;
+  late int _repostCount;
+  bool _isReposted = false; // Mock local state
   List<int>? _pollVotes;
   int? _userVote;
 
@@ -24,12 +26,13 @@ class _PostCardState extends State<PostCard> {
     super.initState();
     _isLiked = widget.post.isLiked;
     _likeCount = widget.post.likes;
+    _repostCount = widget.post.repostsCount;
     _pollVotes = widget.post.pollVotes != null ? List.from(widget.post.pollVotes!) : null;
     _userVote = widget.post.userVote;
   }
 
   void _votePoll(int index) {
-    if (_userVote != null) return; // Already voted
+    if (_userVote != null) return; 
     setState(() {
       _userVote = index;
       _pollVotes![index]++;
@@ -41,7 +44,13 @@ class _PostCardState extends State<PostCard> {
       _isLiked = !_isLiked;
       _likeCount += _isLiked ? 1 : -1;
     });
-    // TODO: Call service to update backend
+  }
+
+  void _toggleRepost() {
+    setState(() {
+      _isReposted = !_isReposted;
+      _repostCount += _isReposted ? 1 : -1;
+    });
   }
 
   void _sharePost() {
@@ -53,34 +62,27 @@ class _PostCardState extends State<PostCard> {
   @override
   Widget build(BuildContext context) {
     Widget content = Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 1)), // Divider style
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header (Avatar + Names)
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Hero(
                 tag: "avatar_${widget.post.id}",
                 child: CircleAvatar(
-                  radius: 20,
+                  radius: 22,
+                  backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
                   backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                  child: Text(
-                    widget.post.authorName.isNotEmpty ? widget.post.authorName[0] : "?",
-                    style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
-                  ),
+                  child: widget.post.authorAvatar.isEmpty 
+                    ? Text(widget.post.authorName[0], style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
+                    : null,
                 ),
               ),
               const SizedBox(width: 12),
@@ -93,7 +95,7 @@ class _PostCardState extends State<PostCard> {
                         Flexible(
                           child: Text(
                             widget.post.authorName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -102,109 +104,95 @@ class _PostCardState extends State<PostCard> {
                           const SizedBox(width: 4),
                           const Icon(Icons.verified, color: Colors.blue, size: 16),
                         ],
-                        if (widget.post.isTyutor) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
-                            child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.deepOrange, fontWeight: FontWeight.bold)),
-                          )
-                        ]
                       ],
                     ),
                     Text(
-                      "${widget.post.authorRole} • ${widget.post.timeAgo}",
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      "${widget.post.authorUsername} • ${widget.post.timeAgo}",
+                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
                     ),
                   ],
                 ),
               ),
-              if (widget.post.usefulScore > 10) 
-                 Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                   decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(12)),
-                   child: Row(
-                     children: [
-                       const Icon(Icons.show_chart, size: 14, color: Colors.green),
-                       const SizedBox(width: 4),
-                       Text("Top", style: TextStyle(fontSize: 10, color: Colors.green[700], fontWeight: FontWeight.bold)),
-                     ],
-                   ),
-                 )
-              else 
-                 const Icon(Icons.more_horiz, color: Colors.grey),
+              IconButton(
+                icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                onPressed: () {},
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              )
             ],
           ),
-          const SizedBox(height: 12),
           
-          // Content
-          Text(widget.post.content, style: const TextStyle(fontSize: 15, height: 1.4)),
-          
-          const SizedBox(height: 12),
-
-          // Poll Section
-          if (widget.post.pollOptions != null)
-             _buildPoll(),
-
-          // Tags
-          if (widget.post.tags.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              children: widget.post.tags.map((tag) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(tag, style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 12)),
-              )).toList(),
-            ),
-
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-
-          // Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-               Row(
-                 children: [
-                    _buildInteractiveAction(
-                      icon: _isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                      color: _isLiked ? Colors.red : Colors.grey[600]!,
-                      label: "$_likeCount",
-                      onTap: _toggleLike,
+          // Body content
+          Padding(
+             padding: const EdgeInsets.only(left: 56), // Align with text start
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 const SizedBox(height: 4),
+                 Text(widget.post.content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87)),
+                 
+                 // Tags
+                 if (widget.post.tags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        children: widget.post.tags.map((tag) => Text(tag, style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 13))).toList(),
+                      ),
                     ),
-                    const SizedBox(width: 16),
-                    _buildInteractiveAction(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      color: Colors.grey[600]!,
-                      label: "${widget.post.commentsCount}",
-                      onTap: () {
-                         if (!widget.isDetail) {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: widget.post)));
-                         }
-                      },
+
+                 // Media Grid
+                 if (widget.post.mediaUrls.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _buildMediaGrid(),
                     ),
-                    const SizedBox(width: 16),
-                    _buildInteractiveAction(
-                      icon: Icons.share_rounded,
-                      color: Colors.grey[600]!,
-                      label: "Ulashish",
-                      onTap: _sharePost,
+
+                 // Poll
+                 if (widget.post.pollOptions != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _buildPoll(),
                     ),
-                 ],
-               ),
-               // View Count
-               Row(
-                 children: [
-                   Icon(Icons.remove_red_eye_outlined, size: 16, color: Colors.grey[400]),
-                   const SizedBox(width: 4),
-                   Text("${widget.post.views > 0 ? widget.post.views : 100+widget.post.likes*5}", style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-                 ],
-               )
-            ],
+
+                 const SizedBox(height: 12),
+                 
+                 // Actions
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                      _buildAction(
+                        icon: Icons.chat_bubble_outline_rounded, 
+                        count: widget.post.commentsCount, 
+                        color: Colors.grey,
+                        onTap: () {
+                           if (!widget.isDetail) {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: widget.post)));
+                           }
+                        }
+                      ),
+                      _buildAction(
+                        icon: _isReposted ? Icons.repeat_rounded : Icons.repeat_rounded, 
+                        count: _repostCount, 
+                        color: _isReposted ? Colors.green : Colors.grey,
+                        onTap: _toggleRepost
+                      ),
+                      _buildAction(
+                        icon: _isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded, 
+                        count: _likeCount, 
+                        color: _isLiked ? Colors.pink : Colors.grey,
+                        onTap: _toggleLike
+                      ),
+                      _buildAction(
+                        icon: Icons.share_rounded, 
+                        count: null, // Share usually doesn't show count locally unless API provided
+                        color: Colors.grey,
+                        onTap: _sharePost
+                      ),
+                   ],
+                 )
+               ],
+             ),
           )
         ],
       ),
@@ -212,7 +200,7 @@ class _PostCardState extends State<PostCard> {
 
     if (widget.isDetail) return content;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         Navigator.push(
           context,
@@ -225,12 +213,55 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  Widget _buildMediaGrid() {
+    final urls = widget.post.mediaUrls;
+    if (urls.isEmpty) return const SizedBox.shrink();
+
+    // Simple implementation: Just show first image rounded
+    // In real app, would use GridView or StaggeredGrid
+    // Since mock data only has 1 url usually, we keep it simple.
+    
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: 16/9,
+        child: Image.network(
+           urls.first, 
+           fit: BoxFit.cover,
+           errorBuilder: (ctx, _, __) => Container(
+             color: Colors.grey[200],
+             child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAction({required IconData icon, int? count, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            if (count != null && count > 0) ...[
+               const SizedBox(width: 4),
+               Text("$count", style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.normal))
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPoll() {
+     // (Re-using existing Poll Logic but styled lighter)
     int totalVotes = _pollVotes!.reduce((a, b) => a + b);
-    if (totalVotes == 0) totalVotes = 1; // Avoid division by zero
+    if (totalVotes == 0) totalVotes = 1; 
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[50], 
@@ -253,20 +284,18 @@ class _PostCardState extends State<PostCard> {
               borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
-                  // Background Progress Bar
                   if (showResults)
                     Container(
-                      height: 40,
-                      width: MediaQuery.of(context).size.width * percent, // Approximate
+                      height: 36,
+                      width: MediaQuery.of(context).size.width * percent * 0.7, // 70% width max inside layout
                       decoration: BoxDecoration(
                          color: isSelected ? AppTheme.primaryBlue.withOpacity(0.2) : Colors.grey[200],
                          borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   
-                  // Text & Border
                   Container(
-                    height: 40,
+                    height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -278,21 +307,9 @@ class _PostCardState extends State<PostCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          option, 
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: Colors.black87
-                          )
-                        ),
+                        Text(option, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
                         if (showResults)
-                          Text(
-                            "${(percent * 100).toStringAsFixed(0)}%",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold, 
-                              color: isSelected ? AppTheme.primaryBlue : Colors.grey[600]
-                            ),
-                          )
+                          Text("${(percent * 100).toStringAsFixed(0)}%", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isSelected ? AppTheme.primaryBlue : Colors.grey[600]))
                       ],
                     ),
                   ),
@@ -301,28 +318,6 @@ class _PostCardState extends State<PostCard> {
             ),
           );
         }),
-      ),
-    );
-  }
-
-  Widget _buildInteractiveAction({
-    required IconData icon, 
-    required Color color, 
-    required String label, 
-    required VoidCallback onTap
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
-          ],
-        ),
       ),
     );
   }
