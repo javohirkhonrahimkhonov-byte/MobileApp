@@ -35,7 +35,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
   // NEW STATE
   String? _uploadSessionId;
   bool _isUploading = false; // Waiting for bot
-  bool _isUploaded = false; // Bot confirmed
+  int _uploadedCount = 0; // Count of uploaded images
   Timer? _pollingTimer;
 
   @override
@@ -53,7 +53,10 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     });
 
     try {
-      await Provider.of<DataService>(context, listen: false).initUploadSession(sessionId);
+      await Provider.of<DataService>(context, listen: false).initUploadSession(
+        sessionId,
+        _selectedCategory ?? "Faollik"
+      );
       
       // Start Polling
       _pollingTimer?.cancel();
@@ -72,11 +75,15 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     try {
       final res = await Provider.of<DataService>(context, listen: false).checkUploadStatus(sessionId);
       if (res['status'] == 'uploaded') {
-        _pollingTimer?.cancel();
+        final count = res['count'] ?? 0;
+        
         if (mounted) {
           setState(() {
-            _isUploading = false;
-            _isUploaded = true;
+            _uploadedCount = count;
+            if (count >= 5) {
+               _pollingTimer?.cancel();
+               _isUploading = false;
+            }
           });
         }
       }
@@ -329,7 +336,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_isUploaded)
+        if (_uploadedCount > 0)
            Container(
              width: double.infinity,
              padding: const EdgeInsets.symmetric(vertical: 24),
@@ -338,11 +345,16 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
                borderRadius: BorderRadius.circular(12),
                border: Border.all(color: Colors.green[300]!),
              ),
-             child: const Column(
+             child: Column(
                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 40),
-                  SizedBox(height: 8),
-                  Text("Rasm muvaffaqiyatli yuklandi!", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 40),
+                  const SizedBox(height: 8),
+                  Text("$_uploadedCount/5 rasm yuklandi!", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                  if (_uploadedCount < 5)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text("Yana yuklashingiz mumkin (Bot orqali)", style: TextStyle(color: Colors.green[700], fontSize: 12)),
+                    )
                ],
              ),
            )
@@ -438,7 +450,7 @@ class _AddActivitySheetState extends State<AddActivitySheet> {
     }
     
     // Check if image uploaded
-    if (!_isUploaded) {
+    if (_uploadedCount == 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, avval rasm yuklang!")));
       return;
     }
@@ -838,7 +850,9 @@ class _SocialActivityScreenState extends State<SocialActivityScreen> {
                       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
                     ),
                     child: Text(
-                      activity.category, 
+                      activity.category.isNotEmpty 
+                        ? "${activity.category[0].toUpperCase()}${activity.category.substring(1)}"
+                        : activity.category, 
                       style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)
                     ),
                   ),

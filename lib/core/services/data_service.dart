@@ -134,7 +134,7 @@ class DataService {
   }
 
   // NEW: Init Upload Session
-  Future<void> initUploadSession(String sessionId) async {
+  Future<void> initUploadSession(String sessionId, String category) async {
     final token = await _authService.getToken();
     final response = await http.post(
       Uri.parse('${ApiConstants.activities}/upload/init'),
@@ -142,7 +142,10 @@ class DataService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: {'session_id': sessionId},
+      body: {
+        'session_id': sessionId,
+        'category': category
+      },
     );
 
     if (response.statusCode != 200) {
