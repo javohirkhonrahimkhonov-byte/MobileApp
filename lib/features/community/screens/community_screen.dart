@@ -74,11 +74,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CreatePostScreen()),
             );
+            if (result == true) {
+              setState(() {}); // Refresh FutureBuilder
+            }
           },
           backgroundColor: AppTheme.primaryBlue,
           child: const Icon(Icons.edit, color: Colors.white),
@@ -140,11 +143,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const CreatePostScreen()),
                 );
+                if (result == true) {
+                  setState(() {}); // Refresh FutureBuilder
+                }
               },
               icon: const Icon(Icons.edit, color: Colors.white),
               label: const Text("Post yozish", style: TextStyle(color: Colors.white)),

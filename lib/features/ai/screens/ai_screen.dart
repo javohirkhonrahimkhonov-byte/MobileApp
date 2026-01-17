@@ -8,27 +8,22 @@ class AiScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2432), // Dark theme background like screenshot? Or keep AppTheme?
-      // Screenshot shows dark background with buttons. Let's use a nice dark gradient or solid color. 
-      // Actually screenshot looks like Telegram Dark Mode.
-      // Let's stick to AppTheme but maybe dark mode specific if requested. 
-      // User said "AI modulni ham botdagi tugmalar kabi qilib sozla" (Configure AI module like bot buttons).
-      // I'll make it look good.
+      backgroundColor: AppTheme.backgroundWhite, 
       appBar: AppBar(
-        title: const Text("AI Yordamchi", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1E2432),
+        title: const Text("AI Yordamchi", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: Container(
-        color: const Color(0xFF1E2432),
+        color: AppTheme.backgroundWhite,
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               "Sizga qanday yordam bera olaman? Quyidagi mavzulardan birini tanlang:",
-              style: TextStyle(color: Colors.white70, fontSize: 15),
+              style: TextStyle(color: Colors.grey[600], fontSize: 15),
               textAlign: TextAlign.start,
             ),
             const SizedBox(height: 20),
@@ -38,7 +33,7 @@ class AiScreen extends StatelessWidget {
             _buildAiButton(context, "Kredit-modul tizimi", Icons.school, () {}),
             _buildAiButton(context, "Dars jadvali", Icons.calendar_today, () {}),
             _buildAiButton(context, "Konspekt qilish (File/Matn)", Icons.note_alt, () {}),
-            const Divider(color: Colors.white24, height: 30),
+            const Divider(height: 30),
             _buildAiButton(context, "AI bilan suhbat", Icons.chat_bubble, () {
                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tez orada...")));
             }, isPrimary: true),
@@ -55,31 +50,34 @@ class AiScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: isPrimary ? Colors.blue.withOpacity(0.2) : const Color(0xFF2B3442),
-              borderRadius: BorderRadius.circular(8),
+              color: isPrimary ? AppTheme.primaryBlue : Colors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isPrimary ? Colors.blue.withOpacity(0.5) : const Color(0xFF384252),
+                color: isPrimary ? AppTheme.primaryBlue : Colors.grey.withOpacity(0.1),
               ),
+              boxShadow: isPrimary 
+                  ? [BoxShadow(color: AppTheme.primaryBlue.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                  : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4, offset: const Offset(0, 2))],
             ),
             child: Row(
               children: [
-                Icon(icon, color: isPrimary ? Colors.blue : const Color(0xFF6B7C93), size: 22),
-                const SizedBox(width: 12),
+                Icon(icon, color: isPrimary ? Colors.white : AppTheme.primaryBlue, size: 24),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     text,
                     style: TextStyle(
-                      color: isPrimary ? Colors.blue : Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      color: isPrimary ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.white24, size: 20),
+                Icon(Icons.chevron_right, color: isPrimary ? Colors.white54 : Colors.grey, size: 20),
               ],
             ),
           ),

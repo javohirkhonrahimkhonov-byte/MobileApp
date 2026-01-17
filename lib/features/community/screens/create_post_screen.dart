@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../models/community_models.dart';
+import '../services/community_service.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -33,15 +35,45 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-  void _publish() {
-    // Mock Publish Logic
+import '../models/community_models.dart';
+import '../services/community_service.dart'; // Import service
+
+// ...
+
+  void _publish() async {
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+
+    if (content.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, matn yozing!")));
+       return;
+    }
+
+    // Mock Current User
+    final newPost = Post(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      authorName: "Men (Talaba)", 
+      authorUsername: "@me",
+      authorAvatar: "",
+      authorRole: _selectedScope == 'specialty' ? "Guruhdoshingiz" : "Talaba",
+      content: title.isNotEmpty ? "$title\n\n$content" : content,
+      timeAgo: "Hozirgina",
+      scope: _selectedScope,
+      // Poll logic if needed
+      pollOptions: _isPoll ? _pollControllers.map((c) => c.text).where((t) => t.isNotEmpty).toList() : null,
+      pollVotes: _isPoll ? List.filled(_pollControllers.where((c) => c.text.isNotEmpty).length, 0) : null,
+    );
+
+    await CommunityService().createPost(newPost); // Call Service
+
+    if (!mounted) return;
+    
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Post muvaffaqiyatli chop etildi!")),
     );
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pop(context);
-    });
+    
+    Navigator.pop(context, true); // Return TRUE to refresh feed
   }
 
   @override
