@@ -23,6 +23,12 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   List<dynamic> _topics = [];
 
   @override
+  void dispose() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _loadResources();
