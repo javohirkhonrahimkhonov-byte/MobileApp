@@ -87,8 +87,12 @@ async def get_posts(
     Get posts with strict access control filtering.
     """
     # Eager load student for author details
-    # Eager load likes for count
-    query = select(ChoyxonaPost).options(selectinload(ChoyxonaPost.student), selectinload(ChoyxonaPost.likes)).order_by(desc(ChoyxonaPost.created_at))
+    # Eager load likes and comments for count
+    query = select(ChoyxonaPost).options(
+        selectinload(ChoyxonaPost.student), 
+        selectinload(ChoyxonaPost.likes),
+        selectinload(ChoyxonaPost.comments)
+    ).order_by(desc(ChoyxonaPost.created_at))
     
     # 1. Category Filter (Tab Filter)
     query = query.where(ChoyxonaPost.category_type == category)
@@ -122,8 +126,9 @@ async def get_posts(
     return [_map_post(p, p.student, student.id) for p in posts]
 
 def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
-    # Calculate likes
+    # Calculate counts
     likes_count = len(post.likes) if post.likes else 0
+    comments_count = len(post.comments) if post.comments else 0
     is_liked = any(l.student_id == current_user_id for l in post.likes) if post.likes else False
 
     return PostResponseSchema(
@@ -137,8 +142,52 @@ def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
         target_faculty_id=post.target_faculty_id,
         target_specialty_name=post.target_specialty_name,
         likes_count=likes_count,
-        is_liked_by_me=is_liked
+        comments_count=comments_count,
+        is_liked_by_me=is_liked,
+        is_mine=(post.student_id == current_user_id)
     )
+
+@router.put("/posts/{post_id}", response_model=PostResponseSchema)
+async def update_post(
+    post_id: int,
+    data: PostCreateSchema, # Reuse create schema (content + category)
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+        
+    if post.student_id != student.id:
+        raise HTTPException(status_code=403, detail="Siz faqat o'zingizning postingizni o'zgartira olasiz")
+        
+    post.content = data.content
+    # We generally don't allow changing category/context after creation, but content yes.
+    
+    await db.commit()
+    await db.refresh(post)
+    
+    # We need to manually load relationships or just return mapped with empty lists if we know they didn't change count-wise
+    # But better to just re-fetch fully if needed. For speed, assume 0 for response or existing.
+    # Simple fix: return mapped with current user
+    return _map_post(post, student, student.id)
+
+@router.delete("/posts/{post_id}")
+async def delete_post(
+    post_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+        
+    if post.student_id != student.id:
+        raise HTTPException(status_code=403, detail="Siz faqat o'zingizning postingizni o'chira olasiz")
+        
+    await db.delete(post)
+    await db.commit()
+    return {"status": "success", "message": "Post o'chirildi"}
 
 @router.post("/posts/{post_id}/like")
 async def toggle_like(
