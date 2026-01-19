@@ -83,7 +83,6 @@ class Post {
     String? targetUniversityId,
     String? targetFacultyId,
     String? targetSpecialtyId,
-    String? targetSpecialtyId,
     bool? isMine,
     bool? isRepostedByMe,
   }) {
