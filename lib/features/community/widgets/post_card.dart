@@ -39,8 +39,25 @@ class _PostCardState extends State<PostCard> {
   final CommunityService _communityService = CommunityService();
 
   @override
+  @override
   void initState() {
     super.initState();
+    _initializeState();
+  }
+
+  @override
+  void didUpdateWidget(PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.post.id != oldWidget.post.id || 
+        widget.post.likes != oldWidget.post.likes || 
+        widget.post.isLiked != oldWidget.post.isLiked ||
+        widget.post.repostsCount != oldWidget.post.repostsCount ||
+        widget.post.isRepostedByMe != oldWidget.post.isRepostedByMe) {
+      _initializeState();
+    }
+  }
+
+  void _initializeState() {
     _isLiked = widget.post.isLiked;
     _likeCount = widget.post.likes;
     _repostCount = widget.post.repostsCount;
