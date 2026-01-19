@@ -197,7 +197,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Expanded(
+                      child: Text(
+                        comment.authorName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
                   ],
                 ),
