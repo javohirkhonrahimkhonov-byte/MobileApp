@@ -149,11 +149,12 @@ class CommunityService {
         headers: await _getHeaders(),
         body: json.encode({
           'content': newContent,
-          'category_type': 'university', // Ignored by backend update logic usually, but required by schema
+          'category_type': 'university', 
         }),
       );
       
-      return response.statusCode == 200;
+      print("Edit Post Result: ${response.statusCode}");
+      return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
       print("CommunityService: Error editing post: $e");
       return false;
