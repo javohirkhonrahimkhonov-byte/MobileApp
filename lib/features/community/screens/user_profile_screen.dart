@@ -22,6 +22,9 @@ class UserProfileScreen extends StatefulWidget {
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  final CommunityService _service = CommunityService();
+
   int _postCount = 0;
   bool _isLoading = true;
   List<Post> _posts = [];
