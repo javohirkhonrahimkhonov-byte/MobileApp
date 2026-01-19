@@ -63,7 +63,6 @@ class CommunityService {
       return [];
     }
   }
-  }
 
   Future<Post?> getPost(String postId) async {
     try {

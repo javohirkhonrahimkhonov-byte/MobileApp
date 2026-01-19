@@ -46,7 +46,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _refreshPost() async {
-    final updatedPost = await _communityService.getPost(_post.id);
+    final updatedPost = await _service.getPost(_post.id);
     if (updatedPost != null && mounted) {
       setState(() {
         _post = updatedPost;
