@@ -63,11 +63,18 @@ async def get_subjects(
 
     import asyncio
     
-    # 1. Fetch data concurrently
-    # Note: We use None for sem_code to let HemisService handle defaults
-    subjects_task = HemisService.get_student_subject_list(student.hemis_token, student_id=student.id)
-    absence_task = HemisService.get_student_absence(student.hemis_token, student_id=student.id)
-    schedule_task = HemisService.get_student_schedule_cached(student.hemis_token, student_id=student.id)
+    # 1. Determine Semester Code (Critical for correct subject list)
+    me_data = await HemisService.get_me(student.hemis_token)
+    sem_code = None
+    if me_data:
+        sem = me_data.get("semester", {})
+        if sem and isinstance(sem, dict):
+             sem_code = str(sem.get("code") or sem.get("id"))
+    
+    # 2. Fetch data concurrently using explicit semester code
+    subjects_task = HemisService.get_student_subject_list(student.hemis_token, semester_code=sem_code, student_id=student.id)
+    absence_task = HemisService.get_student_absence(student.hemis_token, semester_code=sem_code, student_id=student.id)
+    schedule_task = HemisService.get_student_schedule_cached(student.hemis_token, semester_code=sem_code, student_id=student.id)
     
     subjects_data, attendance_result, schedule_data = await asyncio.gather(
         subjects_task, absence_task, schedule_task
