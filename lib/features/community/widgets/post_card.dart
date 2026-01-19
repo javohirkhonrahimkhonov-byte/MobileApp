@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
-import '../screens/user_profile_screen.dart'; // Corrected Import
+import '../screens/user_profile_screen.dart'; 
+import '../screens/post_detail_screen.dart'; // Added Import
 import 'edit_post_sheet.dart';
 
 class PostCard extends StatefulWidget {
@@ -305,9 +306,26 @@ class _PostCardState extends State<PostCard> {
                _buildActionButton(
                  icon: Icons.chat_bubble_outline, 
                  label: "${widget.post.commentsCount}",
-                 onTap: () {
+                 onTap: () async {
                    if (!widget.isDetail) {
-                     // TODO: Navigate
+                     final updatedPost = await Navigator.push(
+                       context, 
+                       MaterialPageRoute(builder: (_) => PostDetailScreen(post: widget.post))
+                     );
+
+                     if (updatedPost != null && updatedPost is Post && mounted) {
+                       setState(() {
+                         // Update local state with changes from detail screen (likes, comments, etc)
+                         _isLiked = updatedPost.isLiked;
+                         _likeCount = updatedPost.likes;
+                         _repostCount = updatedPost.repostsCount;
+                         _isReposted = updatedPost.isRepostedByMe;
+                         // We might need to update comment count if we had a field for it in state
+                         // For now, let's assume parent list reload or just optimistic update isn't strictly tracked for comments in PostCard state yet.
+                         // But we should ideally trigger a refresh or local update.
+                       });
+                       // Ideally call a callback to update existing post in list
+                     }
                    }
                  } 
                ),
