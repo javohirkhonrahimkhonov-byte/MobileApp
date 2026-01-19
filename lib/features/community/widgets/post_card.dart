@@ -540,7 +540,7 @@ class _PostCardState extends State<PostCard> {
              onTap: () => setState(() => _isExpanded = true),
              child: Padding(
                padding: const EdgeInsets.only(top: 4),
-               child: Text("Ko'proq o'qish", style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.bold)),
+               child: Text("Davomi", style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.bold)),
              ),
            )
         ],
