@@ -73,3 +73,54 @@ async def chat_with_ai(
     await db.commit()
     
     return {"success": True, "data": response_text}
+
+
+from fastapi import UploadFile, File, Form, HTTPException
+import shutil
+import os
+import time
+from services.ai_service import summarize_konspekt
+from utils.document_parser import extract_text_from_file
+
+@router.post("/summarize")
+async def summarize_content(
+    file: UploadFile = File(None),
+    text: str = Form(None),
+    student: Student = Depends(get_current_student)
+):
+    """
+    Generate a summary (konspekt) from a file or text.
+    Processed completely in-memory (no disk write).
+    """
+    content_to_summarize = ""
+
+    # 1. Handle File (Stream)
+    if file:
+        try:
+            file_ext = file.filename.split(".")[-1]
+            
+            # Use the SpooledTemporaryFile directly without saving to disk
+            from utils.document_parser import extract_text_from_stream
+            content_to_summarize = extract_text_from_stream(file.file, file_ext)
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Faylni o'qishda xatolik: {str(e)}")
+
+    # 2. Handle Text (fallback)
+    elif text:
+        content_to_summarize = text
+
+    # 3. Validate
+    msg = content_to_summarize.strip()
+    if not msg or len(msg) < 10:
+         return {
+             "success": False, 
+             "message": "Matn juda qisqa yoki o'qib bo'lmadi. Iltimos, boshqa fayl/matn yuboring."
+         }
+
+    # 4. Generate Summary
+    try:
+        summary = await summarize_konspekt(msg)
+        return {"success": True, "data": summary}
+    except Exception as e:
+        return {"success": False, "message": f"AI xatolik: {str(e)}"}

@@ -212,7 +212,11 @@ async def toggle_like(
     student: Student = Depends(get_current_student),
     db: AsyncSession = Depends(get_db)
 ):
-    # ...
+    # Check if post exists
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+
     # Check for existing like
     existing_like = await db.scalar(select(ChoyxonaPostLike).where(ChoyxonaPostLike.post_id == post_id, ChoyxonaPostLike.student_id == student.id))
     
