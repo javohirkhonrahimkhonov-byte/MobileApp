@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart'; // NEW
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
+import '../../../../core/services/data_service.dart'; // Ensure DataService is imported
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -25,35 +27,53 @@ class ProfileScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundWhite,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primaryBlue, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      )
+                GestureDetector(
+                  onTap: () => _showImageOptions(context),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundWhite,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.primaryBlue, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            )
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: student.imageUrl != null && student.imageUrl!.isNotEmpty
+                              ? Image.network(
+                                  student.imageUrl!, 
+                                  fit: BoxFit.cover,
+                                  headers: const {
+                                    'User-Agent': 'Mozilla/5.0',
+                                  },
+                                  errorBuilder: (ctx, err, stack) {
+                                    return _buildInitials(student.fullName);
+                                  },
+                                )
+                              : _buildInitials(student.fullName),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 16),
+                        ),
+                      ),
                     ],
-                  ),
-                  child: ClipOval(
-                    child: student.imageUrl != null && student.imageUrl!.isNotEmpty
-                        ? Image.network(
-                            student.imageUrl!, 
-                            fit: BoxFit.cover,
-                            headers: const {
-                              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                              'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                            },
-                            errorBuilder: (ctx, err, stack) {
-                              return _buildInitials(student.fullName);
-                            },
-                          )
-                        : _buildInitials(student.fullName),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -204,4 +224,62 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  // 4. Image Picker
+  void _pickAndUploadImage(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    
+    if (image != null) {
+      // Show loading snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Rasm yuklanmoqda...")),
+      );
+      
+      final DataService dataService = DataService();
+      final newUrl = await dataService.uploadProfileImage(image.path);
+      
+      if (newUrl != null && context.mounted) {
+         // Update Provider
+         Provider.of<AuthProvider>(context, listen: false).updateProfileImage(newUrl);
+         
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Rasm muvaffaqiyatli o'zgartirildi!")),
+         );
+      } else if (context.mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("Rasm yuklashda xatolik!")),
+         );
+      }
+    }
+  }
+
+  void _showImageOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppTheme.primaryBlue),
+              title: const Text("Galereyadan tanlash"),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadImage(context);
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      )
+    );
+  }
 }
+
+// End of file

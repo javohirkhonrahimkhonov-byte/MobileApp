@@ -75,4 +75,21 @@ class AuthProvider with ChangeNotifier {
       print("Error updating user state: $e");
     }
   }
+
+  Future<void> updateProfileImage(String newUrl) async {
+    if (_currentUser == null) return;
+    
+    _currentUser = _currentUser!.copyWith(imageUrl: newUrl);
+    
+    // Save locally
+    try {
+      if (_currentUser != null) {
+        await _authService.saveProfileManually(_currentUser!.toJson());
+      }
+    } catch (e) {
+      print("Failed to save new image locally: $e");
+    }
+    
+    notifyListeners();
+  }
 }

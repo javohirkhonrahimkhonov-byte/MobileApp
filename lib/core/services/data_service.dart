@@ -558,5 +558,30 @@ class DataService {
       return "Tarmoq xatosi yoki fayl muammosi.";
     }
   }
+  // 22. Upload Profile Image
+  Future<String?> uploadProfileImage(String filePath) async {
+    try {
+      final token = await _authService.getToken();
+      
+      var request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.backendUrl}/student/image'));
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      
+      final response = await request.send();
+      
+      if (response.statusCode == 200) {
+        final respStr = await response.stream.bytesToString();
+        final body = json.decode(respStr);
+        if (body['success'] == true) {
+          return body['data']['image_url'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print("Error uploading profile image: $e");
+      return null;
+    }
+  }
 }
 

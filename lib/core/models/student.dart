@@ -92,4 +92,30 @@ class Student {
       'missed_hours': missedHours,
     };
   }
+
+  Student copyWith({
+    int? id,
+    String? fullName,
+    String? hemisLogin,
+    String? universityName,
+    String? groupNumber,
+    String? specialtyName,
+    String? facultyName,
+    String? semesterName,
+    String? imageUrl,
+    int? missedHours,
+  }) {
+    return Student(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      hemisLogin: hemisLogin ?? this.hemisLogin,
+      universityName: universityName ?? this.universityName,
+      groupNumber: groupNumber ?? this.groupNumber,
+      specialtyName: specialtyName ?? this.specialtyName,
+      facultyName: facultyName ?? this.facultyName,
+      semesterName: semesterName ?? this.semesterName,
+      imageUrl: imageUrl ?? this.imageUrl,
+      missedHours: missedHours ?? this.missedHours,
+    );
+  }
 }

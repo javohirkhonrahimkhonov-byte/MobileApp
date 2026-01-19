@@ -12,6 +12,7 @@ class PostCard extends StatefulWidget {
   final Post post;
   final bool isDetail;
   final Function(bool isLiked, int count)? onLikeChanged;
+  final Function(bool isReposted, int count)? onRepostChanged;
   final VoidCallback? onDelete; // New callback
 
   const PostCard({
@@ -19,6 +20,7 @@ class PostCard extends StatefulWidget {
     required this.post, 
     this.isDetail = false, 
     this.onLikeChanged,
+    this.onRepostChanged,
     this.onDelete,
   });
 
@@ -109,6 +111,10 @@ class _PostCardState extends State<PostCard> {
       _repostCount += _isReposted ? 1 : -1;
     });
 
+    if (widget.onRepostChanged != null) {
+      widget.onRepostChanged!(_isReposted, _repostCount);
+    }
+
     try {
       final result = await _communityService.repostPost(widget.post.id);
       if (result == null) {
@@ -117,6 +123,10 @@ class _PostCardState extends State<PostCard> {
                _isReposted = !_isReposted;
                _repostCount += _isReposted ? 1 : -1;
             });
+            // Revert parent
+            if (widget.onRepostChanged != null) {
+               widget.onRepostChanged!(_isReposted, _repostCount);
+            }
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Repost qilinmadi")));
          }
       } else {
@@ -124,6 +134,10 @@ class _PostCardState extends State<PostCard> {
             setState(() {
                _repostCount = result['count'] ?? _repostCount;
             });
+            // Sync count
+            if (widget.onRepostChanged != null) {
+               widget.onRepostChanged!(_isReposted, _repostCount);
+            }
          }
       }
     } catch (e) {
@@ -132,6 +146,10 @@ class _PostCardState extends State<PostCard> {
             _isReposted = !_isReposted;
             _repostCount += _isReposted ? 1 : -1;
          });
+         // Revert parent
+         if (widget.onRepostChanged != null) {
+            widget.onRepostChanged!(_isReposted, _repostCount);
+         }
       }
     }
   }
@@ -421,6 +439,9 @@ class _PostCardState extends State<PostCard> {
          // Optionally notify parent
          if (widget.onLikeChanged != null) {
             widget.onLikeChanged!(_isLiked, _likeCount);
+         }
+         if (widget.onRepostChanged != null) {
+            widget.onRepostChanged!(_isReposted, _repostCount);
          }
       }
     }

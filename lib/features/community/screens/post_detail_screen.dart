@@ -125,7 +125,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                            _post = _post.copyWith(isLiked: isLiked, likes: count);
                          });
                       },
-                    ),
+                    onRepostChanged: (isReposted, count) {
+                       setState(() {
+                         _post = _post.copyWith(isRepostedByMe: isReposted, repostsCount: count);
+                       });
+                    },
+                  ),  
                     
                     const Divider(thickness: 1, height: 1),
                     
