@@ -105,7 +105,14 @@ async def bot_webhook(request: Request):
 #   API MOUNTING
 # ============================================================
 from api import router as api_router
+from fastapi.staticfiles import StaticFiles
+
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount Static Files (for user uploads)
+import os
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================
 #   MAIN

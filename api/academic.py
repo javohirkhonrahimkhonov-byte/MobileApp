@@ -19,13 +19,16 @@ async def get_grades(
     if not student.hemis_token:
          return {"success": False, "message": "No Token", "data": []}
          
-    # 1. Get current semester (optional, or just fetch all active)
-    # Getting subject list usually defaults to current sem if None, or we can fetch 'me' to find it.
-    # For now, let's try fetching with default (None) or '11' if we want to be safe, 
-    # but strictly speaking we should look it up. The bot uses context or current.
-    # We will fetch without semester param first (defaults to active).
-    
-    subjects = await HemisService.get_student_subject_list(student.hemis_token)
+    # 1. Fetch ME to get current semester (Critical for correct grades)
+    me_data = await HemisService.get_me(student.hemis_token)
+    semester_code = None
+    if me_data:
+        sem = me_data.get("semester", {})
+        if sem and isinstance(sem, dict):
+             semester_code = sem.get("code") or sem.get("id")
+
+    # 2. Fetch Subjects with Semester Code
+    subjects = await HemisService.get_student_subject_list(student.hemis_token, semester_code=semester_code)
     
     parsed_data = []
     
