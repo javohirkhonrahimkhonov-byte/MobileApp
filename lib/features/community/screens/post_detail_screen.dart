@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
+import 'dart:async';
 
 class PostDetailScreen extends StatefulWidget {
   final Post post;
@@ -21,12 +22,36 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   bool _isLoading = true;
   bool _isSending = false;
   late Post _post;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _post = widget.post;
+    _refreshPost(); // Fetch fresh data immediately
     _loadComments();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _refreshPost();
+    });
+  }
+
+  Future<void> _refreshPost() async {
+    final updatedPost = await _communityService.getPost(_post.id);
+    if (updatedPost != null && mounted) {
+      setState(() {
+        _post = updatedPost;
+      });
+    }
   }
 
   Future<void> _loadComments() async {
@@ -86,6 +111,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   PostCard(
                     post: _post, 
                     isDetail: true,
+                    onDelete: () {
+                      Navigator.pop(context, 'deleted');
+                    },
                     onLikeChanged: (isLiked, count) {
                        setState(() {
                          _post = _post.copyWith(isLiked: isLiked, likes: count);

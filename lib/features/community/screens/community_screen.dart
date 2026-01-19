@@ -229,7 +229,14 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         itemCount: posts.length,
         itemBuilder: (context, index) {
-          return PostCard(post: posts[index]);
+          return PostCard(
+            post: posts[index],
+            onDelete: () {
+              setState(() {
+                _posts[scope]!.removeAt(index);
+              });
+            },
+          );
         },
       ),
     );

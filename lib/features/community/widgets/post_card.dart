@@ -12,8 +12,15 @@ class PostCard extends StatefulWidget {
   final Post post;
   final bool isDetail;
   final Function(bool isLiked, int count)? onLikeChanged;
+  final VoidCallback? onDelete; // New callback
 
-  const PostCard({super.key, required this.post, this.isDetail = false, this.onLikeChanged});
+  const PostCard({
+    super.key, 
+    required this.post, 
+    this.isDetail = false, 
+    this.onLikeChanged,
+    this.onDelete,
+  });
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -329,20 +336,24 @@ class _PostCardState extends State<PostCard> {
 
     return InkWell(
       onTap: () async {
-        final updatedPost = await Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => PostDetailScreen(post: widget.post),
           ),
         );
         
-        if (updatedPost != null && updatedPost is Post) {
-          if (updatedPost.isLiked != _isLiked || updatedPost.likes != _likeCount) {
+        if (result == 'deleted') {
+           if (widget.onDelete != null) widget.onDelete!();
+           return;
+        }
+
+        if (result != null && result is Post) {
+          if (result.isLiked != _isLiked || result.likes != _likeCount) {
              setState(() {
-               _isLiked = updatedPost.isLiked;
-               _likeCount = updatedPost.likes;
+               _isLiked = result.isLiked;
+               _likeCount = result.likes;
              });
-             // Notify parent List (optional, if we want to persist properly across tabs)
              if (widget.onLikeChanged != null) {
                 widget.onLikeChanged!(_isLiked, _likeCount);
              }

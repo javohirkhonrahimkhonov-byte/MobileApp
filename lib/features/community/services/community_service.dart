@@ -63,6 +63,26 @@ class CommunityService {
       return [];
     }
   }
+  }
+
+  Future<Post?> getPost(String postId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.communityPosts}/$postId'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return _mapJsonToPost(json.decode(response.body));
+      } else {
+        print("CommunityService: Failed to load post: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("CommunityService: Error loading post: $e");
+      return null;
+    }
+  }
 
   Future<bool> likePost(String postId) async {
     final token = await _authService.getToken(); // Use _authService instance
