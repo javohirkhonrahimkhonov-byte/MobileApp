@@ -177,9 +177,19 @@ async def get_attendance(
     if not student.hemis_token:
         return {"success": False, "message": "No Token"}
 
-    # Fetch attendance
+    # 1. Determine Semester Code
+    sem_code = semester
+    if not sem_code:
+        # Fetch ME to get current semester (Critical for correct data)
+        me_data = await HemisService.get_me(student.hemis_token)
+        if me_data:
+            sem = me_data.get("semester", {})
+            if sem and isinstance(sem, dict):
+                 sem_code = str(sem.get("code") or sem.get("id"))
+    
+    # 2. Fetch attendance
     # get_student_absence returns (0,0,0, list)
-    _, _, _, data = await HemisService.get_student_absence(student.hemis_token, semester_code=semester, student_id=student.id)
+    _, _, _, data = await HemisService.get_student_absence(student.hemis_token, semester_code=sem_code, student_id=student.id)
     
     # Logic: If data is empty and semester is NOT provided (default), we might want to check the previous semester or verify current.
     # However, HemisService.get_student_absence already defaults to current if None.
