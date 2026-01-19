@@ -215,7 +215,7 @@ class _PostCardState extends State<PostCard> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Hero(
+                Hero(
                 tag: "avatar_${widget.post.id}",
                 child: CircleAvatar(
                   radius: 20,
@@ -238,7 +238,7 @@ class _PostCardState extends State<PostCard> {
                         Flexible(
                           child: Text(
                             widget.post.authorName, 
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -254,23 +254,28 @@ class _PostCardState extends State<PostCard> {
                              decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
                              child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
                            ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text(
+                          widget.post.authorRole,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           "• ${widget.post.timeAgo}",
-                          style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                          style: TextStyle(color: Colors.grey[400], fontSize: 13),
                         ),
                       ],
-                    ),
-                    Text(
-                      widget.post.authorRole,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
+                    )
                   ],
                 ),
               ),
               if (widget.post.isMine)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                  icon: const Icon(Icons.more_vert, color: Colors.grey), // Vertical Icon
                   onSelected: (val) {
                     if (val == 'edit') _showEditDialog();
                     if (val == 'delete') _showDeleteDialog();
