@@ -68,16 +68,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       pollVotes: _isPoll ? List.filled(_pollControllers.where((c) => c.text.isNotEmpty).length, 0) : null,
     );
 
-    await CommunityService().createPost(newPost); // Call Service
+    try {
+      await CommunityService().createPost(newPost); // Call Service
 
-    if (!mounted) return;
-    
-    FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Post muvaffaqiyatli chop etildi!")),
-    );
-    
-    Navigator.pop(context, true); // Return TRUE to refresh feed
+      if (!mounted) return;
+      
+      FocusScope.of(context).unfocus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Post muvaffaqiyatli chop etildi!")),
+      );
+      
+      Navigator.pop(context, true); // Return TRUE to refresh feed
+    } catch (e) {
+      if (mounted) {
+        String errorMsg = "Xatolik yuz berdi";
+        if (e.toString().contains("400")) {
+           if (_selectedScope == 'faculty') errorMsg = "Sizga fakultet biriktirilmagan!";
+           else if (_selectedScope == 'specialty') errorMsg = "Sizga yo'nalish biriktirilmagan!";
+        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg), backgroundColor: Colors.red));
+      }
+    }
   }
 
   @override
