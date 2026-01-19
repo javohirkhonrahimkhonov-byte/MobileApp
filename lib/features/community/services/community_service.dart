@@ -230,6 +230,11 @@ class CommunityService {
           isLikedByAuthor: json['is_liked_by_author'] ?? false,
           authorRole: json['author_role'] ?? "Talaba",
         )).toList();
+          isLikedByAuthor: json['is_liked_by_author'] ?? false,
+          authorRole: json['author_role'] ?? "Talaba",
+          replyToUserName: json['reply_to_username'],
+          replyToContent: json['reply_to_content'],
+        )).toList();
       } else {
         print("CommunityService: Failed to load comments: ${response.statusCode}");
         return [];
@@ -240,14 +245,19 @@ class CommunityService {
     }
   }
 
-  Future<void> createComment(String postId, String content) async {
+  Future<void> createComment(String postId, String content, {String? replyToId}) async {
     try {
+      final body = {
+        'content': content,
+      };
+      if (replyToId != null) {
+        body['reply_to_comment_id'] = replyToId;
+      }
+
       final response = await http.post(
         Uri.parse('${ApiConstants.communityPosts}/$postId/comments'),
         headers: await _getHeaders(),
-        body: json.encode({
-          'content': content,
-        }),
+        body: json.encode(body),
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {

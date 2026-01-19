@@ -76,18 +76,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     setState(() => _isSending = true);
     try {
-      // If replying, we should ideally send parentId. Since API might not support it yet,
-      // we can prepend "@username" or handle it if backend supports.
-      // For now, let's assume we just send text.
       String finalContent = content;
-      if (_replyingTo != null) {
-        // Mock notification logic
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${_replyingTo!.authorName} ga javob xabari yuborildi 🔔")),
-        );
-      }
-
-      await _service.createComment(widget.post.id, finalContent);
+      // Pass replyToId if replying
+      await _service.createComment(widget.post.id, finalContent, replyToId: _replyingTo?.id);
+      
       _commentController.clear();
       setState(() => _replyingTo = null); // Clear reply state
       _loadComments(); 
@@ -173,29 +165,47 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
   
-            // Reply Banner
+            // Reply Preview (Telegram Style)
             if (_replyingTo != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.grey[100],
-                child: Row(
-                  children: [
-                    Icon(Icons.reply, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "${_replyingTo!.authorName} ga javob yozilmoqda...",
-                        style: TextStyle(color: Colors.grey[800], fontSize: 13),
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                color: Colors.white,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    border: const Border(left: BorderSide(color: AppTheme.primaryBlue, width: 3)),
+                    borderRadius: const BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8))
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.reply, size: 20, color: AppTheme.primaryBlue),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                             Text(
+                               _replyingTo!.authorName,
+                               style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 13),
+                             ),
+                             Text(
+                               _replyingTo!.content,
+                               style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                               maxLines: 1, 
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                          ],
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 16),
-                      onPressed: () => setState(() => _replyingTo = null),
-                      constraints: const BoxConstraints(),
-                      padding: EdgeInsets.zero,
-                    )
-                  ],
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => setState(() => _replyingTo = null),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      )
+                    ],
+                  ),
                 ),
               ),
 
@@ -344,6 +354,31 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
+                  
+                  // Quote Block if Reply
+                  if (comment.replyToUserName != null)
+                     Container(
+                       margin: const EdgeInsets.only(top: 4, bottom: 4),
+                       padding: const EdgeInsets.all(8),
+                       decoration: BoxDecoration(
+                         color: Colors.grey[100],
+                         borderRadius: BorderRadius.circular(8),
+                         border: const Border(left: BorderSide(color: AppTheme.primaryBlue, width: 3))
+                       ),
+                       child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           Text(comment.replyToUserName!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)),
+                           if (comment.replyToContent != null)
+                              Text(
+                                comment.replyToContent!, 
+                                style: TextStyle(color: Colors.grey[700], fontSize: 11),
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                              ),
+                         ],
+                       ),
+                     ),
+                  
                   const SizedBox(height: 2),
                   Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.3)),
                   const SizedBox(height: 6),

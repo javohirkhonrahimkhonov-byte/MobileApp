@@ -128,6 +128,8 @@ class Comment {
   final bool isLiked;
   final bool isLikedByAuthor;
   final String? authorRole;
+  final String? replyToUserName;
+  final String? replyToContent;
 
   Comment({
     required this.id,
@@ -139,6 +141,8 @@ class Comment {
     this.isLiked = false,
     this.isLikedByAuthor = false,
     this.authorRole,
+    this.replyToUserName,
+    this.replyToContent,
   });
 }
 
