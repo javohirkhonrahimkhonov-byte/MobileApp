@@ -124,20 +124,91 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06), 
+            blurRadius: 15, 
+            offset: const Offset(0, 5)
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Fan haqida", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          const SizedBox(height: 4),
-          Text("👨‍🏫 O'qituvchi: $teachers", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text("❌ Qoldirilgan darslar: $missed soat", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 14)),
+          const Text(
+            "Fan Ma'lumotlari", 
+            style: TextStyle(
+              color: Colors.grey, 
+              fontSize: 12, 
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5
+            )
+          ),
+          const SizedBox(height: 16),
+          
+          // Teachers Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person_rounded, color: AppTheme.primaryBlue, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("O'qituvchi", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    Text(
+                      teachers, 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, height: 1.3),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(),
+          ),
+          
+          // Absence Row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.highlight_off_rounded, color: Colors.red, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Qoldirilgan darslar", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Text(
+                    "$missed soat", 
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
