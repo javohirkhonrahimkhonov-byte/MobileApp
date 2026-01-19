@@ -47,6 +47,8 @@ class _PostCardState extends State<PostCard> {
     _userVote = widget.post.userVote;
   }
   
+  bool _isExpanded = false;
+  
   // ... (votePoll)
   void _votePoll(int index) {
     if (_userVote != null) return; 
@@ -302,7 +304,8 @@ class _PostCardState extends State<PostCard> {
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
                  const SizedBox(height: 4),
-                 Text(widget.post.content, style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87)),
+                 const SizedBox(height: 4),
+                 _buildFoldableContent(),
                  
                  // Tags
                  if (widget.post.tags.isNotEmpty)
