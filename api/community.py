@@ -146,6 +146,26 @@ def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
         is_liked_by_me=is_liked,
         is_mine=(post.student_id == current_user_id)
     )
+    
+@router.get("/posts/{post_id}", response_model=PostResponseSchema)
+async def get_post_by_id(
+    post_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(ChoyxonaPost).options(
+        selectinload(ChoyxonaPost.student), 
+        selectinload(ChoyxonaPost.likes),
+        selectinload(ChoyxonaPost.comments)
+    ).where(ChoyxonaPost.id == post_id)
+    
+    result = await db.execute(query)
+    post = result.scalar_one_or_none()
+    
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+        
+    return _map_post(post, post.student, student.id)
 
 @router.put("/posts/{post_id}", response_model=PostResponseSchema)
 async def update_post(

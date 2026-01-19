@@ -33,57 +33,226 @@ async def get_student(call_or_msg, session: AsyncSession):
 # 📂 Hujjatlar bo‘limi asosiy menyusi
 # ============================================================
 
-@router.callback_query(F.data.in_({"student_documents", "student_documents:profile"}))
-async def student_documents(call: CallbackQuery):
+# ============================================================
+# 📂 Hujjatlar bo‘limi (Direct List)
+# ============================================================
+
+@router.callback_query(F.data.in_({"student_documents", "student_documents:profile", "student_documents_list"}))
+async def student_documents_list(call: CallbackQuery, session: AsyncSession):
     # Determine back button logic
+    # If we are in the list, "Back" should go to Main Menu (or Profile if came from there)
     back_to = "go_student_home"
     if "profile" in call.data:
         back_to = "student_profile"
-
-    text = "📄 <b>Hujjatlar bo‘limi</b>"
-    kb = get_student_documents_kb(back_callback=back_to)
-    try:
-        await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
-    except Exception:
-        await call.message.delete()
-        await call.message.answer(text, reply_markup=kb, parse_mode="HTML")
-    await call.answer()
-
-
-# ============================================================
-# 1) HUJJATLAR RO‘YXATI
-# ============================================================
-
-@router.callback_query(F.data == "student_documents_list")
-async def student_documents_list(call: CallbackQuery, session: AsyncSession):
 
     student = await get_student(call, session)
     if not student:
         await call.answer("Talaba topilmadi!", show_alert=True)
         return
 
-    docs = await session.scalars(
+    # 1. User Uploaded Docs
+    user_docs = (await session.scalars(
         select(UserDocument).where(UserDocument.student_id == student.id)
-    )
-    docs = docs.all()
+    )).all()
 
-    if not docs:
-        await call.message.answer("📄 Sizda hali hujjatlar mavjud emas.")
+    # 2. Build Unified List
+    # Static HEMIS Docs (1-4)
+    hemis_docs = [
+        "O'qish joyidan ma'lumotnoma",
+        "Transkript (Reyting daftarchasi)",
+        "O'quv varaqa (Shaxsiy reja)",
+        "To'lov-kontrakt shartnomasi"
+    ]
+
+    text = "📄 <b>Hujjatlar ro‘yxati:</b>\n\n"
+    
+    # 3. Create Keyboard
+    buttons = []
+    
+    # Add HEMIS Docs
+    for idx, name in enumerate(hemis_docs, start=1):
+        text += f"{idx}. {name}\n"
+        buttons.append(InlineKeyboardButton(text=str(idx), callback_data=f"doc_sel:{idx}"))
+
+    # Add User Docs
+    # Start index from 5
+    start_user_idx = 5
+    if not user_docs:
+        text += "\n<i>Sizda shaxsiy hujjatlar yo'q.</i>"
     else:
-        for doc in docs:
-            caption = f"📄 <b>{doc.title}</b>\nKategoriya: {doc.category}"
+        text += "\n<b>Mening hujjatlarim:</b>\n"
+        for i, doc in enumerate(user_docs):
+            real_idx = start_user_idx + i
+            text += f"{real_idx}. {doc.category} ({doc.title})\n"
+            buttons.append(InlineKeyboardButton(text=str(real_idx), callback_data=f"doc_sel:{real_idx}"))
 
-            if doc.file_type == "photo":
-                await call.message.answer_photo(doc.file_id, caption=caption, parse_mode="HTML")
-            else:
-                await call.message.answer_document(doc.file_id, caption=caption, parse_mode="HTML")
+    # Add "Add Document" button separate row
+    kb_rows = [buttons[i:i + 5] for i in range(0, len(buttons), 5)] # Chunk by 5
+    kb_rows.append([InlineKeyboardButton(text="➕ Hujjat qo‘shish", callback_data="student_document_add")])
+    kb_rows.append([InlineKeyboardButton(text="⬅️ Ortga", callback_data=back_to)])
 
-    await call.message.answer(
-        "📂 Hujjatlar menyusi:",
-        reply_markup=get_student_documents_simple_kb(),
-    )
-
+    try:
+        await call.message.edit_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb_rows),
+            parse_mode="HTML"
+        )
+    except Exception:
+        # If message is identical or something fails, allow delete/re-send
+        await call.message.delete()
+        await call.message.answer(
+            text,
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb_rows),
+            parse_mode="HTML"
+        )
     await call.answer()
+
+
+# ============================================================
+# 1.5) HUJJAT TANLASH HANDLERI
+# ============================================================
+
+@router.callback_query(F.data.startswith("doc_sel:"))
+async def document_selection_handler(call: CallbackQuery, session: AsyncSession):
+    try:
+        selection_idx = int(call.data.split(":")[1])
+    except:
+        await call.answer("Xatolik!", show_alert=True)
+        return
+
+    student = await get_student(call, session)
+    if not student:
+        await call.answer("Talaba topilmadi!", show_alert=True)
+        return
+
+    # Handle HEMIS Docs (1-4)
+    if selection_idx == 1:
+        # Ma'lumotnoma
+        await call.message.answer("⏳ Ma'lumotnoma generatsiya qilinmoqda...")
+        from services.pdf_service import PdfService
+        from aiogram.types import BufferedInputFile
+        
+        pdf_buffer = PdfService.generate_reference_pdf(
+            student_name=student.full_name,
+            hemis_id=str(student.hemis_id or "---"),
+            faculty=student.faculty_name or (student.faculty.name if student.faculty else "Aniqlanmagan"),
+            level=student.education_type or "Bakalavr",
+            courses=student.level_name or "1-kurs"
+        )
+        file_input = BufferedInputFile(pdf_buffer.read(), filename="malumotnoma.pdf")
+        await call.message.answer_document(
+            document=file_input, 
+            caption="📄 <b>O'qish joyidan ma'lumotnoma</b>\nBot orqali shakllantirildi."
+        )
+        await call.answer()
+        return
+
+    elif selection_idx == 2:
+        # Transkript
+        if not student.hemis_token:
+            await call.answer("HEMIS token mavjud emas. Iltimos botga qayta kiring /start", show_alert=True)
+            return
+            
+        await call.message.answer("⏳ Transkript yuklanmoqda va shakllantirilmoqda...")
+        from services.pdf_service import PdfService
+        from services.hemis_service import HemisService
+        from aiogram.types import BufferedInputFile
+
+        subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
+        
+        # Normalize
+        clean_subjects = []
+        for subj in subjects_data:
+            subj_name = subj.get("subject", {}).get("name", "Noma'lum fan")
+            score_obj = subj.get("overallScore", {})
+            grade = score_obj.get("grade", 0) if score_obj else 0
+            if grade == 0: grade = subj.get("totalPoint", 0)
+            
+            load = subj.get("credit", 0)
+            if load == 0: load = subj.get("totalLoad", 0)
+            
+            clean_subjects.append({"name": subj_name, "grade": grade, "load": load})
+
+        pdf_buffer = PdfService.generate_transcript_pdf(
+            student_name=student.full_name,
+            hemis_id=str(student.hemis_id or "---"),
+            faculty=student.faculty_name or "Aniqlanmagan",
+            level=student.education_type or "Bakalavr",
+            subjects=clean_subjects
+        )
+        file_input = BufferedInputFile(pdf_buffer.read(), filename="transkript.pdf")
+        await call.message.answer_document(document=file_input, caption="📄 <b>Transkript (Reyting daftarchasi)</b>")
+        await call.answer()
+        return
+
+    elif selection_idx == 3:
+        # O'quv varaqa
+        if not student.hemis_token:
+            await call.answer("HEMIS token mavjud emas.", show_alert=True)
+            return
+
+        await call.message.answer("⏳ O'quv varaqa shakllantirilmoqda...")
+        from services.pdf_service import PdfService
+        from services.hemis_service import HemisService
+        from aiogram.types import BufferedInputFile
+        
+        subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
+        clean_subjects = []
+        for subj in subjects_data:
+            clean_subjects.append({
+                "name": subj.get("subject", {}).get("name", "Noma'lum"),
+                "credit": subj.get("credit", 0),
+                "load": subj.get("totalLoad", 0)
+            })
+
+        pdf_buffer = PdfService.generate_study_sheet_pdf(
+            student_name=student.full_name,
+            hemis_id=str(student.hemis_id or "---"),
+            faculty=student.faculty_name or "Aniqlanmagan",
+            level=student.education_type or "Bakalavr",
+            semester=student.semester_name or "Joriy",
+            subjects=clean_subjects
+        )
+        file_input = BufferedInputFile(pdf_buffer.read(), filename="oquv_varaqa.pdf")
+        await call.message.answer_document(document=file_input, caption="📄 <b>O'quv varaqa (Shaxsiy reja)</b>")
+        await call.answer()
+        return
+        
+    elif selection_idx == 4:
+        # Shartnoma (Link)
+        url = "https://student.jmcu.uz/finance/contract_pdf"
+        await call.message.answer(
+            f"📄 <b>To'lov-kontrakt shartnomasi</b>\n\n"
+            f"Ushbu hujjatni faqat HEMIS tizimidan yuklab olish mumkin:\n"
+            f"🔗 <a href='{url}'>Yuklab olish (PDF)</a>",
+            parse_mode="HTML",
+            disable_web_page_preview=True
+        )
+        await call.answer()
+        return
+
+    # Handle User Docs (5+)
+    start_user_idx = 5
+    user_docs = (await session.scalars(
+        select(UserDocument).where(UserDocument.student_id == student.id)
+    )).all()
+
+    if not user_docs:
+        await call.answer("Hujjat topilmadi.", show_alert=True)
+        return
+
+    # Calculate array index
+    array_idx = selection_idx - start_user_idx
+    if 0 <= array_idx < len(user_docs):
+        doc = user_docs[array_idx]
+        caption = f"📄 <b>{doc.title}</b>\nKategoriya: {doc.category}"
+        if doc.file_type == "photo":
+            await call.message.answer_photo(doc.file_id, caption=caption, parse_mode="HTML")
+        else:
+            await call.message.answer_document(doc.file_id, caption=caption, parse_mode="HTML")
+        await call.answer()
+    else:
+        await call.answer("Noto'g'ri hujjat raqami.", show_alert=True)
 
 
 # ============================================================
@@ -196,6 +365,10 @@ async def save_document(call: CallbackQuery, state: FSMContext, session: AsyncSe
     await session.commit()
     await state.clear()
 
+    # Return to Main List after save
+    # Re-use logic from documents_list but need to call it or send simplified msg
+    # Simplest: Send success and offer to go back
+    
     await call.message.edit_text(
         "✅ Hujjat muvaffaqiyatli saqlandi!",
         reply_markup=get_student_documents_kb(),
@@ -219,8 +392,4 @@ async def cancel_document(call: CallbackQuery, state: FSMContext):
         pass
     await call.answer()
 
-
-# ============================================================
-# 7) TALABA ASOSIY MENYUSI — ORTGA
-# ============================================================
 
