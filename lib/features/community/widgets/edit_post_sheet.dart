@@ -113,8 +113,8 @@ class _EditPostSheetState extends State<EditPostSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  "Postni tahrirlash",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  "Postni Tahrirlash ✏️",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.grey),
