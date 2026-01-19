@@ -192,7 +192,7 @@ class _PostCardState extends State<PostCard> {
               final success = await _communityService.deletePost(widget.post.id);
               if (success && mounted) {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post o'chirildi")));
-                 // Ideally trigger a refresh in parent, but for now we rely on next poll/refresh
+                 if (widget.onDelete != null) widget.onDelete!();
               } else if (mounted) {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Post o'chirilmayapti")));
               }
