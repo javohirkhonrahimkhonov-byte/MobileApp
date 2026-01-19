@@ -24,6 +24,7 @@ class Post {
   final String? targetUniversityId;
   final String? targetFacultyId;
   final String? targetSpecialtyId;
+  final bool isMine;
 
   Post({
     required this.id,
@@ -51,7 +52,66 @@ class Post {
     this.targetUniversityId,
     this.targetFacultyId,
     this.targetSpecialtyId,
+    this.isMine = false,
   });
+
+  Post copyWith({
+    String? id,
+    String? authorName,
+    String? authorUsername,
+    String? authorAvatar,
+    String? authorRole,
+    String? content,
+    String? timeAgo,
+    int? likes,
+    int? commentsCount,
+    int? sharesCount,
+    int? repostsCount,
+    List<String>? tags,
+    List<String>? mediaUrls,
+    bool? isLiked,
+    bool? isVerified,
+    bool? isTyutor,
+    int? views,
+    int? usefulScore,
+    List<String>? pollOptions,
+    List<int>? pollVotes,
+    int? userVote,
+    String? scope,
+    String? targetUniversityId,
+    String? targetFacultyId,
+    String? targetSpecialtyId,
+    bool? isMine,
+  }) {
+    return Post(
+      id: id ?? this.id,
+      authorName: authorName ?? this.authorName,
+      authorUsername: authorUsername ?? this.authorUsername,
+      authorAvatar: authorAvatar ?? this.authorAvatar,
+      authorRole: authorRole ?? this.authorRole,
+      content: content ?? this.content,
+      timeAgo: timeAgo ?? this.timeAgo,
+      likes: likes ?? this.likes,
+      commentsCount: commentsCount ?? this.commentsCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      repostsCount: repostsCount ?? this.repostsCount,
+      tags: tags ?? this.tags,
+      mediaUrls: mediaUrls ?? this.mediaUrls,
+      isLiked: isLiked ?? this.isLiked,
+      isVerified: isVerified ?? this.isVerified,
+      isTyutor: isTyutor ?? this.isTyutor,
+      views: views ?? this.views,
+      usefulScore: usefulScore ?? this.usefulScore,
+      pollOptions: pollOptions ?? this.pollOptions,
+      pollVotes: pollVotes ?? this.pollVotes,
+      userVote: userVote ?? this.userVote,
+      scope: scope ?? this.scope,
+      targetUniversityId: targetUniversityId ?? this.targetUniversityId,
+      targetFacultyId: targetFacultyId ?? this.targetFacultyId,
+      targetSpecialtyId: targetSpecialtyId ?? this.targetSpecialtyId,
+      isMine: isMine ?? this.isMine,
+    );
+  }
 }
 
 class Comment {

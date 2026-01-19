@@ -128,7 +128,7 @@ class CommunityService {
       targetFacultyId: json['target_faculty_id']?.toString(),
       targetSpecialtyId: json['target_specialty_name'], // Mapping name to ID field as per backend logic
       
-      likesCount: json['likes_count'] ?? 0,
+      likes: json['likes_count'] ?? 0,
       isLiked: json['is_liked_by_me'] ?? false,
       commentsCount: json['comments_count'] ?? 0,
       isVerified: false,

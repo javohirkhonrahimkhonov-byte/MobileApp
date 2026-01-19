@@ -20,10 +20,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   List<Comment> _comments = [];
   bool _isLoading = true;
   bool _isSending = false;
+  late Post _post;
 
   @override
   void initState() {
     super.initState();
+    _post = widget.post;
     _loadComments();
   }
 
@@ -68,7 +70,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, _post), 
         ),
         title: const Text("Muhokama", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
@@ -81,7 +83,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 padding: const EdgeInsets.only(bottom: 20),
                 children: [
                   // Main Post
-                  PostCard(post: widget.post, isDetail: true),
+                  PostCard(
+                    post: _post, 
+                    isDetail: true,
+                    onLikeChanged: (isLiked, count) {
+                       setState(() {
+                         _post = _post.copyWith(isLiked: isLiked, likes: count);
+                       });
+                    },
+                  ),
                   
                   const Divider(thickness: 1, height: 1),
                   

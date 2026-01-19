@@ -103,10 +103,10 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
 
   String _getCurrentScope() {
     switch (_tabController.index) {
-      case 0: return 'university';
-      case 1: return 'specialty';
-      case 2: return 'faculty';
-      default: return 'university';
+      case 0: return 'specialty';
+      case 1: return 'faculty';
+      case 2: return 'university';
+      default: return 'specialty';
     }
   }
 
@@ -142,9 +142,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelPadding: EdgeInsets.zero,
                 tabs: const [
-                  Tab(child: Text("Universitet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
                   Tab(child: Text("Yo'nalish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
                   Tab(child: Text("Fakultet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                  Tab(child: Text("Universitet", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
                 ],
               ),
             ),
@@ -185,9 +185,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildFeed("university"),
             _buildFeed("specialty"),
             _buildFeed("faculty"),
+            _buildFeed("university"),
           ],
         ),
         floatingActionButton: FloatingActionButton(
