@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
+import 'user_profile_screen.dart'; // ADDED
 import 'dart:async';
 
 class PostDetailScreen extends StatefulWidget {

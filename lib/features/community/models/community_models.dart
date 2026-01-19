@@ -123,6 +123,7 @@ class Comment {
   final String authorName;
   final String authorAvatar;
   final String content;
+  final String timeAgo; // RESTORED
   final int likes;
   final bool isLiked;
   final bool isLikedByAuthor;
