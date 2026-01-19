@@ -222,8 +222,13 @@ class CommunityService {
         return data.map((json) => Comment(
           id: json['id'].toString(),
           authorName: json['author_name'] ?? "Talaba",
+          authorAvatar: json['author_avatar'] ?? "",
           content: json['content'] ?? "",
           timeAgo: _formatDate(json['created_at']),
+          likes: json['likes_count'] ?? 0,
+          isLiked: json['is_liked'] ?? false,
+          isLikedByAuthor: json['is_liked_by_author'] ?? false,
+          authorRole: json['author_role'] ?? "Talaba",
         )).toList();
       } else {
         print("CommunityService: Failed to load comments: ${response.statusCode}");

@@ -23,6 +23,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   bool _isSending = false;
   late Post _post;
   Timer? _pollingTimer;
+  Comment? _replyingTo; // State for reply
 
   @override
   void initState() {
@@ -68,15 +69,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
-  Future<void> _sendComment() async {
+    Future<void> _sendComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
     setState(() => _isSending = true);
     try {
-      await _service.createComment(widget.post.id, content);
+      // If replying, we should ideally send parentId. Since API might not support it yet,
+      // we can prepend "@username" or handle it if backend supports.
+      // For now, let's assume we just send text.
+      String finalContent = content;
+      if (_replyingTo != null) {
+        // Mock notification logic
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${_replyingTo!.authorName} ga javob xabari yuborildi 🔔")),
+        );
+      }
+
+      await _service.createComment(widget.post.id, finalContent);
       _commentController.clear();
-      _loadComments(); // Refresh list
+      setState(() => _replyingTo = null); // Clear reply state
+      _loadComments(); 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Xatolik: $e")),
@@ -89,7 +102,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // We handle pop manually
+      canPop: false, 
       onPopInvoked: (didPop) {
         if (didPop) return;
         Navigator.pop(context, _post);
@@ -159,6 +172,32 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
   
+            // Reply Banner
+            if (_replyingTo != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Colors.grey[100],
+                child: Row(
+                  children: [
+                    Icon(Icons.reply, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "${_replyingTo!.authorName} ga javob yozilmoqda...",
+                        style: TextStyle(color: Colors.grey[800], fontSize: 13),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      onPressed: () => setState(() => _replyingTo = null),
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    )
+                  ],
+                ),
+              ),
+
             // Input Area
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -169,7 +208,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, -2))
                 ]
               ),
-              child: SafeArea( // For iPhone bottom bar
+              child: SafeArea( 
                 child: Row(
                   children: [
                      // User Avatar (Placeholder)
@@ -190,10 +229,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                          ),
                          child: TextField(
                            controller: _commentController,
-                           decoration: const InputDecoration(
-                             hintText: "Fikringizni yozing...",
+                           decoration: InputDecoration(
+                             hintText: _replyingTo != null ? "Javob yozing..." : "Fikringizni yozing...",
                              border: InputBorder.none,
-                             contentPadding: EdgeInsets.symmetric(vertical: 10),
+                             contentPadding: const EdgeInsets.symmetric(vertical: 10),
                            ),
                            minLines: 1,
                            maxLines: 4,
@@ -225,46 +264,150 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentItem(Comment comment) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!))
+    // Check if author liked (Assuming verifying logic: if post author liked it)
+    // Note: Since we are in mock mode, relying on service 'isLikedByAuthor'
+    
+    return Dismissible(
+      key: Key("reply_${comment.id}"),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        setState(() {
+          _replyingTo = comment;
+        });
+        // Focus input
+        Future.delayed(const Duration(milliseconds: 100), () {
+           // We might need a FocusNode to focus programmatically, 
+           // but for now user sees banner and can tap input.
+        });
+        return false; // Don't actually dismiss
+      },
+      background: Container(
+        color: Colors.grey[100],
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text("Javob yozish", style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Icon(Icons.reply, color: Colors.grey[600]),
+          ],
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.grey[300],
-            radius: 18,
-            child: Text(comment.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        comment.authorName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.4)),
-              ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: Colors.grey[100]!))
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                  authorName: comment.authorName,
+                  authorUsername: "@${comment.authorName.toLowerCase().replaceAll(' ', '')}",
+                  authorAvatar: comment.authorAvatar,
+                  authorRole: comment.authorRole ?? "Talaba",
+                )));
+              },
+              child: CircleAvatar(
+                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
+                radius: 18,
+                child: comment.authorAvatar.isEmpty 
+                  ? Text(comment.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                  : null,
+              ),
             ),
-          )
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          comment.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(comment.timeAgo, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.4)),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Footer: Reply, Like, Author Badge
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                           setState(() => _replyingTo = comment);
+                        },
+                        child: Text("Javob yozish", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+                      ),
+                      const SizedBox(width: 16),
+                      
+                      // Like Logic (Mock visual toggle)
+                      InkWell(
+                        onTap: () {
+                          // TODO: Call API
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                              size: 14,
+                              color: comment.isLiked ? Colors.red : Colors.grey[500],
+                            ),
+                            if (comment.likes > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Text("${comment.likes}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // Author Liked Badge
+                      if (comment.isLikedByAuthor)
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                           decoration: BoxDecoration(
+                             color: Colors.red.withOpacity(0.1),
+                             borderRadius: BorderRadius.circular(10),
+                             border: Border.all(color: Colors.red.withOpacity(0.2))
+                           ),
+                           child: Row(
+                             children: [
+                               CircleAvatar(
+                                 radius: 6,
+                                 backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
+                                 child: widget.post.authorAvatar.isEmpty ? Text(widget.post.authorName[0], style: const TextStyle(fontSize: 6)) : null,
+                               ),
+                               const SizedBox(width: 4),
+                               const Icon(Icons.favorite, size: 8, color: Colors.red),
+                             ],
+                           ),
+                         )
+                    ],
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

@@ -123,7 +123,10 @@ class Comment {
   final String authorName;
   final String authorAvatar;
   final String content;
-  final String timeAgo;
+  final int likes;
+  final bool isLiked;
+  final bool isLikedByAuthor;
+  final String? authorRole;
 
   Comment({
     required this.id,
@@ -131,6 +134,10 @@ class Comment {
     this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
+    this.likes = 0,
+    this.isLiked = false,
+    this.isLikedByAuthor = false,
+    this.authorRole,
   });
 }
 
