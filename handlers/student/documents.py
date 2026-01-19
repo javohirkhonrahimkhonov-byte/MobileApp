@@ -112,6 +112,10 @@ async def student_documents_list(call: CallbackQuery, session: AsyncSession):
 # 1.5) HUJJAT TANLASH HANDLERI
 # ============================================================
 
+# ============================================================
+# 1.5) HUJJAT TANLASH HANDLERI
+# ============================================================
+
 @router.callback_query(F.data.startswith("doc_sel:"))
 async def document_selection_handler(call: CallbackQuery, session: AsyncSession):
     try:
@@ -125,101 +129,147 @@ async def document_selection_handler(call: CallbackQuery, session: AsyncSession)
         await call.answer("Talaba topilmadi!", show_alert=True)
         return
 
-    # Handle HEMIS Docs (1-4)
+    # ------------------------------------------------------------
+    # 1. Ma'lumotnoma
+    # ------------------------------------------------------------
     if selection_idx == 1:
-        # Ma'lumotnoma
-        await call.message.answer("⏳ Ma'lumotnoma generatsiya qilinmoqda...")
-        from services.pdf_service import PdfService
-        from aiogram.types import BufferedInputFile
+        status_msg = await call.message.answer("⏳ <b>Ma'lumotnoma:</b> So'rov qabul qilindi...", parse_mode="HTML")
+        try:
+            # 1. Data Fetch (Local)
+            # await status_msg.edit_text("⏳ Ma'lumotlar tayyorlanmoqda...") 
+            # (Fast enough to skip intermediate edit)
+            
+            from services.pdf_service import PdfService
+            from aiogram.types import BufferedInputFile
+            
+            pdf_buffer = PdfService.generate_reference_pdf(
+                student_name=student.full_name,
+                hemis_id=str(student.hemis_id or "---"),
+                faculty=student.faculty_name or (student.faculty.name if student.faculty else "Aniqlanmagan"),
+                level=student.education_type or "Bakalavr",
+                courses=student.level_name or "1-kurs"
+            )
+            
+            await status_msg.edit_text("📤 <b>Ma'lumotnoma:</b> PDF yuborilmoqda...", parse_mode="HTML")
+            
+            file_input = BufferedInputFile(pdf_buffer.read(), filename="malumotnoma.pdf")
+            await call.message.answer_document(
+                document=file_input, 
+                caption="📄 <b>O'qish joyidan ma'lumotnoma</b>\nBot orqali shakllantirildi."
+            )
+            await status_msg.delete()
+            
+        except Exception as e:
+            await status_msg.edit_text(f"❌ <b>Xatolik:</b> PDF yaratishda muammo bo'ldi.\n\n<code>{str(e)}</code>", parse_mode="HTML")
         
-        pdf_buffer = PdfService.generate_reference_pdf(
-            student_name=student.full_name,
-            hemis_id=str(student.hemis_id or "---"),
-            faculty=student.faculty_name or (student.faculty.name if student.faculty else "Aniqlanmagan"),
-            level=student.education_type or "Bakalavr",
-            courses=student.level_name or "1-kurs"
-        )
-        file_input = BufferedInputFile(pdf_buffer.read(), filename="malumotnoma.pdf")
-        await call.message.answer_document(
-            document=file_input, 
-            caption="📄 <b>O'qish joyidan ma'lumotnoma</b>\nBot orqali shakllantirildi."
-        )
         await call.answer()
         return
 
+    # ------------------------------------------------------------
+    # 2. Transkript
+    # ------------------------------------------------------------
     elif selection_idx == 2:
-        # Transkript
         if not student.hemis_token:
-            await call.answer("HEMIS token mavjud emas. Iltimos botga qayta kiring /start", show_alert=True)
+            await call.answer("HEMIS token mavjud emas. /start bosing.", show_alert=True)
             return
             
-        await call.message.answer("⏳ Transkript yuklanmoqda va shakllantirilmoqda...")
-        from services.pdf_service import PdfService
-        from services.hemis_service import HemisService
-        from aiogram.types import BufferedInputFile
+        status_msg = await call.message.answer("⏳ <b>Transkript:</b> HEMIS tizimidan baholar olinmoqda...", parse_mode="HTML")
+        try:
+            from services.pdf_service import PdfService
+            from services.hemis_service import HemisService
+            from aiogram.types import BufferedInputFile
 
-        subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
-        
-        # Normalize
-        clean_subjects = []
-        for subj in subjects_data:
-            subj_name = subj.get("subject", {}).get("name", "Noma'lum fan")
-            score_obj = subj.get("overallScore", {})
-            grade = score_obj.get("grade", 0) if score_obj else 0
-            if grade == 0: grade = subj.get("totalPoint", 0)
+            # 1. Fetch Data
+            subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
             
-            load = subj.get("credit", 0)
-            if load == 0: load = subj.get("totalLoad", 0)
-            
-            clean_subjects.append({"name": subj_name, "grade": grade, "load": load})
+            await status_msg.edit_text(f"⏳ <b>Transkript:</b> {len(subjects_data)} ta fan topildi. PDF shakllantirilmoqda...", parse_mode="HTML")
 
-        pdf_buffer = PdfService.generate_transcript_pdf(
-            student_name=student.full_name,
-            hemis_id=str(student.hemis_id or "---"),
-            faculty=student.faculty_name or "Aniqlanmagan",
-            level=student.education_type or "Bakalavr",
-            subjects=clean_subjects
-        )
-        file_input = BufferedInputFile(pdf_buffer.read(), filename="transkript.pdf")
-        await call.message.answer_document(document=file_input, caption="📄 <b>Transkript (Reyting daftarchasi)</b>")
+            # 2. Normalize
+            clean_subjects = []
+            for subj in subjects_data:
+                subj_name = subj.get("subject", {}).get("name", "Noma'lum fan")
+                score_obj = subj.get("overallScore", {})
+                grade = score_obj.get("grade", 0) if score_obj else 0
+                if grade == 0: grade = subj.get("totalPoint", 0)
+                
+                load = subj.get("credit", 0)
+                if load == 0: load = subj.get("totalLoad", 0)
+                
+                clean_subjects.append({"name": subj_name, "grade": grade, "load": load})
+
+            # 3. Generate PDF
+            pdf_buffer = PdfService.generate_transcript_pdf(
+                student_name=student.full_name,
+                hemis_id=str(student.hemis_id or "---"),
+                faculty=student.faculty_name or "Aniqlanmagan",
+                level=student.education_type or "Bakalavr",
+                subjects=clean_subjects
+            )
+            
+            await status_msg.edit_text("📤 <b>Transkript:</b> PDF yuborilmoqda...", parse_mode="HTML")
+            
+            file_input = BufferedInputFile(pdf_buffer.read(), filename="transkript.pdf")
+            await call.message.answer_document(document=file_input, caption="📄 <b>Transkript (Reyting daftarchasi)</b>")
+            await status_msg.delete()
+
+        except Exception as e:
+            await status_msg.edit_text(f"❌ <b>Xatolik:</b> Transkript olishda muammo.\n\n<code>{str(e)}</code>", parse_mode="HTML")
+
         await call.answer()
         return
 
+    # ------------------------------------------------------------
+    # 3. O'quv varaqa
+    # ------------------------------------------------------------
     elif selection_idx == 3:
-        # O'quv varaqa
         if not student.hemis_token:
             await call.answer("HEMIS token mavjud emas.", show_alert=True)
             return
 
-        await call.message.answer("⏳ O'quv varaqa shakllantirilmoqda...")
-        from services.pdf_service import PdfService
-        from services.hemis_service import HemisService
-        from aiogram.types import BufferedInputFile
-        
-        subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
-        clean_subjects = []
-        for subj in subjects_data:
-            clean_subjects.append({
-                "name": subj.get("subject", {}).get("name", "Noma'lum"),
-                "credit": subj.get("credit", 0),
-                "load": subj.get("totalLoad", 0)
-            })
+        status_msg = await call.message.answer("⏳ <b>O'quv varaqa:</b> HEMIS fanlari yuklanmoqda...", parse_mode="HTML")
+        try:
+            from services.pdf_service import PdfService
+            from services.hemis_service import HemisService
+            from aiogram.types import BufferedInputFile
+            
+            # 1. Fetch Data
+            subjects_data = await HemisService.get_student_subject_list(token=student.hemis_token, student_id=student.id)
+            
+            await status_msg.edit_text(f"⏳ <b>O'quv varaqa:</b> {len(subjects_data)} ta fan yuklandi. PDF yasalmoqda...", parse_mode="HTML") # Fixed typo 'fan yuklandi'
+            
+            clean_subjects = []
+            for subj in subjects_data:
+                clean_subjects.append({
+                    "name": subj.get("subject", {}).get("name", "Noma'lum"),
+                    "credit": subj.get("credit", 0),
+                    "load": subj.get("totalLoad", 0)
+                })
 
-        pdf_buffer = PdfService.generate_study_sheet_pdf(
-            student_name=student.full_name,
-            hemis_id=str(student.hemis_id or "---"),
-            faculty=student.faculty_name or "Aniqlanmagan",
-            level=student.education_type or "Bakalavr",
-            semester=student.semester_name or "Joriy",
-            subjects=clean_subjects
-        )
-        file_input = BufferedInputFile(pdf_buffer.read(), filename="oquv_varaqa.pdf")
-        await call.message.answer_document(document=file_input, caption="📄 <b>O'quv varaqa (Shaxsiy reja)</b>")
+            pdf_buffer = PdfService.generate_study_sheet_pdf(
+                student_name=student.full_name,
+                hemis_id=str(student.hemis_id or "---"),
+                faculty=student.faculty_name or "Aniqlanmagan",
+                level=student.education_type or "Bakalavr",
+                semester=student.semester_name or "Joriy",
+                subjects=clean_subjects
+            )
+            
+            await status_msg.edit_text("📤 <b>O'quv varaqa:</b> PDF yuborilmoqda...", parse_mode="HTML")
+            
+            file_input = BufferedInputFile(pdf_buffer.read(), filename="oquv_varaqa.pdf")
+            await call.message.answer_document(document=file_input, caption="📄 <b>O'quv varaqa (Shaxsiy reja)</b>")
+            await status_msg.delete()
+            
+        except Exception as e:
+            await status_msg.edit_text(f"❌ <b>Xatolik:</b> O'quv varaqasini olishda muammo.\n\n<code>{str(e)}</code>", parse_mode="HTML")
+
         await call.answer()
         return
         
+    # ------------------------------------------------------------
+    # 4. Shartnoma
+    # ------------------------------------------------------------
     elif selection_idx == 4:
-        # Shartnoma (Link)
         url = "https://student.jmcu.uz/finance/contract_pdf"
         await call.message.answer(
             f"📄 <b>To'lov-kontrakt shartnomasi</b>\n\n"
@@ -231,28 +281,40 @@ async def document_selection_handler(call: CallbackQuery, session: AsyncSession)
         await call.answer()
         return
 
-    # Handle User Docs (5+)
-    start_user_idx = 5
-    user_docs = (await session.scalars(
-        select(UserDocument).where(UserDocument.student_id == student.id)
-    )).all()
+    # ------------------------------------------------------------
+    # 5+. User Documents
+    # ------------------------------------------------------------
+    status_msg = await call.message.answer("⏳ Hujjat qidirilmoqda...")
+    try:
+        start_user_idx = 5
+        user_docs = (await session.scalars(
+            select(UserDocument).where(UserDocument.student_id == student.id)
+        )).all()
 
-    if not user_docs:
-        await call.answer("Hujjat topilmadi.", show_alert=True)
-        return
+        if not user_docs:
+            await status_msg.edit_text("❌ Sizda shaxsiy hujjatlar topilmadi.")
+            return
 
-    # Calculate array index
-    array_idx = selection_idx - start_user_idx
-    if 0 <= array_idx < len(user_docs):
-        doc = user_docs[array_idx]
-        caption = f"📄 <b>{doc.title}</b>\nKategoriya: {doc.category}"
-        if doc.file_type == "photo":
-            await call.message.answer_photo(doc.file_id, caption=caption, parse_mode="HTML")
+        array_idx = selection_idx - start_user_idx
+        if 0 <= array_idx < len(user_docs):
+            doc = user_docs[array_idx]
+            caption = f"📄 <b>{doc.title}</b>\nKategoriya: {doc.category}"
+            
+            await status_msg.edit_text(f"📤 <b>{doc.title}</b> yuborilmoqda...", parse_mode="HTML")
+            
+            if doc.file_type == "photo":
+                await call.message.answer_photo(doc.file_id, caption=caption, parse_mode="HTML")
+            else:
+                await call.message.answer_document(doc.file_id, caption=caption, parse_mode="HTML")
+            
+            await status_msg.delete()
         else:
-            await call.message.answer_document(doc.file_id, caption=caption, parse_mode="HTML")
-        await call.answer()
-    else:
-        await call.answer("Noto'g'ri hujjat raqami.", show_alert=True)
+            await status_msg.edit_text("❌ Noto'g'ri hujjat raqami.")
+            
+    except Exception as e:
+         await status_msg.edit_text(f"❌ Xatolik: {str(e)}")
+    
+    await call.answer()
 
 
 # ============================================================

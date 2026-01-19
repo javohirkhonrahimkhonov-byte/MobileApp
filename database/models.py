@@ -724,8 +724,12 @@ class ChoyxonaPost(Base):
     target_specialty_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True) # Direction ID o'rniga name ishlatilmoqda chunki alohida jadval yo'q
 
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
-
     
+    # Denormalized Counts for Performance
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
+    comments_count: Mapped[int] = mapped_column(Integer, default=0)
+    reposts_count: Mapped[int] = mapped_column(Integer, default=0)
+
     # Relationships
     student: Mapped["Student"] = relationship("Student")
     university: Mapped["University"] = relationship("University")
@@ -733,6 +737,7 @@ class ChoyxonaPost(Base):
     
     comments: Mapped[list["ChoyxonaComment"]] = relationship("ChoyxonaComment", back_populates="post", cascade="all, delete-orphan")
     likes: Mapped[list["ChoyxonaPostLike"]] = relationship("ChoyxonaPostLike", back_populates="post", cascade="all, delete-orphan")
+    reposts: Mapped[list["ChoyxonaPostRepost"]] = relationship("ChoyxonaPostRepost", back_populates="post", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
@@ -769,3 +774,17 @@ class ChoyxonaPostLike(Base):
 
     def __repr__(self):
         return f"<ChoyxonaPostLike {self.id} on Post {self.post_id} by Student {self.student_id}>"
+
+class ChoyxonaPostRepost(Base):
+    __tablename__ = "choyxona_post_reposts"
+    __table_args__ = (UniqueConstraint('post_id', 'student_id', name='_user_post_repost_uc'),)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_posts.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    
+    post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="reposts")
+
+    def __repr__(self):
+        return f"<ChoyxonaPostRepost {self.id} on Post {self.post_id} by Student {self.student_id}>"

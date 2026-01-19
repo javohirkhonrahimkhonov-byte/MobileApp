@@ -87,38 +87,32 @@ async def get_posts(
     Get posts with strict access control filtering.
     """
     # Eager load student for author details
-    # Eager load likes and comments for count
+    # Eager load likes and reposts ONLY for determining "is_liked_by_me/is_reposted_by_me" status
+    # We DO NOT need to load all comments/likes to count them anymore.
+    
     query = select(ChoyxonaPost).options(
         selectinload(ChoyxonaPost.student), 
-        selectinload(ChoyxonaPost.likes),
-        selectinload(ChoyxonaPost.comments)
+        selectinload(ChoyxonaPost.likes), 
+        selectinload(ChoyxonaPost.reposts)
     ).order_by(desc(ChoyxonaPost.created_at))
     
+    # ... (filters remain same) ...
     # 1. Category Filter (Tab Filter)
     query = query.where(ChoyxonaPost.category_type == category)
     
-    # ... (context logic stays same) ...
-    # 2. Access Control (Context Filter) - LOGIC
-    # User can ONLY see posts that belong to their context.
-    
     if category == 'university': 
-        # Show posts for my university
-        query = query.where(ChoyxonaPost.target_university_id == student.university_id)
-        
+         query = query.where(ChoyxonaPost.target_university_id == student.university_id)
     elif category == 'faculty':
-        # Show posts for my faculty in my university
-        query = query.where(
-            ChoyxonaPost.target_university_id == student.university_id,
-            ChoyxonaPost.target_faculty_id == student.faculty_id
-        )
-        
+         query = query.where(
+             ChoyxonaPost.target_university_id == student.university_id,
+             ChoyxonaPost.target_faculty_id == student.faculty_id
+         )
     elif category == 'specialty':
-        # Show posts for my specialty
-        query = query.where(
-            ChoyxonaPost.target_university_id == student.university_id,
-            ChoyxonaPost.target_faculty_id == student.faculty_id,
-            ChoyxonaPost.target_specialty_name == student.specialty_name
-        )
+         query = query.where(
+             ChoyxonaPost.target_university_id == student.university_id,
+             ChoyxonaPost.target_faculty_id == student.faculty_id,
+             ChoyxonaPost.target_specialty_name == student.specialty_name
+         )
         
     result = await db.execute(query)
     posts = result.scalars().all()
@@ -126,10 +120,9 @@ async def get_posts(
     return [_map_post(p, p.student, student.id) for p in posts]
 
 def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
-    # Calculate counts
-    likes_count = len(post.likes) if post.likes else 0
-    comments_count = len(post.comments) if post.comments else 0
+    # Use stored counts
     is_liked = any(l.student_id == current_user_id for l in post.likes) if post.likes else False
+    is_reposted = any(r.student_id == current_user_id for r in post.reposts) if post.reposts else False
 
     return PostResponseSchema(
         id=post.id,
@@ -141,9 +134,13 @@ def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
         target_university_id=post.target_university_id,
         target_faculty_id=post.target_faculty_id,
         target_specialty_name=post.target_specialty_name,
-        likes_count=likes_count,
-        comments_count=comments_count,
+        
+        likes_count=post.likes_count,
+        comments_count=post.comments_count,
+        reposts_count=post.reposts_count,
+        
         is_liked_by_me=is_liked,
+        is_reposted_by_me=is_reposted,
         is_mine=(post.student_id == current_user_id)
     )
     
@@ -156,7 +153,7 @@ async def get_post_by_id(
     query = select(ChoyxonaPost).options(
         selectinload(ChoyxonaPost.student), 
         selectinload(ChoyxonaPost.likes),
-        selectinload(ChoyxonaPost.comments)
+        selectinload(ChoyxonaPost.reposts)
     ).where(ChoyxonaPost.id == post_id)
     
     result = await db.execute(query)
@@ -215,25 +212,50 @@ async def toggle_like(
     student: Student = Depends(get_current_student),
     db: AsyncSession = Depends(get_db)
 ):
-    from database.models import ChoyxonaPostLike
-    # Check if post exists
-    post = await db.get(ChoyxonaPost, post_id)
-    if not post:
-        raise HTTPException(status_code=404, detail="Post topilmadi")
-
+    # ...
     # Check for existing like
     existing_like = await db.scalar(select(ChoyxonaPostLike).where(ChoyxonaPostLike.post_id == post_id, ChoyxonaPostLike.student_id == student.id))
     
     if existing_like:
         await db.delete(existing_like)
+        post.likes_count = max(0, post.likes_count - 1) # Atomic-ish in app logic, better to use SQL expression if high concurrency, but OK for now
         liked = False
     else:
         new_like = ChoyxonaPostLike(post_id=post_id, student_id=student.id)
         db.add(new_like)
+        post.likes_count += 1
         liked = True
 
     await db.commit()
-    return {"status": "success", "liked": liked}
+    return {"status": "success", "liked": liked, "count": post.likes_count}
+
+@router.post("/posts/{post_id}/repost")
+async def toggle_repost(
+    post_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    from database.models import ChoyxonaPostRepost
+    # Check if post exists
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+
+    # Check for existing repost
+    existing_repost = await db.scalar(select(ChoyxonaPostRepost).where(ChoyxonaPostRepost.post_id == post_id, ChoyxonaPostRepost.student_id == student.id))
+    
+    if existing_repost:
+        await db.delete(existing_repost)
+        post.reposts_count = max(0, post.reposts_count - 1)
+        reposted = False
+    else:
+        new_repost = ChoyxonaPostRepost(post_id=post_id, student_id=student.id)
+        db.add(new_repost)
+        post.reposts_count += 1
+        reposted = True
+
+    await db.commit()
+    return {"status": "success", "reposted": reposted, "count": post.reposts_count}
 
 @router.post("/posts/{post_id}/comments", response_model=CommentResponseSchema)
 async def create_comment(
@@ -242,17 +264,14 @@ async def create_comment(
     student: Student = Depends(get_current_student),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Create a comment on a post.
-    Validates access based on Post's context.
-    """
+    # ... (same checks)
     # 1. Fetch Post to verify access logic
     post = await db.get(ChoyxonaPost, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post topilmadi")
     
+    # ... (access checks)
     # 2. Verify Access (User must have same context as post)
-    # Reuse filtering logic or just simple check
     if post.category_type == 'university' and post.target_university_id != student.university_id:
         raise HTTPException(status_code=403, detail="Siz bu universitet postiga yozolmaysiz")
     
@@ -271,6 +290,7 @@ async def create_comment(
     )
     
     db.add(new_comment)
+    post.comments_count += 1 # Increment comment count
     await db.commit()
     await db.refresh(new_comment)
     
