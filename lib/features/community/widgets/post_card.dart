@@ -534,4 +534,71 @@ class _PostCardState extends State<PostCard> {
       ),
     );
   }
+  Widget _buildFoldableContent() {
+    final content = widget.post.content;
+    final lines = content.split('\n');
+    final hasTitle = lines.length > 1;
+    final title = lines.isNotEmpty ? lines.first : "";
+    final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : "";
+    
+    // Define thresholds
+    const maxLines = 4;
+    
+    // Check if we need to fold
+    final shouldFold = content.length > 150 || content.split('\n').length > 5;
+
+    if (!shouldFold || widget.isDetail || _isExpanded) {
+       return Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           if (hasTitle)
+             Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, height: 1.4, color: Colors.black)),
+           if (hasTitle && body.isNotEmpty)
+             const SizedBox(height: 4),
+           Text(
+             hasTitle ? body : title, 
+             style: TextStyle(
+               fontWeight: hasTitle ? FontWeight.normal : (lines.length == 1 ? FontWeight.bold : FontWeight.normal),
+               fontSize: 15, 
+               height: 1.4, 
+               color: Colors.black87
+             )
+           ),
+           if (shouldFold && !widget.isDetail)
+             GestureDetector(
+               onTap: () => setState(() => _isExpanded = false),
+               child: Padding(
+                 padding: const EdgeInsets.only(top: 4),
+                 child: Text("Kamroq o'qish", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+               ),
+             )
+         ],
+       );
+    } else {
+       // Folded View
+       return Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           if (hasTitle)
+             Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, height: 1.4, color: Colors.black)),
+           if (hasTitle && body.isNotEmpty)
+             const SizedBox(height: 4),
+           
+           Text(
+             hasTitle ? body : title,
+             style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black87),
+             maxLines: maxLines,
+             overflow: TextOverflow.ellipsis,
+           ),
+           GestureDetector(
+             onTap: () => setState(() => _isExpanded = true),
+             child: const Padding(
+               padding: EdgeInsets.only(top: 4),
+               child: Text("Ko'proq o'qish", style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+             ),
+           )
+         ],
+       );
+    }
+  }
 }
