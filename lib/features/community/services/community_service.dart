@@ -66,8 +66,11 @@ class CommunityService {
 
   Future<bool> likePost(String postId) async {
     final token = await _authService.getToken(); // Use _authService instance
+    final url = '${ApiConstants.communityPosts}/$postId/like';
+    print("CommunityService: Liking post at $url");
+    
     final response = await http.post(
-      Uri.parse('${ApiConstants.communityPosts}/$postId/like'),
+      Uri.parse(url),
       headers: await _getHeaders(), // Use existing _getHeaders method
     );
 
