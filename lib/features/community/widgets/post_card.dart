@@ -206,13 +206,14 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _showEditDialog() async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent, // Sheet handles its own styling
-      builder: (ctx) => EditPostSheet(
-        postId: widget.post.id,
-        initialContent: widget.post.content,
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (ctx) => EditPostSheet(
+          postId: widget.post.id,
+          initialContent: widget.post.content,
+        ),
       ),
     );
 
