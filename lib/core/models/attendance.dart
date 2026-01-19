@@ -16,19 +16,40 @@ class Attendance {
   });
 
   factory Attendance.fromJson(Map<String, dynamic> json) {
-    // Parsing logic based on standard HEMIS response structure
-    // structure: { "subject": {"name": "Matematika"}, "date": "12.01.2024", "lesson": {"name": "Integrallar"}, "absent_status": 12 }
+    // Handle Proxy API (Simplified) vs Direct HEMIS (Nested)
     
-    final subject = json['subject'] != null ? json['subject']['name'] ?? 'Noma\'lum fan' : 'Noma\'lum fan';
-    final lesson = json['lesson'] != null ? json['lesson']['name'] ?? 'Mavzu kiritilmagan' : 'Mavzu kiritilmagan';
-    final dateStr = json['details']?['date'] ?? json['date'] ?? ''; 
-    final hourVal = json['hour'] != null ? int.tryParse(json['hour'].toString()) ?? 2 : 2;
+    // 1. Subject Name
+    String subject = "Noma'lum fan";
+    if (json['subject'] is String) {
+      subject = json['subject'];
+    } else if (json['subject'] != null && json['subject'] is Map) {
+      subject = json['subject']['name'] ?? "Noma'lum fan";
+    }
+
+    // 2. Lesson Theme
+    String lesson = "Mavzu kiritilmagan";
+    if (json['theme'] != null) {
+       lesson = json['theme'];
+    } else if (json['lesson'] != null && json['lesson'] is Map) {
+       lesson = json['lesson']['name'] ?? "Mavzu kiritilmagan";
+    }
+
+    // 3. Date
+    final dateStr = json['date'] ?? json['details']?['date'] ?? ''; 
     
-    // Status 11 = Sababli, 12 = Sababsiz
-    // Also checking "is_valid" field which sometimes indicates excused status
-    final int status = json['absent_status'] ?? 0;
-    final bool valid = json['is_valid'] == true;
-    final bool excused = status == 11 || valid;
+    // 4. Hours
+    final hourVal = json['hours'] ?? (json['hour'] != null ? int.tryParse(json['hour'].toString()) ?? 2 : 2);
+    
+    // 5. Status
+    bool excused = false;
+    if (json.containsKey('is_excused')) {
+       excused = json['is_excused'] == true;
+    } else {
+       // Legacy/Raw Logic
+       final int status = json['absent_status'] ?? 0;
+       final bool valid = json['is_valid'] == true;
+       excused = status == 11 || valid;
+    }
 
     return Attendance(
       id: json['id'] ?? 0,

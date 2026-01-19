@@ -137,84 +137,95 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     Expanded(
                       child: _attendanceList.isEmpty
                           ? const Center(child: Text("Qoldirilgan darslar yo'q 🎉"))
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              itemCount: _attendanceList.length,
-                              itemBuilder: (context, index) {
-                                final item = _attendanceList[index];
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              item.subjectName,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: (item.isExcused ? Colors.green : Colors.red).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              "${item.hours} soat",
-                                              style: TextStyle(
-                                                color: item.isExcused ? Colors.green : Colors.red,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[500]),
-                                          const SizedBox(width: 6),
-                                          Text(item.date, style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500)),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              item.lessonTheme,
-                                              style: TextStyle(color: Colors.grey[800], fontSize: 13),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        item.isExcused ? "Sababli" : "Sababsiz",
-                                        style: TextStyle(
-                                          color: item.isExcused ? Colors.green : Colors.red,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                          : _buildGroupedList(),
                     ),
                   ],
                 ),
+    );
+  }
+
+  Widget _buildGroupedList() {
+    // 1. Group Data
+    final Map<String, List<Attendance>> grouped = {};
+    for (var item in _attendanceList) {
+       if (!grouped.containsKey(item.subjectName)) grouped[item.subjectName] = [];
+       grouped[item.subjectName]!.add(item);
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: grouped.length,
+      itemBuilder: (ctx, idx) {
+        String subject = grouped.keys.elementAt(idx);
+        List<Attendance> items = grouped[subject]!;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             // Subject Header
+             Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 8, left: 4),
+                child: Text(
+                  subject, 
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 15,
+                    color: AppTheme.primaryBlue
+                  )
+                ),
+             ),
+             // Items
+             ...items.map((item) => _buildItem(item)).toList(),
+             const Divider(),
+          ],
+        );
+      }
+    );
+  }
+
+  Widget _buildItem(Attendance item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))
+        ],
+      ),
+      child: Row(
+        children: [
+           // Date Icon
+           Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[400]),
+           const SizedBox(width: 6),
+           
+           // Date & Hours
+           Text(
+             "${item.date} (${item.hours} soat)",
+             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppTheme.textBlack),
+           ),
+           
+           const Spacer(),
+           
+           // Status
+           Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: (item.isExcused ? Colors.green : Colors.red).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                item.isExcused ? "Sababli" : "Sababsiz",
+                style: TextStyle(
+                  color: item.isExcused ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+           )
+        ],
+      ),
     );
   }
 
