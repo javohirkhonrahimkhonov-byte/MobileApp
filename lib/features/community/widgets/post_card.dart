@@ -340,7 +340,7 @@ class _PostCardState extends State<PostCard> {
                         color: Colors.grey,
                         onTap: () {
                            if (!widget.isDetail) {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: widget.post)));
+                               _openDetail();
                            }
                         }
                       ),
@@ -374,50 +374,53 @@ class _PostCardState extends State<PostCard> {
     if (widget.isDetail) return content;
 
     return InkWell(
-      onTap: () async {
-        final currentPost = widget.post.copyWith(
-             isLiked: _isLiked,
-             likes: _likeCount,
-             isRepostedByMe: _isReposted,
-        );
-
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostDetailScreen(post: currentPost),
-          ),
-        );
-        
-        if (result == 'deleted') {
-           if (widget.onDelete != null) widget.onDelete!();
-           return;
-        }
-
-        if (result != null && result is Post) {
-          // Sync back any changes from Detail Screen
-          bool changed = false;
-          if (result.isLiked != _isLiked || result.likes != _likeCount) {
-             _isLiked = result.isLiked;
-             _likeCount = result.likes;
-             changed = true;
-          }
-          if (result.isRepostedByMe != _isReposted || result.repostsCount != _repostCount) {
-             _isReposted = result.isRepostedByMe;
-             _repostCount = result.repostsCount;
-             changed = true;
-          }
-
-          if (changed) {
-             setState(() {});
-             // Optionally notify parent
-             if (widget.onLikeChanged != null) {
-                widget.onLikeChanged!(_isLiked, _likeCount);
-             }
-          }
-        }
-      },
+      onTap: _openDetail,
       child: content,
     );
+  }
+
+  Future<void> _openDetail() async {
+    final currentPost = widget.post.copyWith(
+         isLiked: _isLiked,
+         likes: _likeCount,
+         isRepostedByMe: _isReposted,
+         repostsCount: _repostCount,
+    );
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostDetailScreen(post: currentPost),
+      ),
+    );
+    
+    if (result == 'deleted') {
+       if (widget.onDelete != null) widget.onDelete!();
+       return;
+    }
+
+    if (result != null && result is Post) {
+      // Sync back any changes from Detail Screen
+      bool changed = false;
+      if (result.isLiked != _isLiked || result.likes != _likeCount) {
+         _isLiked = result.isLiked;
+         _likeCount = result.likes;
+         changed = true;
+      }
+      if (result.isRepostedByMe != _isReposted || result.repostsCount != _repostCount) {
+         _isReposted = result.isRepostedByMe;
+         _repostCount = result.repostsCount;
+         changed = true;
+      }
+
+      if (changed) {
+         setState(() {});
+         // Optionally notify parent
+         if (widget.onLikeChanged != null) {
+            widget.onLikeChanged!(_isLiked, _likeCount);
+         }
+      }
+    }
   }
 
   Widget _buildMediaGrid() {
