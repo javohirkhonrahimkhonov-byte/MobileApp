@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from services.hemis_service import HemisService
 from database.db_connect import get_session
 from api.dependencies import get_current_student
-from database.models import Student
+from database.models import Student, TgAccount
 
 router = APIRouter()
 
@@ -287,8 +288,15 @@ async def send_resource_to_bot(
     if not student.hemis_token:
         return {"success": False, "message": "No Token"}
         
-    if not student.telegram_id:
-        return {"success": False, "message": "Telegram ID not connected. Please start the bot."}
+    # Retrieve Telegram Account
+    stmt = select(TgAccount).where(TgAccount.student_id == student.id)
+    result = await db.execute(stmt)
+    tg_account = result.scalar_one_or_none()
+
+    if not tg_account:
+        return {"success": False, "message": "Telegram hisob ulanmagan. Iltimos, botga kiring."}
+    
+    chat_id = tg_account.telegram_id
         
     # Download
     content, filename = await HemisService.download_resource_file(student.hemis_token, req.url)
@@ -326,7 +334,10 @@ async def get_subject_details_endpoint(
         
     # 1. Get Subject Info (from List)
     subjects = await HemisService.get_student_subject_list(student.hemis_token, semester_code=semester)
-    target_subject = next((s for s in subjects if str(s.get_path("curriculumSubject.subject.id") or s.get("subject", {}).get("id")) == str(subject_id)), None)
+    target_subject = next((
+        s for s in subjects 
+        if str((s.get("curriculumSubject", {}).get("subject", {}) or {}).get("id") or s.get("subject", {}).get("id")) == str(subject_id)
+    ), None)
     
     # helper to safely get nested
     def get_nested(d, path):

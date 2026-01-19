@@ -721,14 +721,24 @@ class ChoyxonaPost(Base):
     # Qaysi auditoriya uchun mo'ljallangan?
     target_university_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("universities.id", ondelete="CASCADE"), nullable=True)
     target_faculty_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("faculties.id", ondelete="CASCADE"), nullable=True)
-    target_specialty_name: Mapped[str | None] = mapped_column(String(255), nullable=True) # Direction ID o'rniga name ishlatilmoqda chunki alohida jadval yo'q
+    target_specialty_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True) # Direction ID o'rniga name ishlatilmoqda chunki alohida jadval yo'q
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
 
     # Relationships
     student: Mapped["Student"] = relationship("Student")
     university: Mapped["University"] = relationship("University")
     faculty: Mapped["Faculty"] = relationship("Faculty")
+    
+    __table_args__ = (
+        # Index for feed filtering (Composite indexes for common queries)
+        # University Feed: category='university', target_uni
+        # Faculty Feed: category='faculty', target_uni, target_fac
+        # Specialty Feed: category='specialty', target_uni, target_fac, target_spec
+        # Since queries always filter by category first (or distinct queries per tab), separate indexes or strategic composite indexes help.
+        # But simple single-column indexes on FKs are often enough for this scale.
+        # Adding simple indexes via mapped_column(index=True) above.
+    )
 
     def __repr__(self):
         return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
