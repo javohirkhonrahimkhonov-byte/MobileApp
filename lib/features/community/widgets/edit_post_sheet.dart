@@ -19,8 +19,11 @@ class EditPostSheet extends StatefulWidget {
 class _EditPostSheetState extends State<EditPostSheet> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
+  final FocusNode _contentFocusNode = FocusNode(); // Track Focus
+  
   bool _isLoading = false;
   bool _hasChanges = false;
+  bool _isFocused = false; // For Blue Border
   String? _originalTitle;
   String? _originalBody;
 
@@ -33,6 +36,21 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
     _titleController.addListener(_checkForChanges);
     _contentController.addListener(_checkForChanges);
+    
+    // Listen to focus changes
+    _contentFocusNode.addListener(() {
+      setState(() {
+        _isFocused = _contentFocusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    _contentFocusNode.dispose();
+    super.dispose();
   }
 
   void _parseInitialContent() {
@@ -44,7 +62,7 @@ class _EditPostSheetState extends State<EditPostSheet> {
       _originalTitle = match.group(1)?.trim() ?? "";
       _originalBody = match.group(2)?.trim() ?? "";
     } else {
-      // 2. Fallback: Split by newline if multiple lines
+      // 2. Fallback: Legacy Split
       final lines = widget.initialContent.split('\n');
       if (lines.length > 1) {
         _originalTitle = lines.first.trim();
@@ -69,7 +87,6 @@ class _EditPostSheetState extends State<EditPostSheet> {
   Future<void> _handleSave() async {
     if (!_hasChanges) return;
     
-    // Validate
     if (_contentController.text.trim().isEmpty) {
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, matn yozing!")));
        return;
@@ -79,8 +96,10 @@ class _EditPostSheetState extends State<EditPostSheet> {
     final newTitle = _titleController.text.trim();
     final newBody = _contentController.text.trim();
     
+    // Enforce Markdown Format
     String finalContent = newBody;
     if (newTitle.isNotEmpty) {
+      // Always save as **Title**\n\nBody
       finalContent = "**$newTitle**\n\n$newBody";
     }
 
@@ -135,8 +154,6 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Mimic CreatePostScreen layout but as a Sheet
-    // We use a specific height (e.g. 90%) to show the app behind
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -145,7 +162,7 @@ class _EditPostSheetState extends State<EditPostSheet> {
         if (shouldPop && context.mounted) Navigator.pop(context);
       },
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.9, // 90% Height
+        height: MediaQuery.of(context).size.height * 0.9, 
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -166,7 +183,7 @@ class _EditPostSheetState extends State<EditPostSheet> {
                     },
                   ),
                   const Text("Postni Tahrirlash", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 48), // Spacer to balance Close button
+                  const SizedBox(width: 48), 
                 ],
               ),
             ),
@@ -178,29 +195,74 @@ class _EditPostSheetState extends State<EditPostSheet> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Title
+                    // Title Field (Plain)
                     TextField(
                       controller: _titleController,
                       decoration: const InputDecoration(
                         hintText: "Sarlavha (Ixtiyoriy)",
                         border: InputBorder.none,
                         hintStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
                       ),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const Divider(),
-                    // Body
+                    const SizedBox(height: 8),
+                    
+                    // Body Field (With Blue Border & Menu Button)
                     Expanded(
-                      child: TextField(
-                        controller: _contentController,
-                        maxLines: null,
-                        expands: true,
-                        textAlignVertical: TextAlignVertical.top,
-                        decoration: const InputDecoration(
-                          hintText: "Bu yerga yozing...",
-                          border: InputBorder.none,
-                        ),
-                        style: const TextStyle(fontSize: 16),
+                      child: Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              // Animated Border Color
+                              border: Border.all(
+                                color: _isFocused ? AppTheme.primaryBlue : Colors.grey[300]!,
+                                width: _isFocused ? 2 : 1
+                              ),
+                              borderRadius: BorderRadius.circular(16) // Rounded Corners
+                            ),
+                            child: TextField(
+                              controller: _contentController,
+                              focusNode: _contentFocusNode,
+                              maxLines: null, // Infinite
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              decoration: const InputDecoration(
+                                hintText: "Bu yerga yozing...",
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.fromLTRB(16, 16, 16, 60), // Space for button at bottom
+                              ),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                          
+                          // Floating Menu Button (Bottom Left)
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            child: Material(
+                              color: Colors.white,
+                              elevation: 2,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                onTap: () {
+                                  // Placeholder for formatting menu
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Formatlash menyusi (Tez orada)"), duration: Duration(seconds: 1)),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(50),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.menu, color: Colors.black54),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
