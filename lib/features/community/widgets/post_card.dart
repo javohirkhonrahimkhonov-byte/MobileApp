@@ -206,31 +206,77 @@ class _PostCardState extends State<PostCard> {
 
   void _showEditDialog() {
     final controller = TextEditingController(text: widget.post.content);
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Postni tahrirlash"),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          left: 16, 
+          right: 16, 
+          top: 16
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish")),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final success = await _communityService.editPost(widget.post.id, controller.text);
-              if (success && mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post yangilandi")));
-                 // Ideally trigger refresh
-              } else if (mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Post yangilanmadi")));
-              }
-            }, 
-            child: const Text("Saqlash")
-          ),
-        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Postni tahrirlash", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Navigator.pop(ctx),
+                )
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              maxLines: 8,
+              minLines: 3,
+              style: const TextStyle(fontSize: 16),
+              decoration: InputDecoration(
+                hintText: "Fikringizni o'zgartiring...",
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                final newContent = controller.text.trim();
+                if (newContent.isEmpty) return;
+
+                Navigator.pop(ctx);
+                final success = await _communityService.editPost(widget.post.id, newContent);
+                if (success && mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post yangilandi")));
+                   // Ideally trigger refresh or update local state immediately if we had callback
+                } else if (mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Post yangilanmadi")));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0
+              ),
+              child: const Text("Saqlash", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       )
     );
   }
