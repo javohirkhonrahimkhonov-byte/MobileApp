@@ -227,7 +227,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ],
     );
   }
-  }
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
