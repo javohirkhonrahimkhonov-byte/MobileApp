@@ -6,11 +6,35 @@ import '../constants/api_constants.dart';
 
 class AuthService {
   
+<<<<<<< HEAD
+  // Bridge for AuthProvider
+  Future<bool> loginWithHemis(String login, String password) async {
+    final student = await this.login(login, password);
+    return student != null;
+  }
+
+  Future<void> saveToken(String token) async {
+    await _saveToken(token);
+  }
+
+  // Telegram Login Stubs
+  Future<Map<String, dynamic>> initAuth() async {
+    await Future.delayed(const Duration(seconds: 1));
+    return {
+      'uuid': 'test-uuid',
+      'url': 'https://t.me/talabahamkorbot?start=login'
+    };
+  }
+
+  Future<Map<String, dynamic>?> checkAuth(String uuid) async {
+    return null;
+  }
+
   // Using PROXY (Our Server) for Login now as updated in api_constants
   Future<Student?> login(String login, String password) async {
     // 0. DEMO MODE
     if (login == 'demo' && password == '123') {
-       final demoStudent = Student(
+       return Student(
         id: 0,
         fullName: 'Talaba Testov',
         hemisLogin: 'demo.student',
@@ -21,12 +45,10 @@ class AuthService {
         universityName: 'Jizzax davlat pedagogika universiteti',
         imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
       );
-       return demoStudent;
     }
 
     final url = Uri.parse(ApiConstants.authLogin);
     try {
-      print('Proxy Login: $url');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -55,6 +77,57 @@ class AuthService {
       print('Auth Error: $e');
     }
     return null;
+  }
+  
+  // --- Username Methods ---
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      final token = await getToken();
+      if (token == null) return false;
+      
+      final url = Uri.parse("${ApiConstants.baseUrl}/student/check-username?username=$username");
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['available'] == true;
+      }
+    } catch (e) {
+      print("Check username error: $e");
+    }
+    return false;
+  }
+  
+  Future<Map<String, dynamic>> setUsername(String username) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'Avtorizatsiya yo\'q'};
+      
+      final url = Uri.parse("${ApiConstants.baseUrl}/student/username");
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({'username': username}),
+      );
+      
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return body;
+      } else {
+        return {'success': false, 'message': body['detail'] ?? 'Xatolik'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Tarmoq xatosi: $e'};
+    }
   }
 
   Future<void> _saveRole(String role) async {

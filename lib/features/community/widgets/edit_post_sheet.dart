@@ -92,7 +92,8 @@ class _EditPostSheetState extends State<EditPostSheet> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0.5,
+        leadingWidth: 100,
         leading: TextButton(
           onPressed: () async {
             if (await _onWillPop()) {
@@ -100,14 +101,13 @@ class _EditPostSheetState extends State<EditPostSheet> {
             }
           },
           child: const Text(
-            "Bekor",
-            style: TextStyle(fontSize: 16, color: Colors.red),
+            "Bekor qilish",
+            style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.normal),
           ),
         ),
-        leadingWidth: 80,
         title: const Text(
           "Postni tahrirlash",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
@@ -115,18 +115,23 @@ class _EditPostSheetState extends State<EditPostSheet> {
             padding: const EdgeInsets.only(right: 8.0),
             child: TextButton(
               onPressed: (_hasChanges && !_isLoading) ? _handleSave : null,
+              style: TextButton.styleFrom(
+                backgroundColor: (_hasChanges && !_isLoading) ? AppTheme.primaryBlue : Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
               child: _isLoading 
                 ? const SizedBox(
                     height: 16, 
                     width: 16, 
-                    child: CircularProgressIndicator(strokeWidth: 2)
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
                   )
                 : Text(
                     "Saqlash",
                     style: TextStyle(
                       fontSize: 16, 
                       fontWeight: FontWeight.bold,
-                      color: (_hasChanges && !_isLoading) ? AppTheme.primaryBlue : Colors.grey
+                      color: (_hasChanges && !_isLoading) ? Colors.white : Colors.grey[400]
                     ),
                   ),
             ),
@@ -144,18 +149,17 @@ class _EditPostSheetState extends State<EditPostSheet> {
         },
         child: Column(
           children: [
-            const Divider(height: 1),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                 child: TextField(
                   controller: _controller,
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(fontSize: 18, height: 1.5),
+                  style: const TextStyle(fontSize: 18, height: 1.5, color: Colors.black87),
                   decoration: const InputDecoration(
-                    hintText: "Nimalarni o'zgartirmoqchisiz...",
+                    hintText: "Fikringizni yozing...",
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
