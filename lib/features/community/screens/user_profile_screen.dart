@@ -71,115 +71,149 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       line2 = nameParts.sublist(2).join(" ");
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(widget.authorUsername, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Avatar
-            Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                backgroundImage: widget.authorAvatar.isNotEmpty ? NetworkImage(widget.authorAvatar) : null,
-                child: widget.authorAvatar.isEmpty 
-                   ? Text(widget.authorName[0], style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
-                   : null,
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Centered & Split Name
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+        appBar: AppBar(
+          title: Text(widget.authorUsername, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          centerTitle: true,
+        ),
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
               child: Column(
                 children: [
-                  Text(
-                    line1.toUpperCase(), 
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                  ),
-                  if (line2.isNotEmpty)
-                    Text(
-                      line2.toUpperCase(), 
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                  const SizedBox(height: 20),
+                  // Avatar
+                  Center(
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                      backgroundImage: widget.authorAvatar.isNotEmpty ? NetworkImage(widget.authorAvatar) : null,
+                      child: widget.authorAvatar.isEmpty 
+                         ? Text(widget.authorName[0], style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
+                         : null,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Centered & Split Name
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        Text(
+                          line1.toUpperCase(), 
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                        ),
+                        if (line2.isNotEmpty)
+                          Text(
+                            line2.toUpperCase(), 
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  Text(widget.authorRole, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Dynamic Stats
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStat("Postlar", "$_postCount"),
+                      _buildStat("Kuzatuvchilar", "0"), 
+                      _buildStat("Obuna", "0"),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                          elevation: 0,
+                        ),
+                        child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          side: const BorderSide(color: Colors.black12),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        child: const Text("Xabar yozish", style: TextStyle(color: Colors.black)),
+                      )
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
-            
-            const SizedBox(height: 8),
-            Text(widget.authorRole, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-            
-            const SizedBox(height: 24),
-            
-            // Dynamic Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStat("Postlar", "$_postCount"),
-                _buildStat("Kuzatuvchilar", "0"), // Placeholder until Follow logic exists
-                _buildStat("Obuna", "0"), // Placeholder
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                    elevation: 0,
-                  ),
-                  child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            SliverPersistentHeader(
+              delegate: _SliverAppBarDelegate(
+                const TabBar(
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.black,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: [
+                    Tab(icon: Icon(Icons.grid_on)), // User Posts
+                    Tab(icon: Icon(Icons.repeat)),  // Reposts
+                  ],
                 ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    side: const BorderSide(color: Colors.black12),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text("Xabar yozish", style: TextStyle(color: Colors.black)),
-                )
-              ],
+              ),
+              pinned: true,
             ),
-            
-            const SizedBox(height: 20),
-            const Divider(thickness: 1, height: 1),
-            
-            // User Posts List
-            if (_isLoading)
-               const Padding(padding: EdgeInsets.only(top: 40), child: CircularProgressIndicator())
-            else if (_posts.isEmpty)
-               Padding(
-                 padding: const EdgeInsets.only(top: 40),
-                 child: Text("Postlar yo'q", style: TextStyle(color: Colors.grey[500])),
-               )
-            else
-               ListView.builder(
-                 shrinkWrap: true,
-                 physics: const NeverScrollableScrollPhysics(),
-                 itemCount: _posts.length,
-                 itemBuilder: (ctx, i) => PostCard(post: _posts[i]),
-               )
           ],
+          body: TabBarView(
+            children: [
+              // 1. User Posts
+              _isLoading 
+                 ? const Center(child: CircularProgressIndicator()) 
+                 : _posts.isEmpty 
+                    ? const Center(child: Text("Postlar yo'q", style: TextStyle(color: Colors.grey)))
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: _posts.length,
+                        itemBuilder: (ctx, i) => PostCard(post: _posts[i]),
+                      ),
+                      
+              // 2. Reposts (Placeholder)
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.repeat, size: 48, color: Colors.grey),
+                    SizedBox(height: 8),
+                    Text("Repostlar yo'q", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -194,3 +228,26 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 }
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverAppBarDelegate(this._tabBar);
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
+  }
