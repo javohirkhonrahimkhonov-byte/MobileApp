@@ -42,6 +42,8 @@ class _EditPostSheetState extends State<EditPostSheet> {
     if (!_hasChanges) return;
 
     setState(() => _isLoading = true);
+    // Unfocus keyboard
+    FocusScope.of(context).unfocus();
 
     final success = await _communityService.editPost(widget.postId, _controller.text.trim());
 
@@ -71,7 +73,7 @@ class _EditPostSheetState extends State<EditPostSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("O'zgarishlarga qaytish"),
+            child: const Text("Yo'q, qaytish"),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -86,96 +88,78 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine bottom padding for keyboard
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.pop(context);
-        }
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: TextButton(
+          onPressed: () async {
+            if (await _onWillPop()) {
+              Navigator.pop(context);
+            }
+          },
+          child: const Text(
+            "Bekor",
+            style: TextStyle(fontSize: 16, color: Colors.red),
+          ),
         ),
-        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
+        leadingWidth: 80,
+        title: const Text(
+          "Postni tahrirlash",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton(
+              onPressed: (_hasChanges && !_isLoading) ? _handleSave : null,
+              child: _isLoading 
+                ? const SizedBox(
+                    height: 16, 
+                    width: 16, 
+                    child: CircularProgressIndicator(strokeWidth: 2)
+                  )
+                : Text(
+                    "Saqlash",
+                    style: TextStyle(
+                      fontSize: 16, 
+                      fontWeight: FontWeight.bold,
+                      color: (_hasChanges && !_isLoading) ? AppTheme.primaryBlue : Colors.grey
+                    ),
+                  ),
+            ),
+          )
+        ],
+      ),
+      body: PopScope(
+        canPop: !_hasChanges,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          final shouldPop = await _onWillPop();
+          if (shouldPop && context.mounted) {
+            Navigator.pop(context);
+          }
+        },
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Postni Tahrirlash ✏️",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () async {
-                    if (await _onWillPop()) {
-                       Navigator.pop(context);
-                    }
-                  },
-                ),
-              ],
-            ),
-            const Divider(),
-            
-            // Input Area
-            Flexible(
-              child: TextField(
-                controller: _controller,
-                maxLines: null,
-                minLines: 5,
-                autofocus: true,
-                style: const TextStyle(fontSize: 16, height: 1.5),
-                decoration: InputDecoration(
-                  hintText: "Fikringizni yozing...",
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  fillColor: Colors.grey[50],
-                  filled: true,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primaryBlue, width: 1.5)
+            const Divider(height: 1),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: _controller,
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: const TextStyle(fontSize: 18, height: 1.5),
+                  decoration: const InputDecoration(
+                    hintText: "Nimalarni o'zgartirmoqchisiz...",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Save Button
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: (_hasChanges && !_isLoading) ? _handleSave : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryBlue,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.grey[300],
-                  disabledForegroundColor: Colors.grey[500],
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: _isLoading 
-                  ? const SizedBox(
-                      height: 24, 
-                      width: 24, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
-                  : const Text("Saqlash", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
