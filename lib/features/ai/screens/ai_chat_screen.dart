@@ -4,7 +4,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
 
 class AiChatScreen extends StatefulWidget {
-  const AiChatScreen({super.key});
+  final String? initialQuery;
+  const AiChatScreen({super.key, this.initialQuery});
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -45,6 +46,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
          _isLoading = false;
       });
     }
+
+    // Auto-send initial query if provided
+    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+       // Allow UI to render first
+       Future.delayed(const Duration(milliseconds: 500), () {
+           if (mounted) _sendMessage(customText: widget.initialQuery);
+       });
+    }
   }
 
   Future<void> _clearHistory() async {
@@ -58,8 +67,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
   }
 
-  void _sendMessage() async {
-    final text = _controller.text.trim();
+  void _sendMessage({String? customText}) async {
+    final text = customText ?? _controller.text.trim();
     if (text.isEmpty) return;
     
     _controller.clear();

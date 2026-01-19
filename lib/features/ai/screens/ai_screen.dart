@@ -31,9 +31,21 @@ class AiScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             
-            _buildAiButton(context, "Stipendiya haqida", Icons.monetization_on, () {}),
-            _buildAiButton(context, "Hemis parolini tiklash", Icons.vpn_key, () {}),
-            _buildAiButton(context, "Kredit-modul tizimi", Icons.school, () {}),
+            _buildAiButton(context, "Stipendiya haqida", Icons.monetization_on, () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatScreen(
+                 initialQuery: "Mening stipendiyam qancha va qachon tushadi? (Ta'lim shaklim va baholarimga qarab ayting)"
+               )));
+            }),
+            _buildAiButton(context, "Hemis parolini tiklash", Icons.vpn_key, () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatScreen(
+                 initialQuery: "Hemis tizimida parolni qanday tiklash mumkin? (Login va parolni unutdim)"
+               )));
+            }),
+            _buildAiButton(context, "Kredit-modul tizimi", Icons.school, () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const AiChatScreen(
+                 initialQuery: "Kredit-modul tizimi nima va GPA qanday hisoblanadi?"
+               )));
+            }),
             _buildAiButton(context, "Dars jadvali", Icons.calendar_today, () {
                // Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tez kunda ishga tushadi!")));
