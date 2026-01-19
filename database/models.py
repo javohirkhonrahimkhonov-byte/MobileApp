@@ -725,21 +725,32 @@ class ChoyxonaPost(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
 
+    
     # Relationships
     student: Mapped["Student"] = relationship("Student")
     university: Mapped["University"] = relationship("University")
     faculty: Mapped["Faculty"] = relationship("Faculty")
     
-    __table_args__ = (
-        # Index for feed filtering (Composite indexes for common queries)
-        # University Feed: category='university', target_uni
-        # Faculty Feed: category='faculty', target_uni, target_fac
-        # Specialty Feed: category='specialty', target_uni, target_fac, target_spec
-        # Since queries always filter by category first (or distinct queries per tab), separate indexes or strategic composite indexes help.
-        # But simple single-column indexes on FKs are often enough for this scale.
-        # Adding simple indexes via mapped_column(index=True) above.
-    )
+    comments: Mapped[list["ChoyxonaComment"]] = relationship("ChoyxonaComment", back_populates="post", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
+
+
+class ChoyxonaComment(Base):
+    __tablename__ = "choyxona_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+
+    # Relationships
+    post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="comments")
+    student: Mapped["Student"] = relationship("Student")
+
+    def __repr__(self):
+        return f"<Comment {self.id} on Post {self.post_id}>"
 

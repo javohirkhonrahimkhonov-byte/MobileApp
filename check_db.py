@@ -1,23 +1,24 @@
+
 import asyncio
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from database.db_connect import AsyncSessionLocal
-from database.models import UserActivity, UserActivityImage, Student
+from database.models import ChoyxonaPost, Student
 
-async def check_activity():
+async def check():
     async with AsyncSessionLocal() as session:
-        # Find activity by name 'somethings'
-        query = select(UserActivity).where(UserActivity.name.ilike("%tewt%")).options(selectinload(UserActivity.images)).limit(1)
-        result = await session.execute(query)
-        activity = result.scalar_one_or_none()
+        # Check Posts
+        result = await session.execute(select(ChoyxonaPost))
+        posts = result.scalars().all()
+        print(f"Total Posts: {len(posts)}")
+        for p in posts:
+            print(f"ID: {p.id}, Content: {p.content}, Type: {p.category_type}, TargetUni: {p.target_university_id}, TargetFac: {p.target_faculty_id}")
 
-        if activity:
-            print(f"✅ Activity Found: ID={activity.id}, Name='{activity.name}'")
-            print(f"📸 Images Count: {len(activity.images)}")
-            for img in activity.images:
-                print(f"   - Image ID: {img.id}, File ID: {img.file_id}")
-        else:
-            print("❌ Activity 'somethings' not found.")
+        # Check Students (Just to see if we have valid university_ids)
+        result_s = await session.execute(select(Student).limit(5))
+        students = result_s.scalars().all()
+        print("\n--- Students Sample ---")
+        for s in students:
+            print(f"ID: {s.id}, Name: {s.full_name}, UniID: {s.university_id}, FacID: {s.faculty_id}")
 
 if __name__ == "__main__":
-    asyncio.run(check_activity())
+    asyncio.run(check())

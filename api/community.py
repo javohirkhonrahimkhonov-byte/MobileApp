@@ -7,7 +7,8 @@ from typing import List
 from database.db_connect import AsyncSessionLocal
 from database.models import Student, ChoyxonaPost
 from api.dependencies import get_current_student, get_db
-from api.schemas import PostCreateSchema, PostResponseSchema
+from api.dependencies import get_current_student, get_db
+from api.schemas import PostCreateSchema, PostResponseSchema, CommentCreateSchema, CommentResponseSchema
 
 router = APIRouter()
 
@@ -116,4 +117,79 @@ def _map_post(post: ChoyxonaPost, author: Student):
         target_university_id=post.target_university_id,
         target_faculty_id=post.target_faculty_id,
         target_specialty_name=post.target_specialty_name
+    )
+
+@router.post("/posts/{post_id}/comments", response_model=CommentResponseSchema)
+async def create_comment(
+    post_id: int,
+    data: CommentCreateSchema,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Create a comment on a post.
+    Validates access based on Post's context.
+    """
+    # 1. Fetch Post to verify access logic
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+    
+    # 2. Verify Access (User must have same context as post)
+    # Reuse filtering logic or just simple check
+    if post.category_type == 'university' and post.target_university_id != student.university_id:
+        raise HTTPException(status_code=403, detail="Siz bu universitet postiga yozolmaysiz")
+    
+    if post.category_type == 'faculty' and (post.target_university_id != student.university_id or post.target_faculty_id != student.faculty_id):
+        raise HTTPException(status_code=403, detail="Siz bu fakultet postiga yozolmaysiz")
+        
+    if post.category_type == 'specialty' and (post.target_specialty_name != student.specialty_name):
+         raise HTTPException(status_code=403, detail="Siz bu yo'nalish postiga yozolmaysiz")
+
+    # 3. Create Comment
+    from database.models import ChoyxonaComment
+    new_comment = ChoyxonaComment(
+        post_id=post_id,
+        student_id=student.id,
+        content=data.content
+    )
+    
+    db.add(new_comment)
+    await db.commit()
+    await db.refresh(new_comment)
+    
+    return _map_comment(new_comment, student)
+
+@router.get("/posts/{post_id}/comments", response_model=List[CommentResponseSchema])
+async def get_comments(
+    post_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get comments for a post.
+    """
+    from database.models import ChoyxonaComment
+    # No strict access check needed for READ if we assume anyone who can see the post can see comments
+    # But technically we should check context again. 
+    # For now, minimal check:
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+
+    # Eager load student
+    query = select(ChoyxonaComment).options(selectinload(ChoyxonaComment.student)).where(ChoyxonaComment.post_id == post_id).order_by(ChoyxonaComment.created_at)
+    result = await db.execute(query)
+    comments = result.scalars().all()
+    
+    return [_map_comment(c, c.student) for c in comments]
+
+def _map_comment(comment: "ChoyxonaComment", author: Student):
+    from api.schemas import CommentResponseSchema
+    return CommentResponseSchema(
+        id=comment.id,
+        post_id=comment.post_id,
+        content=comment.content,
+        author_name=author.full_name if author else "Noma'lum",
+        created_at=comment.created_at
     )

@@ -134,3 +134,16 @@ class PostResponseSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CommentCreateSchema(BaseModel):
+    content: str
+
+class CommentResponseSchema(BaseModel):
+    id: int
+    post_id: int
+    content: str
+    author_name: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
