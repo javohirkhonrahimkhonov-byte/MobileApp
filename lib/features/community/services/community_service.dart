@@ -101,6 +101,23 @@ class CommunityService {
     }
   }
 
+  Future<bool> repostPost(String postId) async {
+    final url = '${ApiConstants.communityPosts}/$postId/repost';
+    print("CommunityService: Reposting post at $url");
+    
+    final response = await http.post(
+      Uri.parse(url),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['reposted'] ?? false;
+    } else {
+      return false; 
+    }
+  }
+
   Future<bool> deletePost(String postId) async {
     try {
       final response = await http.delete(
@@ -149,6 +166,8 @@ class CommunityService {
       
       likes: json['likes_count'] ?? 0,
       isLiked: json['is_liked_by_me'] ?? false,
+      repostsCount: json['reposts_count'] ?? 0,
+      isRepostedByMe: json['is_reposted_by_me'] ?? false,
       commentsCount: json['comments_count'] ?? 0,
       isVerified: false,
       isMine: json['is_mine'] ?? false,

@@ -31,7 +31,7 @@ class _PostCardState extends State<PostCard> {
   late bool _isLiked;
   late int _likeCount;
   late int _repostCount;
-  bool _isReposted = false; // Mock local state
+  late bool _isReposted;
   List<int>? _pollVotes;
   int? _userVote;
   final CommunityService _communityService = CommunityService();
@@ -42,6 +42,7 @@ class _PostCardState extends State<PostCard> {
     _isLiked = widget.post.isLiked;
     _likeCount = widget.post.likes;
     _repostCount = widget.post.repostsCount;
+    _isReposted = widget.post.isRepostedByMe;
     _pollVotes = widget.post.pollVotes != null ? List.from(widget.post.pollVotes!) : null;
     _userVote = widget.post.userVote;
   }
@@ -88,11 +89,30 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
-  void _toggleRepost() {
+  Future<void> _toggleRepost() async {
     setState(() {
       _isReposted = !_isReposted;
       _repostCount += _isReposted ? 1 : -1;
     });
+
+    try {
+      final success = await _communityService.repostPost(widget.post.id);
+      if (!success) {
+         if (mounted) {
+            setState(() {
+               _isReposted = !_isReposted;
+               _repostCount += _isReposted ? 1 : -1;
+            });
+         }
+      }
+    } catch (e) {
+      if (mounted) {
+         setState(() {
+            _isReposted = !_isReposted;
+            _repostCount += _isReposted ? 1 : -1;
+         });
+      }
+    }
   }
 
   void _sharePost() {
@@ -339,7 +359,7 @@ class _PostCardState extends State<PostCard> {
         final currentPost = widget.post.copyWith(
              isLiked: _isLiked,
              likes: _likeCount,
-             repostsCount: _repostCount,
+             isRepostedByMe: _isReposted,
         );
 
         final result = await Navigator.push(
@@ -355,11 +375,22 @@ class _PostCardState extends State<PostCard> {
         }
 
         if (result != null && result is Post) {
+          // Sync back any changes from Detail Screen
+          bool changed = false;
           if (result.isLiked != _isLiked || result.likes != _likeCount) {
-             setState(() {
-               _isLiked = result.isLiked;
-               _likeCount = result.likes;
-             });
+             _isLiked = result.isLiked;
+             _likeCount = result.likes;
+             changed = true;
+          }
+          if (result.isRepostedByMe != _isReposted || result.repostsCount != _repostCount) {
+             _isReposted = result.isRepostedByMe;
+             _repostCount = result.repostsCount;
+             changed = true;
+          }
+
+          if (changed) {
+             setState(() {});
+             // Optionally notify parent
              if (widget.onLikeChanged != null) {
                 widget.onLikeChanged!(_isLiked, _likeCount);
              }

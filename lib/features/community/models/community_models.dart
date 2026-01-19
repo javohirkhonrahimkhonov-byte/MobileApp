@@ -25,6 +25,7 @@ class Post {
   final String? targetFacultyId;
   final String? targetSpecialtyId;
   final bool isMine;
+  final bool isRepostedByMe;
 
   Post({
     required this.id,
@@ -53,6 +54,7 @@ class Post {
     this.targetFacultyId,
     this.targetSpecialtyId,
     this.isMine = false,
+    this.isRepostedByMe = false,
   });
 
   Post copyWith({
@@ -81,7 +83,9 @@ class Post {
     String? targetUniversityId,
     String? targetFacultyId,
     String? targetSpecialtyId,
+    String? targetSpecialtyId,
     bool? isMine,
+    bool? isRepostedByMe,
   }) {
     return Post(
       id: id ?? this.id,
@@ -110,6 +114,7 @@ class Post {
       targetFacultyId: targetFacultyId ?? this.targetFacultyId,
       targetSpecialtyId: targetSpecialtyId ?? this.targetSpecialtyId,
       isMine: isMine ?? this.isMine,
+      isRepostedByMe: isRepostedByMe ?? this.isRepostedByMe,
     );
   }
 }
