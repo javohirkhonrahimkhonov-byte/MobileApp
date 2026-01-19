@@ -62,9 +62,20 @@ async def create_post(
     
     # Re-fetch with author to map response
     # Or just use the student object we have
-    # Manually init likes for response to avoid loading issue
-    new_post.likes = [] 
-    return _map_post(new_post, student, student.id)
+    # Manually construct response to avoid lazy loading 'likes' on async session
+    return PostResponseSchema(
+        id=new_post.id,
+        content=new_post.content,
+        category_type=new_post.category_type,
+        author_name=student.full_name if student.full_name else "Talaba",
+        author_role="Talaba",
+        created_at=new_post.created_at,
+        target_university_id=new_post.target_university_id,
+        target_faculty_id=new_post.target_faculty_id,
+        target_specialty_name=new_post.target_specialty_name,
+        likes_count=0,
+        is_liked_by_me=False
+    )
 
 @router.get("/posts", response_model=List[PostResponseSchema])
 async def get_posts(
