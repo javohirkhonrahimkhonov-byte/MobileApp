@@ -160,10 +160,33 @@ class _PostCardState extends State<PostCard> {
       ),
     );
 
-    if (result != null && result is String && mounted) {
+    if (result != null && result is String) {
+       // 1. Optimistic Update (Immediate)
+       final previousContent = _currentContent;
        setState(() {
          _currentContent = result;
        });
+
+       // 2. Background API Call (Fire & Forget logic moved to here)
+       try {
+         final success = await CommunityService().editPost(widget.post.id, result);
+         if (!success && mounted) {
+           // Revert on failure
+           setState(() => _currentContent = previousContent);
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("Xatolik: O'zgarishlar saqlanmadi ❌")),
+           );
+         } else if (success && mounted) {
+            // Optional: Silent success or small indicator
+         }
+       } catch (e) {
+         if (mounted) {
+           setState(() => _currentContent = previousContent);
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("Xatolik: $e")),
+           );
+         }
+       }
     }
   }
 

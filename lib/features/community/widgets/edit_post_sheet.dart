@@ -87,46 +87,28 @@ class _EditPostSheetState extends State<EditPostSheet> {
   Future<void> _handleSave() async {
     if (!_hasChanges) return;
     
+    // Validate
     if (_contentController.text.trim().isEmpty) {
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, matn yozing!")));
        return;
     }
 
-    setState(() => _isLoading = true);
+    // No Loading Indicator needed for Fire & Forget
     final newTitle = _titleController.text.trim();
     final newBody = _contentController.text.trim();
     
     // Enforce Markdown Format
     String finalContent = newBody;
     if (newTitle.isNotEmpty) {
-      // Always save as **Title**\n\nBody
       finalContent = "**$newTitle**\n\n$newBody";
     }
 
-    try {
-      final success = await CommunityService().editPost(widget.postId, finalContent);
-      if (mounted) {
-        if (success) {
-          // Return the new content string to update local UI immediately
-          Navigator.pop(context, finalContent); 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Post muvaffaqiyatli saqlandi ✅")),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Xatolik: Post saqlanmadi ❌")),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Xatolik: $e")),
-          );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    // FIRE & FORGET: Return immediately with new content
+    // The parent widget (PostCard) will handle the background API call.
+    Navigator.pop(context, finalContent);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Post saqlanmoqda... ⏳"), duration: Duration(milliseconds: 1000)),
+    );
   }
 
   Future<bool> _onWillPop() async {
