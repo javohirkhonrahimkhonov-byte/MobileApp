@@ -206,18 +206,14 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _showEditDialog() async {
-    final result = await Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false, // Transparent background
-        barrierColor: Colors.black54, // Dimmed background
-        barrierDismissible: true,
-        pageBuilder: (context, _, __) => EditPostSheet(
-          postId: widget.post.id,
-          initialContent: widget.post.content,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      enableDrag: true,
+      builder: (ctx) => EditPostSheet(
+        postId: widget.post.id,
+        initialContent: widget.post.content,
       ),
     );
 

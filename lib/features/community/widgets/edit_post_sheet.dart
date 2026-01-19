@@ -36,8 +36,6 @@ class _EditPostSheetState extends State<EditPostSheet> {
   }
 
   void _parseInitialContent() {
-    // Logic: If content starts with **Title**, extract it.
-    // Regex look for **Title** at start, followed by newlines.
     final RegExp titleRegex = RegExp(r'^\*\*(.*?)\*\*\n+(.*)', multiLine: true, dotAll: true);
     final match = titleRegex.firstMatch(widget.initialContent);
 
@@ -62,12 +60,17 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
   Future<void> _handleSave() async {
     if (!_hasChanges) return;
+    
+    // Validate
+    if (_contentController.text.trim().isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, matn yozing!")));
+       return;
+    }
 
     setState(() => _isLoading = true);
     final newTitle = _titleController.text.trim();
     final newBody = _contentController.text.trim();
     
-    // Combine back: **Title**\n\nBody
     String finalContent = newBody;
     if (newTitle.isNotEmpty) {
       finalContent = "**$newTitle**\n\n$newBody";
@@ -79,11 +82,11 @@ class _EditPostSheetState extends State<EditPostSheet> {
         if (success) {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Post muvaffaqiyatli o'zgartirildi ✅")),
+            const SnackBar(content: Text("Post muvaffaqiyatli saqlandi ✅")),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Xatolik: Post o'zgartirilmadi ❌")),
+            const SnackBar(content: Text("Xatolik: Post saqlanmadi ❌")),
           );
         }
       }
@@ -105,15 +108,15 @@ class _EditPostSheetState extends State<EditPostSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Saqlanmagan o'zgarishlar"),
-        content: const Text("Haqiqatan ham chiqib ketmoqchimisiz? O'zgarishlar yo'qoladi."),
+        content: const Text("Chiqib ketsangiz o'zgarishlaringiz yo'qoladi."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Yo'q", style: TextStyle(color: Colors.grey)),
+            child: const Text("Qolish", style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Ha, chiqish", style: TextStyle(color: Colors.red)),
+            child: const Text("Chiqish", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -124,110 +127,100 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Use PopScope for Android Back button protection
+    // Mimic CreatePostScreen layout but as a Sheet
+    // We use a specific height (e.g. 90%) to show the app behind
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.pop(context);
-        }
+        if (shouldPop && context.mounted) Navigator.pop(context);
       },
-      child: Scaffold(
-        backgroundColor: Colors.transparent, // Important for overlay effect
-        body: Stack(
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.9, // 90% Height
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
           children: [
-            // Barrier (Dismiss on tap)
-            GestureDetector(
-              onTap: () async {
-                 final shouldPop = await _onWillPop();
-                 if (shouldPop && context.mounted) Navigator.pop(context);
-              },
-              child: Container(color: Colors.transparent),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () async {
+                       final shouldPop = await _onWillPop();
+                       if (shouldPop && context.mounted) Navigator.pop(context);
+                    },
+                  ),
+                  const Text("Postni Tahrirlash", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 48), // Spacer to balance Close button
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Title
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        hintText: "Sarlavha (Ixtiyoriy)",
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Divider(),
+                    // Body
+                    Expanded(
+                      child: TextField(
+                        controller: _contentController,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: const InputDecoration(
+                          hintText: "Bu yerga yozing...",
+                          border: InputBorder.none,
+                        ),
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
             
-            // Central Dialog Card
-            Center(
-              child: GestureDetector(
-                onTap: () {}, // Prevent tap propagation to barrier
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
-                  ),
-                  child: Column(
-                    children: [
-                      // Header
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextButton(
-                              onPressed: () async {
-                                final shouldPop = await _onWillPop();
-                                if (shouldPop && context.mounted) Navigator.pop(context);
-                              },
-                              child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey, fontSize: 16)),
-                            ),
-                            const Text("Postni tahrirlash", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            _isLoading 
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                              : TextButton(
-                                  onPressed: _hasChanges ? _handleSave : null,
-                                  child: Text("Saqlash", style: TextStyle(
-                                    color: _hasChanges ? AppTheme.primaryBlue : Colors.grey, 
-                                    fontSize: 16, 
-                                    fontWeight: FontWeight.bold
-                                  )),
-                                ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      
-                      // Content Fields
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Title Field
-                              TextField(
-                                controller: _titleController,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                decoration: const InputDecoration(
-                                  hintText: "Mavzu (ixtiyoriy)",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                maxLines: 1,
-                              ),
-                              const SizedBox(height: 12),
-                              // Body Field
-                              TextField(
-                                controller: _contentController,
-                                style: const TextStyle(fontSize: 16, height: 1.5),
-                                decoration: const InputDecoration(
-                                  hintText: "Izoh...",
-                                  border: InputBorder.none,
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                maxLines: null, // Infinite
-                                minLines: 10,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+            // Bottom Save Button
+            SafeArea(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                ),
+                child: SizedBox(
+                   height: 50,
+                   child: ElevatedButton(
+                    onPressed: (_hasChanges && !_isLoading) ? _handleSave : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryBlue,
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("SAQLASH", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),
