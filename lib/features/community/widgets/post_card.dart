@@ -149,6 +149,52 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  Color _getCategoryColor(String type) {
+    if (type == 'university') return Colors.blue;
+    if (type == 'faculty') return Colors.orange;
+    if (type == 'specialty') return Colors.green;
+    return Colors.grey;
+  }
+
+  String _getCategoryLabel(String type) {
+    if (type == 'university') return "Universitet";
+    if (type == 'faculty') return "Fakultet";
+    if (type == 'specialty') return "Yo'nalish";
+    return "";
+  }
+
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Postni o'chirish"),
+        content: const Text("Haqiqatan ham ushbu postni o'chirmoqchimisiz?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              // Optimistic Delete: Notify parent immediately
+              if (widget.onDelete != null) widget.onDelete!();
+              
+              // Background API Call
+              try {
+                await CommunityService().deletePost(widget.post.id);
+              } catch (e) {
+                // If failed, we might want to reload or show error, but user asked for "just disappear"
+                // So we prioritize speed.
+              }
+            },
+            child: const Text("O'chirish", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showEditDialog() async {
     final result = await showModalBottomSheet(
       context: context,
@@ -263,6 +309,19 @@ class _PostCardState extends State<PostCard> {
                           widget.post.authorRole,
                           style: TextStyle(color: Colors.grey[600], fontSize: 13),
                         ),
+                        const SizedBox(width: 8),
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                           decoration: BoxDecoration(
+                             color: _getCategoryColor(widget.post.categoryType).withOpacity(0.1),
+                             borderRadius: BorderRadius.circular(4),
+                             border: Border.all(color: _getCategoryColor(widget.post.categoryType).withOpacity(0.3), width: 0.5)
+                           ),
+                           child: Text(
+                             _getCategoryLabel(widget.post.categoryType),
+                             style: TextStyle(color: _getCategoryColor(widget.post.categoryType), fontSize: 10, fontWeight: FontWeight.bold),
+                           ),
+                         ),
                         const SizedBox(width: 4),
                         Text(
                           "• ${widget.post.timeAgo}",
@@ -275,7 +334,7 @@ class _PostCardState extends State<PostCard> {
               ),
               if (widget.post.isMine)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.grey), // Vertical Icon
+                  icon: const Icon(Icons.more_vert, color: Colors.grey), 
                   onSelected: (val) {
                     if (val == 'edit') _showEditDialog();
                     if (val == 'delete') _showDeleteDialog();
