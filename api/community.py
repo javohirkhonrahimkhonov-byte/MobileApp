@@ -62,7 +62,9 @@ async def create_post(
     
     # Re-fetch with author to map response
     # Or just use the student object we have
-    return _map_post(new_post, student)
+    # Manually init likes for response to avoid loading issue
+    new_post.likes = [] 
+    return _map_post(new_post, student, student.id)
 
 @router.get("/posts", response_model=List[PostResponseSchema])
 async def get_posts(
@@ -74,11 +76,13 @@ async def get_posts(
     Get posts with strict access control filtering.
     """
     # Eager load student for author details
-    query = select(ChoyxonaPost).options(selectinload(ChoyxonaPost.student)).order_by(desc(ChoyxonaPost.created_at))
+    # Eager load likes for count
+    query = select(ChoyxonaPost).options(selectinload(ChoyxonaPost.student), selectinload(ChoyxonaPost.likes)).order_by(desc(ChoyxonaPost.created_at))
     
     # 1. Category Filter (Tab Filter)
     query = query.where(ChoyxonaPost.category_type == category)
     
+    # ... (context logic stays same) ...
     # 2. Access Control (Context Filter) - LOGIC
     # User can ONLY see posts that belong to their context.
     
@@ -104,9 +108,13 @@ async def get_posts(
     result = await db.execute(query)
     posts = result.scalars().all()
     
-    return [_map_post(p, p.student) for p in posts]
+    return [_map_post(p, p.student, student.id) for p in posts]
 
-def _map_post(post: ChoyxonaPost, author: Student):
+def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
+    # Calculate likes
+    likes_count = len(post.likes) if post.likes else 0
+    is_liked = any(l.student_id == current_user_id for l in post.likes) if post.likes else False
+
     return PostResponseSchema(
         id=post.id,
         content=post.content,
@@ -116,8 +124,36 @@ def _map_post(post: ChoyxonaPost, author: Student):
         created_at=post.created_at,
         target_university_id=post.target_university_id,
         target_faculty_id=post.target_faculty_id,
-        target_specialty_name=post.target_specialty_name
+        target_specialty_name=post.target_specialty_name,
+        likes_count=likes_count,
+        is_liked_by_me=is_liked
     )
+
+@router.post("/posts/{post_id}/like")
+async def toggle_like(
+    post_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    from database.models import ChoyxonaPostLike
+    # Check if post exists
+    post = await db.get(ChoyxonaPost, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post topilmadi")
+
+    # Check for existing like
+    existing_like = await db.scalar(select(ChoyxonaPostLike).where(ChoyxonaPostLike.post_id == post_id, ChoyxonaPostLike.student_id == student.id))
+    
+    if existing_like:
+        await db.delete(existing_like)
+        liked = False
+    else:
+        new_like = ChoyxonaPostLike(post_id=post_id, student_id=student.id)
+        db.add(new_like)
+        liked = True
+
+    await db.commit()
+    return {"status": "success", "liked": liked}
 
 @router.post("/posts/{post_id}/comments", response_model=CommentResponseSchema)
 async def create_comment(

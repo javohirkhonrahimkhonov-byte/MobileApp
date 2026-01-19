@@ -132,6 +132,10 @@ class PostResponseSchema(BaseModel):
     target_faculty_id: Optional[int]
     target_specialty_name: Optional[str]
 
+    # Likes
+    likes_count: int = 0
+    is_liked_by_me: bool = False
+
     class Config:
         from_attributes = True
 

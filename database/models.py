@@ -732,6 +732,7 @@ class ChoyxonaPost(Base):
     faculty: Mapped["Faculty"] = relationship("Faculty")
     
     comments: Mapped[list["ChoyxonaComment"]] = relationship("ChoyxonaComment", back_populates="post", cascade="all, delete-orphan")
+    likes: Mapped[list["ChoyxonaPostLike"]] = relationship("ChoyxonaPostLike", back_populates="post", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
@@ -740,7 +741,7 @@ class ChoyxonaPost(Base):
 class ChoyxonaComment(Base):
     __tablename__ = "choyxona_comments"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_posts.id", ondelete="CASCADE"), nullable=False, index=True)
     student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     
@@ -754,3 +755,17 @@ class ChoyxonaComment(Base):
     def __repr__(self):
         return f"<Comment {self.id} on Post {self.post_id}>"
 
+
+class ChoyxonaPostLike(Base):
+    __tablename__ = "choyxona_post_likes"
+    __table_args__ = (UniqueConstraint('post_id', 'student_id', name='_user_post_like_uc'),)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_posts.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    
+    post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="likes")
+
+    def __repr__(self):
+        return f"<ChoyxonaPostLike {self.id} on Post {self.post_id} by Student {self.student_id}>"
