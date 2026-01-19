@@ -336,10 +336,16 @@ class _PostCardState extends State<PostCard> {
 
     return InkWell(
       onTap: () async {
+        final currentPost = widget.post.copyWith(
+             isLiked: _isLiked,
+             likes: _likeCount,
+             repostsCount: _repostCount,
+        );
+
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PostDetailScreen(post: widget.post),
+            builder: (context) => PostDetailScreen(post: currentPost),
           ),
         );
         
