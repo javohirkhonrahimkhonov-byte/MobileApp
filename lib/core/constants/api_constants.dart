@@ -38,4 +38,7 @@ class ApiConstants {
   static const String resources = '$academic/resources';
   static const String aiChat = '$backendUrl/ai/chat';
   static const String documentsSend = '$backendUrl/documents/send';
+  
+  // Community
+  static const String communityPosts = '$backendUrl/community/posts';
 }

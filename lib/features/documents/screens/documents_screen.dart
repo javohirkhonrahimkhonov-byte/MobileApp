@@ -75,6 +75,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
         "color": Colors.orange
       },
       {
+        "title": "O'quv varaqa (Shaxsiy reja)", 
+        "subtitle": "Semestr fanlari va yuklamalar",
+        "icon": Icons.list_alt_rounded,
+        "color": Colors.teal
+      },
+      {
         "title": "Buyruqlar ko'chirmasi", 
         "subtitle": "O'qishga qabul, ko'chirish va h.k.",
         "icon": Icons.gavel_rounded,
@@ -130,6 +136,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
                 final typeMap = {
                   "O'qish joyidan ma'lumotnoma": "reference",
                   "Reyting daftarchasi (Transkript)": "transcript",
+                  "O'quv varaqa (Shaxsiy reja)": "study_sheet",
                   "Buyruqlar ko'chirmasi": "orders",
                   "To'lov kontrakt shartnomasi": "contract"
                 };

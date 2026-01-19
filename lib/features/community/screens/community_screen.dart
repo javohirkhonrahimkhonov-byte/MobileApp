@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
@@ -17,17 +18,87 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProviderStateMixin {
   final CommunityService _service = CommunityService();
   late TabController _tabController;
+  Timer? _pollTimer;
+
+  // State Management for Silent Updates
+  final Map<String, List<Post>> _posts = {
+    'university': [],
+    'specialty': [],
+    'faculty': [],
+  };
+  final Map<String, bool> _isLoading = {
+    'university': true,
+    'specialty': true,
+    'faculty': true,
+  };
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    _tabController.addListener(_handleTabSelection);
+    
+    // Initial Load
+    _loadAllScopes();
+    
+    // Start Polling (Real-time Simulation)
+    _startPolling();
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      setState(() {}); // Rebuild to show correct scope
+      _fetchPosts(_getCurrentScope(), isSilent: false); // Force refresh on tab switch
+    }
+  }
+
+  void _startPolling() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted) {
+        // Refresh ONLY the active scope to save bandwidth
+        _fetchPosts(_getCurrentScope(), isSilent: true);
+      }
+    });
+  }
+
+  Future<void> _loadAllScopes() async {
+    await Future.wait([
+      _fetchPosts('university'),
+      _fetchPosts('specialty'),
+      _fetchPosts('faculty'),
+    ]);
+  }
+
+  Future<void> _fetchPosts(String scope, {bool isSilent = false}) async {
+    if (!isSilent) {
+      setState(() {
+        _isLoading[scope] = true;
+      });
+    }
+
+    try {
+      final newPosts = await _service.getPosts(scope: scope);
+      if (mounted) {
+        setState(() {
+          _posts[scope] = newPosts;
+          _isLoading[scope] = false;
+        });
+      }
+    } catch (e) {
+      if (mounted && !isSilent) {
+        setState(() {
+          _isLoading[scope] = false;
+        });
+      }
+      debugPrint("Polling Error: $e");
+    }
   }
 
   String _getCurrentScope() {
@@ -94,6 +165,12 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                        width: 8,
                        height: 8,
                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                       child: Center(
+                         child: Text(
+                             "1", 
+                             style: TextStyle(color: Colors.white, fontSize: 6, fontWeight: FontWeight.bold)
+                         ),
+                       ),
                      ),
                    )
                 ],
@@ -108,7 +185,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildFeed("university"), // Default
+            _buildFeed("university"),
             _buildFeed("specialty"),
             _buildFeed("faculty"),
           ],
@@ -120,8 +197,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
               MaterialPageRoute(builder: (context) => CreatePostScreen(initialScope: _getCurrentScope())),
             );
             if (result == true) {
-              setState(() {}); // Refresh FutureBuilder
-              // Also refresh services if needed, but FutureBuilder handles logic
+              _fetchPosts(_getCurrentScope(), isSilent: false); // Immediate refresh
             }
           },
           backgroundColor: AppTheme.primaryBlue,
@@ -131,37 +207,33 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   Widget _buildFeed(String scope) {
-    return FutureBuilder<List<Post>>(
-      future: _service.getPosts(scope: scope),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return ListView.builder(
-             padding: const EdgeInsets.all(16),
-             itemCount: 3,
-             itemBuilder: (ctx, i) => const ShimmerPost(),
-          );
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text("Xatolik: ${snapshot.error}"));
-        }
-        final posts = snapshot.data ?? [];
-        
-        if (posts.isEmpty) {
-           return _buildEmptyState();
-        }
+    if (_isLoading[scope] == true && (_posts[scope] == null || _posts[scope]!.isEmpty)) {
+      return ListView.builder(
+         padding: const EdgeInsets.all(16),
+         itemCount: 3,
+         itemBuilder: (ctx, i) => const ShimmerPost(),
+      );
+    }
+    
+    final posts = _posts[scope] ?? [];
+    
+    if (posts.isEmpty) {
+       return _buildEmptyState();
+    }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-          itemCount: posts.length,
-          itemBuilder: (context, index) {
-            return PostCard(post: posts[index]);
-          },
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _fetchPosts(scope, isSilent: false);
       },
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        itemCount: posts.length,
+        itemBuilder: (context, index) {
+          return PostCard(post: posts[index]);
+        },
+      ),
     );
   }
-
-
 
   Widget _buildEmptyState() {
     return Center(
@@ -189,7 +261,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                   MaterialPageRoute(builder: (context) => CreatePostScreen(initialScope: _getCurrentScope())),
                 );
                 if (result == true) {
-                  setState(() {}); // Refresh FutureBuilder
+                   _fetchPosts(_getCurrentScope(), isSilent: false);
                 }
               },
               icon: const Icon(Icons.edit, color: Colors.white),
