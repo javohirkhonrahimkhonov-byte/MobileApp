@@ -361,4 +361,42 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   )
                 ],
               ),
+            ),
+
+            // 3. Right Side: Like & Badge
+            const SizedBox(width: 8),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                InkWell(
+                  onTap: () => _toggleCommentLike(comment.id),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                      size: 18, 
+                      color: comment.isLiked ? Colors.red : Colors.grey[500]
+                    ),
+                  ),
+                ),
+                if (comment.isLikedByAuthor) ...[
+                  const SizedBox(height: 2),
+                  CircleAvatar(
+                    radius: 8,
+                    backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    child: widget.post.authorAvatar.isEmpty 
+                      ? Text(widget.post.authorName[0], style: const TextStyle(fontSize: 6, color: Colors.red)) 
+                      : null,
+                  ),
+                ]
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
 }
