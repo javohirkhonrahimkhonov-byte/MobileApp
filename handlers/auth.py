@@ -201,10 +201,12 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession):
         )
 
     # ===================== AGAR RO‘YXATDAN O‘TMAGAN BO‘LSA =====================
-    await state.set_state(AuthStates.choosing_role)
+    # Direct HEMIS Login (Unified Auth)
+    await state.set_state(AuthStates.entering_hemis_login)
     await message.answer(
-        "Assalomu alaykum!\nTizimga kirish uchun rolingizni tanlang:",
-        reply_markup=get_start_role_inline_kb()
+        "👋 <b>Assalomu alaykum!</b>\n\n"
+        "Tizimga kirish uchun <b>HEMIS login</b>ingizni yozib yuboring:",
+        parse_mode="HTML"
     )
 
 
@@ -237,21 +239,10 @@ async def cmd_exit(message: Message, state: FSMContext, session: AsyncSession):
 # =====================================================================
 #                       ROLE → STAFF (XODIM)
 # =====================================================================
-@router.callback_query(AuthStates.choosing_role, F.data == "role_staff")
-async def cb_role_staff(call: CallbackQuery, state: FSMContext):
-    await state.set_state(AuthStates.entering_jshshir)
-    await call.message.edit_text("👨‍🏫 Iltimos JSHSHIR (14 raqam) kiriting.")
-    await call.answer()
-
-
+# Removed Role Handlers
 # =====================================================================
-#                          ROLE → STUDENT
+#                       XODIM → JSHSHIR KIRITISH (UNUSED)
 # =====================================================================
-@router.callback_query(AuthStates.choosing_role, F.data == "role_student")
-async def cb_role_student(call: CallbackQuery, state: FSMContext):
-    await state.set_state(AuthStates.entering_hemis_login)
-    await call.message.edit_text("🎓 HEMIS login kiriting.")
-    await call.answer()
 
 
 # =====================================================================
@@ -452,6 +443,86 @@ async def process_hemis_password(message: Message, state: FSMContext, session: A
         logger.error(f"Absence fetch error: {e}")
         missed_hours = 0
     # --------------------------------------
+
+    # --- ROLE DETECTION ---
+    user_type = me.get("type", "student")
+    roles = me.get("roles", [])
+    
+    # Debug roles
+    logger.info(f"User {login} Roles: {roles} Type: {user_type}")
+
+    detected_role = None
+
+    if user_type == "employee" or me.get("employee_id_number"):
+        for r in roles:
+            r_obj = r if isinstance(r, dict) else {"name": str(r), "code": str(r)}
+            code = str(r_obj.get("code", "")).lower()
+            name = r_obj.get("name", "").lower()
+            
+            # 1. Tyutor
+            if code == "tutor" or "tyutor" in name or "murabbiy" in name:
+                detected_role = "tyutor"
+                break
+            
+            # 2. Dekanat (Dean)
+            if code == "dean" or "dekan" in name:
+                 detected_role = "dekanat" # Or specific DEKAN
+                 # break ? Maybe Tutor has priority if multiple roles? 
+                 # Usually users have one primary role context in login?
+    
+    if detected_role == "tyutor":
+        # --- HANDLE TUTOR / STAFF REGISTRATION ---
+        # 1. Create/Update Staff
+        # Use 'employee_id_number' as JSHSHIR? Or just login/hemis_id?
+        # Staff model uses JSHSHIR as unique. HEMIS might give it in 'pinfl' or similar.
+        pinfl = me.get("pinfl") or me.get("passport_pin") or me.get("login") # Fallback to login if no PINFL
+        
+        staff = await session.scalar(select(Staff).where(Staff.hemis_login == login)) # Using login as unique identifier if possible
+        if not staff:
+             # Try finding by JSHSHIR/PINFL
+             if pinfl and len(str(pinfl)) == 14:
+                 staff = await session.scalar(select(Staff).where(Staff.jshshir == pinfl))
+        
+        if not staff:
+            staff = Staff(
+                full_name=full_name,
+                jshshir=pinfl if pinfl and len(str(pinfl)) == 14 else None,
+                hemis_login=login,
+                role=StaffRole.TYUTOR.value,
+                position="Tyutor",
+                phone=me.get("phone"),
+                is_active=True
+            )
+            session.add(staff)
+            await session.commit()
+            await session.refresh(staff)
+        else:
+            # Update Staff info
+            staff.hemis_login = login
+            staff.full_name = full_name
+            staff.is_active = True
+            await session.commit()
+
+        # 2. Link TgAccount
+        account = await session.scalar(select(TgAccount).where(TgAccount.telegram_id == message.from_user.id))
+        if not account:
+            account = TgAccount(telegram_id=message.from_user.id, staff_id=staff.id, current_role=StaffRole.TYUTOR.value)
+            session.add(account)
+        else:
+            account.staff_id = staff.id
+            account.student_id = None # Clear student link if exists
+            account.current_role = StaffRole.TYUTOR.value
+        
+        await session.commit()
+        await state.clear()
+        
+        return await message.answer(
+            f"🎓 <b>Assalomu alaykum, {staff.full_name}!</b>\n"
+            "Siz <b>Tyutor</b> sifatida tizimga kirdingiz.",
+            reply_markup=get_tutor_main_menu_kb(),
+            parse_mode="HTML"
+        )
+        # ------------------------------------------
 
     # Talabani yaratish yoki topish
     student = await session.scalar(select(Student).where(Student.hemis_login == login))
