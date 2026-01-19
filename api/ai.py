@@ -69,11 +69,11 @@ async def chat_with_ai(
     context = (
         f"Talaba ma'lumotlari:\n"
         f"Ism: {student.full_name}\n"
-        f"Universitet: {student.university_name or 'Noma\'lum'}\n"
-        f"Fakultet: {student.faculty_name or 'Noma\'lum'}\n"
-        f"Yo'nalish: {student.specialty_name or 'Noma\'lum'}\n"
+        f"Universitet: {student.university_name or 'Noma`lum'}\n"
+        f"Fakultet: {student.faculty_name or 'Noma`lum'}\n"
+        f"Yo'nalish: {student.specialty_name or 'Noma`lum'}\n"
         f"Bosqich: {student.level_name or ''} ({student.semester_name or ''})\n"
-        f"Ta'lim shakli: {student.payment_form or 'Noma\'lum'} (Moliya turi)\n"
+        f"Ta'lim shakli: {student.payment_form or 'Noma`lum'} (Moliya turi)\n"
     )
     
     full_prompt = f"Context:\n{context}\n\nSavol: {req.message}"
