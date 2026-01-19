@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
-import '../../../core/services/data_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../models/market_item.dart';
 
 class MarketService {
-  final DataService _dataService = DataService();
+  final AuthService _authService = AuthService();
 
   Future<List<MarketItem>> getItems({String? category, String? search}) async {
-    final token = await _dataService.getToken();
+    final token = await _authService.getToken();
     if (token == null) return [];
 
     try {
@@ -42,7 +42,7 @@ class MarketService {
   }
 
   Future<bool> createItem(Map<String, dynamic> data) async {
-    final token = await _dataService.getToken();
+    final token = await _authService.getToken();
     if (token == null) return false;
 
     try {
@@ -63,7 +63,7 @@ class MarketService {
   }
 
   Future<bool> deleteItem(int id) async {
-    final token = await _dataService.getToken();
+    final token = await _authService.getToken();
     if (token == null) return false;
 
     try {
