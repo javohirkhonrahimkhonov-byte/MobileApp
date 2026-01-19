@@ -22,11 +22,52 @@ class UserProfileScreen extends StatefulWidget {
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
-  final CommunityService _service = CommunityService();
+  int _postCount = 0;
+  bool _isLoading = true;
+  List<Post> _posts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPosts();
+  }
+
+  Future<void> _loadUserPosts() async {
+    // Fetch posts where authorName matches (Not ideal but works for now as we don't pass ID)
+    // Better: Filter locally from fetching all univ posts or add endpoint. 
+    // Assuming getPosts returns all univ posts, filtering by name is fragile but consistent with current app logic context.
+    // Actually `getPosts` supports filtering by scope.
+    
+    // We will simulate fetching specific user posts by filtering the list
+    // In a real app we'd call `getPosts(userId: ...)`
+    try {
+      final allPosts = await _service.getPosts(scope: "university");
+      final userPosts = allPosts.where((p) => p.authorName == widget.authorName).toList();
+      
+      if (mounted) {
+        setState(() {
+          _posts = userPosts;
+          _postCount = userPosts.length;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Name Splitting Logic
+    final nameParts = widget.authorName.split(" ");
+    String line1 = widget.authorName;
+    String line2 = "";
+    
+    if (nameParts.length > 2) {
+      line1 = "${nameParts[0]} ${nameParts[1]}";
+      line2 = nameParts.sublist(2).join(" ");
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -34,38 +75,61 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 20),
             // Avatar
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-              backgroundImage: widget.authorAvatar.isNotEmpty ? NetworkImage(widget.authorAvatar) : null,
-              child: widget.authorAvatar.isEmpty 
-                 ? Text(widget.authorName[0], style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
-                 : null,
+            Center(
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundImage: widget.authorAvatar.isNotEmpty ? NetworkImage(widget.authorAvatar) : null,
+                child: widget.authorAvatar.isEmpty 
+                   ? Text(widget.authorName[0], style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
+                   : null,
+              ),
             ),
             const SizedBox(height: 12),
-            // Names
-            Text(widget.authorName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            
+            // Centered & Split Name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  Text(
+                    line1.toUpperCase(), 
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                  ),
+                  if (line2.isNotEmpty)
+                    Text(
+                      line2.toUpperCase(), 
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                    ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 8),
             Text(widget.authorRole, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
-            // Stats (Mock)
+            // Dynamic Stats
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStat("Postlar", "12"),
-                _buildStat("Kuzatuvchilar", "345"),
-                _buildStat("Obuna", "120"),
+                _buildStat("Postlar", "$_postCount"),
+                _buildStat("Kuzatuvchilar", "0"), // Placeholder until Follow logic exists
+                _buildStat("Obuna", "0"), // Placeholder
               ],
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
             // Actions
             Row(
@@ -75,38 +139,43 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(horizontal: 32)
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                    elevation: 0,
                   ),
-                  child: const Text("Kuzatish", style: TextStyle(color: Colors.white)),
+                  child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton(
                   onPressed: () {},
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    side: const BorderSide(color: Colors.black12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  child: const Text("Xabar yozish"),
+                  child: const Text("Xabar yozish", style: TextStyle(color: Colors.black)),
                 )
               ],
             ),
             
             const SizedBox(height: 20),
-            const Divider(thickness: 1),
+            const Divider(thickness: 1, height: 1),
             
-            // Posts Grid (Mock: Reusing PostCard list)
-            FutureBuilder<List<Post>>(
-              future: _service.getPosts(scope: "university"),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (ctx, i) => PostCard(post: snapshot.data![i]),
-                );
-              },
-            )
+            // User Posts List
+            if (_isLoading)
+               const Padding(padding: EdgeInsets.only(top: 40), child: CircularProgressIndicator())
+            else if (_posts.isEmpty)
+               Padding(
+                 padding: const EdgeInsets.only(top: 40),
+                 child: Text("Postlar yo'q", style: TextStyle(color: Colors.grey[500])),
+               )
+            else
+               ListView.builder(
+                 shrinkWrap: true,
+                 physics: const NeverScrollableScrollPhysics(),
+                 itemCount: _posts.length,
+                 itemBuilder: (ctx, i) => PostCard(post: _posts[i]),
+               )
           ],
         ),
       ),
