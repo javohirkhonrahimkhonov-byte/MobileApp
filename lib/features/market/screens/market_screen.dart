@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../models/market_item.dart';
 import '../services/market_service.dart';
 import 'create_market_item_screen.dart';
+import 'market_item_detail_screen.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -13,13 +14,12 @@ class MarketScreen extends StatefulWidget {
 
 class _MarketScreenState extends State<MarketScreen> {
   final MarketService _marketService = MarketService();
-  String _selectedCategory = 'all';
-  String _searchQuery = '';
-  List<MarketItem> _items = [];
+  
+  List<MarketItem> _featuredItems = [];
+  List<MarketItem> _newItems = [];
   bool _isLoading = true;
 
   final Map<String, String> _categories = {
-    'all': 'Barchasi',
     'books': 'Kitoblar',
     'tech': 'Texnika',
     'housing': 'Kvartira',
@@ -29,7 +29,6 @@ class _MarketScreenState extends State<MarketScreen> {
   };
 
   final Map<String, IconData> _categoryIcons = {
-    'all': Icons.grid_view,
     'books': Icons.menu_book,
     'tech': Icons.devices,
     'housing': Icons.home,
@@ -41,228 +40,235 @@ class _MarketScreenState extends State<MarketScreen> {
   @override
   void initState() {
     super.initState();
-    _loadItems();
+    _loadData();
   }
 
-  Future<void> _loadItems() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final items = await _marketService.getItems(
-      category: _selectedCategory == 'all' ? null : _selectedCategory,
-      search: _searchQuery,
-    );
-    setState(() {
-      _items = items;
-      _isLoading = false;
-    });
+    try {
+      final featured = await _marketService.getItems(sort: 'popular', search: '');
+      final newItems = await _marketService.getItems(sort: 'newest', search: '');
+      
+      setState(() {
+        _featuredItems = featured.take(5).toList();
+        _newItems = newItems;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundWhite,
-      appBar: AppBar(
-        title: const Text("Talaba Bozori", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle, color: AppTheme.primaryBlue),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (_) => const CreateMarketItemScreen())
-              );
-              if (result == true) _loadItems();
-            },
-          )
+      backgroundColor: const Color(0xFFF5F5F5), // Light grey background like B&N
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          if (_isLoading)
+            const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+          else ...[
+            _buildHeroSection(),
+            _buildSectionTitle("Eng ko'p ko'rilganlar"),
+            _buildFeaturedHorizontalList(),
+            _buildSectionTitle("Kategoriyalar"),
+            _buildCategoryGrid(),
+            _buildSectionTitle("Yangi E'lonlar"),
+            _buildNewItemsGrid(),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)), // Bottom padding
+          ]
         ],
       ),
-      body: Column(
-        children: [
-          _buildCategoryFilter(),
-          _buildSearchBar(),
-          Expanded(
-            child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _items.isEmpty 
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        onRefresh: _loadItems,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          itemCount: _items.length,
-                          itemBuilder: (context, index) => _buildItemCard(_items[index]),
-                        ),
-                      ),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateMarketItemScreen()));
+          if (res == true) _loadData();
+        },
+        label: const Text("E'lon berish"),
+        icon: const Icon(Icons.add),
+        backgroundColor: AppTheme.primaryBlue,
       ),
     );
   }
 
-  Widget _buildCategoryFilter() {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final key = _categories.keys.elementAt(index);
-          final label = _categories.values.elementAt(index);
-          final isSelected = _selectedCategory == key;
-          
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(label),
-              avatar: Icon(_categoryIcons[key], size: 16, color: isSelected ? Colors.white : Colors.grey),
-              selected: isSelected,
-              onSelected: (bool selected) {
-                setState(() {
-                  _selectedCategory = key;
-                });
-                _loadItems();
-              },
-              backgroundColor: Colors.white,
-              selectedColor: AppTheme.primaryBlue,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20), 
-                side: BorderSide(color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade300)
-              ),
-              showCheckmark: false,
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      floating: true,
+      pinned: true,
+      backgroundColor: Colors.white,
+      elevation: 1,
+      title: const Text("Talaba Bozori", style: TextStyle(color: Colors.black, fontFamily: 'Serif', fontWeight: FontWeight.bold)),
+      centerTitle: true,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: "Kitob, texnika yoki ish qidiring...",
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             ),
-          );
-        },
-      ),
-    );
-  }
-  
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: "E'lonlardan qidirish...",
-          prefixIcon: const Icon(Icons.search),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            onSubmitted: (val) {
+               // Implement search navigation
+            },
           ),
         ),
-        onSubmitted: (value) {
-          _searchQuery = value;
-          _loadItems();
-        },
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_bag_outlined, size: 60, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            "E'lonlar topilmadi",
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+  Widget _buildHeroSection() {
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 140,
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2C3E50), // B&N Greenish/Dark Blue
+          borderRadius: BorderRadius.circular(12),
+          image: const DecorationImage(
+             image: NetworkImage("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1000&auto=format&fit=crop"), // Library
+             fit: BoxFit.cover,
+             opacity: 0.3
+          )
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "O'qish uchun kerakli hamma narsa",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Serif'),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Kitoblar, kiyimlar va texnikalar",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildItemCard(MarketItem item) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
-        ],
+  Widget _buildSectionTitle(String title) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Serif')),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                image: item.imageUrl != null 
-                    ? DecorationImage(image: NetworkImage(item.imageUrl!), fit: BoxFit.cover)
+    );
+  }
+
+  Widget _buildFeaturedHorizontalList() {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 220,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: _featuredItems.length,
+          itemBuilder: (context, index) {
+            return _buildBookCard(_featuredItems[index]);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookCard(MarketItem item) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => MarketItemDetailScreen(item: item)));
+      },
+      child: Container(
+        width: 130,
+        margin: const EdgeInsets.only(right: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[200],
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                  image: item.imageUrl != null 
+                      ? DecorationImage(image: NetworkImage(item.imageUrl!), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: item.imageUrl == null 
+                    ? Center(child: Icon(_categoryIcons[item.category] ?? Icons.book, color: Colors.grey))
                     : null,
               ),
-              child: item.imageUrl == null
-                  ? Center(child: Icon(_categoryIcons[item.category] ?? Icons.shopping_bag, size: 40, color: Colors.grey[400]))
-                  : null,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  item.price ?? "Kelishilgan",
-                  style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.visibility, size: 12, color: Colors.grey[500]),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${item.viewsCount}",
-                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _formatDate(item.createdAt),
-                      style: TextStyle(color: Colors.grey[500], fontSize: 10),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            Text(item.price ?? "Kelishilgan", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    if (diff.inDays == 0) return "Bugun";
-    if (diff.inDays == 1) return "Kecha";
-    return "${date.day}.${date.month}.${date.year}";
+  Widget _buildCategoryGrid() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+           crossAxisCount: 3, 
+           childAspectRatio: 1.5, 
+           crossAxisSpacing: 8, 
+           mainAxisSpacing: 8
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final key = _categories.keys.elementAt(index);
+            final label = _categories.values.elementAt(index);
+            return Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(_categoryIcons[key], size: 20, color: AppTheme.primaryBlue),
+                  const SizedBox(height: 4),
+                  Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            );
+          },
+          childCount: _categories.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewItemsGrid() {
+     return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.65,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildBookCard(_newItems[index]), // Reusing book card logic, but maybe bigger?
+          childCount: _newItems.length,
+        ),
+      ),
+    );
   }
 }

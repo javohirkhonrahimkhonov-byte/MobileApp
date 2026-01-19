@@ -8,13 +8,13 @@ import '../models/market_item.dart';
 class MarketService {
   final AuthService _authService = AuthService();
 
-  Future<List<MarketItem>> getItems({String? category, String? search}) async {
+  Future<List<MarketItem>> getItems({String? category, String? search, String sort = 'newest'}) async {
     final token = await _authService.getToken();
     if (token == null) return [];
 
     try {
       var uri = Uri.parse('${ApiConstants.baseUrl}/market');
-      final queryParams = <String, String>{};
+      final queryParams = <String, String>{'sort': sort};
       if (category != null && category != 'all') queryParams['cat'] = category;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       
@@ -78,6 +78,18 @@ class MarketService {
     } catch (e) {
       print('Market Delete Error: $e');
       return false;
+    }
+  }
+  Future<void> viewItem(int id) async {
+    final token = await _authService.getToken();
+    if (token == null) return;
+    try {
+      await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/market/$id/view'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+    } catch (e) {
+      print('View Item Error: $e');
     }
   }
 }
