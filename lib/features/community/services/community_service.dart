@@ -111,18 +111,47 @@ class CommunityService {
   // --- Mocked Chat Methods (Keep as Mock for now) ---
 
   Future<List<Comment>> getComments(String postId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (postId == '1') {
-      return [
-        Comment(
-          id: '101',
-          authorName: 'Aliyev Vali',
-          content: 'Ha, domla kasal ekanlar, dars bo\'lmaydi.',
-          timeAgo: '1 soat oldin',
-        ),
-      ];
-    } 
-    return [];
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.communityPosts}/$postId/comments'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Comment(
+          id: json['id'].toString(),
+          authorName: json['author_name'] ?? "Talaba",
+          content: json['content'] ?? "",
+          timeAgo: _formatDate(json['created_at']),
+        )).toList();
+      } else {
+        print("CommunityService: Failed to load comments: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("CommunityService: Error loading comments: $e");
+      return [];
+    }
+  }
+
+  Future<void> createComment(String postId, String content) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.communityPosts}/$postId/comments'),
+        headers: await _getHeaders(),
+        body: json.encode({
+          'content': content,
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Failed to create comment: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("CommunityService: Error creating comment: $e");
+      rethrow;
+    }
   }
 
   Future<List<Chat>> getChats() async {
