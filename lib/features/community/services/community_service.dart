@@ -83,38 +83,48 @@ class CommunityService {
     }
   }
 
-  Future<bool> likePost(String postId) async {
-    final token = await _authService.getToken(); // Use _authService instance
+  Future<Map<String, dynamic>?> likePost(String postId) async {
+    final token = await _authService.getToken(); 
     final url = '${ApiConstants.communityPosts}/$postId/like';
     print("CommunityService: Liking post at $url");
     
-    final response = await http.post(
-      Uri.parse(url),
-      headers: await _getHeaders(), // Use existing _getHeaders method
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: await _getHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['liked'] ?? false;
-    } else {
-      return false; // Or throw
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print("CommunityService: Like failed ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("CommunityService: Like error $e");
+      return null;
     }
   }
 
-  Future<bool> repostPost(String postId) async {
+  Future<Map<String, dynamic>?> repostPost(String postId) async {
     final url = '${ApiConstants.communityPosts}/$postId/repost';
     print("CommunityService: Reposting post at $url");
     
-    final response = await http.post(
-      Uri.parse(url),
-      headers: await _getHeaders(),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: await _getHeaders(),
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['reposted'] ?? false;
-    } else {
-      return false; 
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print("CommunityService: Repost failed ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+       print("CommunityService: Repost error $e");
+       return null;
     }
   }
 

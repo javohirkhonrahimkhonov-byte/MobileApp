@@ -68,8 +68,8 @@ class _PostCardState extends State<PostCard> {
     }
 
     try {
-      final success = await _communityService.likePost(widget.post.id);
-      if (!success) {
+      final result = await _communityService.likePost(widget.post.id);
+      if (result == null) {
         // Revert if failed
         if (mounted) {
            setState(() {
@@ -78,6 +78,18 @@ class _PostCardState extends State<PostCard> {
            });
            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Like bosilmadi")));
         }
+      } else {
+         // Sync with server count if needed
+         if (mounted) {
+             setState(() {
+               _likeCount = result['count'] ?? _likeCount;
+               // _isLiked is already toggled, but we could double check: result['liked']
+             });
+             // Update parent again with authoritative count
+             if (widget.onLikeChanged != null) {
+                widget.onLikeChanged!(_isLiked, _likeCount);
+             }
+         }
       }
     } catch (e) {
       if (mounted) {
@@ -96,12 +108,19 @@ class _PostCardState extends State<PostCard> {
     });
 
     try {
-      final success = await _communityService.repostPost(widget.post.id);
-      if (!success) {
+      final result = await _communityService.repostPost(widget.post.id);
+      if (result == null) {
          if (mounted) {
             setState(() {
                _isReposted = !_isReposted;
                _repostCount += _isReposted ? 1 : -1;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Repost qilinmadi")));
+         }
+      } else {
+         if (mounted) {
+            setState(() {
+               _repostCount = result['count'] ?? _repostCount;
             });
          }
       }

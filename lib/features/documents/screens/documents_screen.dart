@@ -62,37 +62,36 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
 
   Widget _buildHemisDocsTab() {
     final hemisDocs = [
-      {
-        "title": "O'qish joyidan ma'lumotnoma", 
-        "subtitle": "Talabalikni tasdiqlovchi hujjat",
-        "icon": Icons.assignment_ind_rounded,
-        "color": Colors.blue
-      },
-      {
-        "title": "Reyting daftarchasi (Transkript)", 
-        "subtitle": "Barcha fanlar va baholar tarixi",
-        "icon": Icons.grade_rounded,
-        "color": Colors.orange
-      },
-      {
-        "title": "O'quv varaqa (Shaxsiy reja)", 
-        "subtitle": "Semestr fanlari va yuklamalar",
-        "icon": Icons.list_alt_rounded,
-        "color": Colors.teal
-      },
-      {
-        "title": "Buyruqlar ko'chirmasi", 
-        "subtitle": "O'qishga qabul, ko'chirish va h.k.",
-        "icon": Icons.gavel_rounded,
-        "color": Colors.purple
-      },
-      {
-        "title": "To'lov kontrakt shartnomasi", 
-        "subtitle": "Joriy o'quv yili uchun shartnoma",
-        "icon": Icons.description_rounded,
-        "color": Colors.green
-      },
+      // Temporarily Hidden
+      // {
+      //   "title": "O'qish joyidan ma'lumotnoma", 
+      //   "subtitle": "Talabalikni tasdiqlovchi hujjat",
+      //   "icon": Icons.assignment_ind_rounded,
+      //   "color": Colors.blue
+      // },
+      // ...
     ];
+    
+    if (hemisDocs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_clock_outlined, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              "Hozircha faol emas",
+              style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+             const SizedBox(height: 8),
+             Text(
+              "HEMIS tizimi bilan bog'liq texnik ishlar ketmoqda",
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(20),
