@@ -36,17 +36,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Future<void> _loadUserPosts() async {
-    // Fetch posts where authorName matches (Not ideal but works for now as we don't pass ID)
-    // Better: Filter locally from fetching all univ posts or add endpoint. 
-    // Assuming getPosts returns all univ posts, filtering by name is fragile but consistent with current app logic context.
-    // Actually `getPosts` supports filtering by scope.
-    
-    // We will simulate fetching specific user posts by filtering the list
-    // In a real app we'd call `getPosts(userId: ...)`
     try {
-      final allPosts = await _service.getPosts(scope: "university");
-      final userPosts = allPosts.where((p) => p.authorName == widget.authorName).toList();
+      // Fetch from all scopes to ensure we get every post
+      final univPosts = await _service.getPosts(scope: "university");
+      final facPosts = await _service.getPosts(scope: "faculty");
+      final specPosts = await _service.getPosts(scope: "specialty");
+
+      // Combine and Dedup
+      final all = [...univPosts, ...facPosts, ...specPosts];
+      final uniqueMap = { for (var p in all) p.id : p }; // Dedup by ID
       
+      final userPosts = uniqueMap.values.where((p) => p.authorName == widget.authorName).toList();
+      
+      // Sort newest first
+      userPosts.sort((a, b) => b.id.compareTo(a.id));
+
       if (mounted) {
         setState(() {
           _posts = userPosts;
@@ -57,6 +61,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _handleDelete(String postId) {
+    setState(() {
+      _posts.removeWhere((p) => p.id == postId);
+      _postCount = _posts.length;
+    });
   }
 
   @override
@@ -198,7 +209,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     : ListView.builder(
                         padding: EdgeInsets.zero,
                         itemCount: _posts.length,
-                        itemBuilder: (ctx, i) => PostCard(post: _posts[i]),
+                        itemBuilder: (ctx, i) => PostCard(
+                          post: _posts[i], 
+                          onDelete: () => _handleDelete(_posts[i].id),
+                        ),
                       ),
                       
               // 2. Reposts (Placeholder)
