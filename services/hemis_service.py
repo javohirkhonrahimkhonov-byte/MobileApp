@@ -20,6 +20,11 @@ class HemisService:
     @staticmethod
     async def authenticate(login: str, password: str):
         async with httpx.AsyncClient() as client:
+            # --- TEST CREDENTIALS ---
+            if login == "test_tutor" and password == "123":
+                return "test_token_tutor", None
+            # ------------------------
+
             try:
                 response = await client.post(
                     f"{HemisService.BASE_URL}/auth/login",
@@ -30,15 +35,38 @@ class HemisService:
                 
                 if response.status_code == 200:
                     data = response.json()
+                    if data.get("success") is False:
+                        return None, data.get("error", "Login yoki parol noto'g'ri")
+                        
                     token = data.get("data", {}).get("token") or data.get("token")
-                    return token
-                return None
+                    return token, None
+                elif response.status_code == 401:
+                     return None, "Login yoki parol noto'g'ri"
+                elif response.status_code == 404:
+                     return None, "Bunday foydalanuvchi topilmadi"
+                else:
+                     return None, f"Server xatosi: {response.status_code}"
             except Exception as e:
                 logger.error(f"Auth Error: {e}")
-                return None
+                return None, "Tarmoq xatoligi"
 
     @staticmethod
     async def get_me(token: str):
+        # --- TEST CREDENTIALS ---
+        if token == "test_token_tutor":
+            return {
+                "id": 99999,
+                "uuid": "test-tutor-uuid",
+                "type": "employee",
+                "login": "test_tutor",
+                "firstname": "Test",
+                "lastname": "Tyutor",
+                "fathername": "Admin",
+                "image": "https://ui-avatars.com/api/?name=Test+Tyutor",
+                "roles": [{"code": "tutor", "name": "Tyutor"}]
+            }
+        # ------------------------
+
         async with httpx.AsyncClient() as client:
             try:
                 headers = HemisService.HEADERS.copy()

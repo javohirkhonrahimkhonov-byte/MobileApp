@@ -788,3 +788,42 @@ class ChoyxonaPostRepost(Base):
 
     def __repr__(self):
         return f"<ChoyxonaPostRepost {self.id} on Post {self.post_id} by Student {self.student_id}>"
+
+
+# ============================================================
+# TALABA BOZORI (MARKET)
+# ============================================================
+
+class MarketCategory(str, enum.Enum):
+    BOOKS = "books"       # Kitoblar
+    TECH = "tech"         # Texnika
+    HOUSING = "housing"   # Kvartira / Ijaraga sherik
+    JOBS = "jobs"         # Ish / Vakansiya
+    LOST_FOUND = "lost"   # Yo'qolgan buyumlar
+    OTHER = "other"       # Boshqa
+
+class MarketItem(Base):
+    __tablename__ = "market_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    price: Mapped[str] = mapped_column(String(128), nullable=True) # "100.000 so'm" or "Kelishilgan"
+    category: Mapped[str] = mapped_column(String(32), default=MarketCategory.OTHER.value, index=True)
+    
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    telegram_username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    
+    views_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student")
+
+    def __repr__(self):
+        return f"<MarketItem {self.id} {self.title}>"
