@@ -88,8 +88,18 @@ class CommunityService {
   String _formatDate(String? dateStr) {
     if (dateStr == null) return "";
     try {
-      final date = DateTime.parse(dateStr);
-      final diff = DateTime.now().difference(date);
+      // Backend returns UTC time (e.g. 2024-01-19T07:00:00)
+      // We must append 'Z' if missing to properly parse as UTC, or force isUtc: true.
+      if (!dateStr.endsWith('Z')) {
+        dateStr = "${dateStr}Z";
+      }
+      
+      final date = DateTime.parse(dateStr).toLocal();
+      final now = DateTime.now();
+      
+      final diff = now.difference(date);
+
+      if (diff.inMinutes < 1) return "Hozirgina";
       if (diff.inMinutes < 60) return "${diff.inMinutes} daqiqa oldin";
       if (diff.inHours < 24) return "${diff.inHours} soat oldin";
       return "${diff.inDays} kun oldin";
