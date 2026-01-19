@@ -53,6 +53,7 @@ class CommunityService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
+        print("CommunityService: Loaded ${data.length} posts for scope $scope"); // Debug log
         return data.map((json) => _mapJsonToPost(json)).toList();
       } else {
         print("CommunityService: Failed to load posts: ${response.statusCode}");
