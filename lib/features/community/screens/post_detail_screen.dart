@@ -172,11 +172,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 color: Colors.white,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: const Color(0xFFEEF2FF), // Light Blue tint
                     border: const Border(left: BorderSide(color: AppTheme.primaryBlue, width: 3)),
                     borderRadius: const BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8))
                   ),
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   child: Row(
                     children: [
                       const Icon(Icons.reply, size: 20, color: AppTheme.primaryBlue),
@@ -191,7 +191,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                              ),
                              Text(
                                _replyingTo!.content,
-                               style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                               style: const TextStyle(color: Colors.black87, fontSize: 12),
                                maxLines: 1, 
                                overflow: TextOverflow.ellipsis,
                              ),
@@ -358,22 +358,28 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   // Quote Block if Reply
                   if (comment.replyToUserName != null)
                      Container(
-                       margin: const EdgeInsets.only(top: 4, bottom: 4),
+                       margin: const EdgeInsets.only(top: 4, bottom: 8),
                        padding: const EdgeInsets.all(8),
                        decoration: BoxDecoration(
-                         color: Colors.grey[100],
+                         color: const Color(0xFFEEF2FF), // Light Blue tint
                          borderRadius: BorderRadius.circular(8),
                          border: const Border(left: BorderSide(color: AppTheme.primaryBlue, width: 3))
                        ),
                        child: Column(
                          crossAxisAlignment: CrossAxisAlignment.start,
                          children: [
-                           Text(comment.replyToUserName!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)),
+                           Text(
+                             comment.replyToUserName!, 
+                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryBlue)
+                           ),
                            if (comment.replyToContent != null)
-                              Text(
-                                comment.replyToContent!, 
-                                style: TextStyle(color: Colors.grey[700], fontSize: 11),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  comment.replyToContent!, 
+                                  style: const TextStyle(color: Colors.black87, fontSize: 12),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                          ],
                        ),
