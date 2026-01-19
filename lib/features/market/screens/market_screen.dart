@@ -49,15 +49,6 @@ class _MarketScreenState extends State<MarketScreen> {
       final featured = await _marketService.getItems(sort: 'popular', search: '');
       final newItems = await _marketService.getItems(sort: 'newest', search: '');
       
-<<<<<<< HEAD
-      setState(() {
-        _featuredItems = featured.take(5).toList();
-        _newItems = newItems;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-=======
       if (mounted) {
         setState(() {
           _featuredItems = featured.take(5).toList();
@@ -67,7 +58,6 @@ class _MarketScreenState extends State<MarketScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
->>>>>>> ec9440d (feat(market): Implement Market Mobile App (Screens, Service, B&N Design))
     }
   }
 
@@ -80,28 +70,6 @@ class _MarketScreenState extends State<MarketScreen> {
           _buildSliverAppBar(),
           if (_isLoading)
             const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
-<<<<<<< HEAD
-          else ...[
-            _buildHeroSection(),
-            _buildSectionTitle("Eng ko'p ko'rilganlar"),
-            _buildFeaturedHorizontalList(),
-            _buildSectionTitle("Kategoriyalar"),
-            _buildCategoryGrid(),
-            _buildSectionTitle("Yangi E'lonlar"),
-            _buildNewItemsGrid(),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)), // Bottom padding
-          ]
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateMarketItemScreen()));
-          if (res == true) _loadData();
-        },
-        label: const Text("E'lon berish"),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppTheme.primaryBlue,
-=======
           else if (_featuredItems.isEmpty && _newItems.isEmpty)
              const SliverFillRemaining(child: Center(child: Text("Hozircha e'lonlar yo'q")))
           else ...[
@@ -119,17 +87,16 @@ class _MarketScreenState extends State<MarketScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 80)), // Bottom padding
           ]
         ],
->>>>>>> ec9440d (feat(market): Implement Market Mobile App (Screens, Service, B&N Design))
       ),
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: () async {
-      //     final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateMarketItemScreen()));
-      //     if (res == true) _loadData();
-      //   },
-      //   label: const Text("E'lon berish"),
-      //   icon: const Icon(Icons.add),
-      //   backgroundColor: AppTheme.primaryBlue,
-      // ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final res = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateMarketItemScreen()));
+          if (res == true) _loadData();
+        },
+        label: const Text("E'lon berish"),
+        icon: const Icon(Icons.add),
+        backgroundColor: AppTheme.primaryBlue,
+      ),
     );
   }
 
@@ -147,11 +114,7 @@ class _MarketScreenState extends State<MarketScreen> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: TextField(
             decoration: InputDecoration(
-<<<<<<< HEAD
               hintText: "Kitob, texnika yoki ish qidiring...",
-=======
-              hintText: "Kitob, texnika yoki yashash joyi qidiring...",
->>>>>>> ec9440d (feat(market): Implement Market Mobile App (Screens, Service, B&N Design))
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               filled: true,
               fillColor: Colors.grey[100],
