@@ -236,6 +236,15 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 _posts[scope]!.removeAt(index);
               });
             },
+            onLikeChanged: (isLiked, count) {
+              // Update local source of truth to prevent reversion on rebuild
+              _posts[scope]![index] = posts[index].copyWith(
+                isLiked: isLiked, 
+                likes: count
+              );
+              // Note: We don't necessarily need setState since PostCard handles its own state,
+              // but updating the listener variable ensures persistence if recycled.
+            },
           );
         },
       ),

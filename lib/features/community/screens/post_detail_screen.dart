@@ -88,126 +88,133 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false, // We handle pop manually
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        Navigator.pop(context, _post);
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context, _post), 
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context, _post), 
+          ),
+          title: const Text("Muhokama", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         ),
-        title: const Text("Muhokama", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _loadComments,
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 20),
-                children: [
-                  // Main Post
-                  PostCard(
-                    post: _post, 
-                    isDetail: true,
-                    onDelete: () {
-                      Navigator.pop(context, 'deleted');
-                    },
-                    onLikeChanged: (isLiked, count) {
-                       setState(() {
-                         _post = _post.copyWith(isLiked: isLiked, likes: count);
-                       });
-                    },
-                  ),
-                  
-                  const Divider(thickness: 1, height: 1),
-                  
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      "Muhokamalar", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey[800])
+        body: Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadComments,
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  children: [
+                    // Main Post
+                    PostCard(
+                      post: _post, 
+                      isDetail: true,
+                      onDelete: () {
+                        Navigator.pop(context, 'deleted');
+                      },
+                      onLikeChanged: (isLiked, count) {
+                         setState(() {
+                           _post = _post.copyWith(isLiked: isLiked, likes: count);
+                         });
+                      },
                     ),
-                  ),
-
-                  // Comments List
-                   if (_isLoading)
-                      const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-                   else if (_comments.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Text("Hozircha sharhlar yo'q", style: TextStyle(color: Colors.grey[500])),
-                        ),
-                      )
-                   else
-                      ..._comments.map((comment) => _buildCommentItem(comment)),
-                ],
+                    
+                    const Divider(thickness: 1, height: 1),
+                    
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Muhokamalar", 
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey[800])
+                      ),
+                    ),
+  
+                    // Comments List
+                     if (_isLoading)
+                        const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                     else if (_comments.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Text("Hozircha sharhlar yo'q", style: TextStyle(color: Colors.grey[500])),
+                          ),
+                        )
+                     else
+                        ..._comments.map((comment) => _buildCommentItem(comment)),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // Input Area
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey[200]!)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, -2))
-              ]
-            ),
-            child: SafeArea( // For iPhone bottom bar
-              child: Row(
-                children: [
-                   // User Avatar (Placeholder)
-                   CircleAvatar(
-                     backgroundColor: Colors.grey[200],
-                     radius: 18,
-                     child: const Icon(Icons.person, color: Colors.grey, size: 20),
-                   ),
-                   const SizedBox(width: 12),
-                   
-                   // Input Field
-                   Expanded(
-                     child: Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                       decoration: BoxDecoration(
-                         color: Colors.grey[100],
-                         borderRadius: BorderRadius.circular(24),
-                       ),
-                       child: TextField(
-                         controller: _commentController,
-                         decoration: const InputDecoration(
-                           hintText: "Fikringizni yozing...",
-                           border: InputBorder.none,
-                           contentPadding: EdgeInsets.symmetric(vertical: 10),
+  
+            // Input Area
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, -2))
+                ]
+              ),
+              child: SafeArea( // For iPhone bottom bar
+                child: Row(
+                  children: [
+                     // User Avatar (Placeholder)
+                     CircleAvatar(
+                       backgroundColor: Colors.grey[200],
+                       radius: 18,
+                       child: const Icon(Icons.person, color: Colors.grey, size: 20),
+                     ),
+                     const SizedBox(width: 12),
+                     
+                     // Input Field
+                     Expanded(
+                       child: Container(
+                         padding: const EdgeInsets.symmetric(horizontal: 16),
+                         decoration: BoxDecoration(
+                           color: Colors.grey[100],
+                           borderRadius: BorderRadius.circular(24),
                          ),
-                         minLines: 1,
-                         maxLines: 4,
+                         child: TextField(
+                           controller: _commentController,
+                           decoration: const InputDecoration(
+                             hintText: "Fikringizni yozing...",
+                             border: InputBorder.none,
+                             contentPadding: EdgeInsets.symmetric(vertical: 10),
+                           ),
+                           minLines: 1,
+                           maxLines: 4,
+                         ),
                        ),
                      ),
-                   ),
-                   
-                   const SizedBox(width: 8),
-                   
-                   // Send Button
-                   IconButton(
-                     onPressed: _isSending ? null : _sendComment,
-                     icon: _isSending 
-                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                       : const CircleAvatar(
-                           backgroundColor: AppTheme.primaryBlue,
-                           radius: 20,
-                           child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                         ),
-                   )
-                ],
+                     
+                     const SizedBox(width: 8),
+                     
+                     // Send Button
+                     IconButton(
+                       onPressed: _isSending ? null : _sendComment,
+                       icon: _isSending 
+                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                         : const CircleAvatar(
+                             backgroundColor: AppTheme.primaryBlue,
+                             radius: 20,
+                             child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                           ),
+                     )
+                  ],
+                ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }

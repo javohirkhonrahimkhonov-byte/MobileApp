@@ -523,5 +523,40 @@ class DataService {
       return null;
     }
   }
+  // 21. Summarize Content (Konspekt)
+  Future<String?> summarizeContent({String? text, String? filePath}) async {
+    try {
+      final token = await _authService.getToken();
+      
+      // Use MultipartRequest for optional file upload
+      var request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.backendUrl}/ai/summarize'));
+      request.headers['Authorization'] = 'Bearer $token';
+
+      if (text != null && text.isNotEmpty) {
+        request.fields['text'] = text;
+      }
+
+      if (filePath != null) {
+        request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      }
+
+      var response = await request.send();
+      
+      if (response.statusCode == 200) {
+         final respStr = await response.stream.bytesToString();
+         final body = json.decode(respStr);
+         if (body['success'] == true) {
+            return body['data'];
+         } else {
+            return "Xatolik: ${body['message']}";
+         }
+      } else {
+         return "Server xatosi: ${response.statusCode}";
+      }
+    } catch (e) {
+      print("DataService: Error summarizing content: $e");
+      return "Tarmoq xatosi yoki fayl muammosi.";
+    }
+  }
 }
 
