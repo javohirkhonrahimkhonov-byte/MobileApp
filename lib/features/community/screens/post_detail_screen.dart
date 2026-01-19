@@ -264,36 +264,45 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  void _toggleCommentLike(String commentId) {
+    setState(() {
+      final index = _comments.indexWhere((c) => c.id == commentId);
+      if (index != -1) {
+        final comment = _comments[index];
+        final newIsLiked = !comment.isLiked;
+        final newLikes = newIsLiked ? comment.likes + 1 : comment.likes - 1;
+        
+        _comments[index] = Comment(
+          id: comment.id,
+          authorName: comment.authorName,
+          authorAvatar: comment.authorAvatar,
+          content: comment.content,
+          timeAgo: comment.timeAgo,
+          likes: newLikes,
+          isLiked: newIsLiked,
+          isLikedByAuthor: comment.isLikedByAuthor, // Keep existing state
+          authorRole: comment.authorRole
+        );
+      }
+    });
+
+    // API Call (Fire & Forget)
+    // _service.likeComment(commentId);
+  }
+
   Widget _buildCommentItem(Comment comment) {
-    // Check if author liked (Assuming verifying logic: if post author liked it)
-    // Note: Since we are in mock mode, relying on service 'isLikedByAuthor'
-    
     return Dismissible(
       key: Key("reply_${comment.id}"),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        setState(() {
-          _replyingTo = comment;
-        });
-        // Focus input
-        Future.delayed(const Duration(milliseconds: 100), () {
-           // We might need a FocusNode to focus programmatically, 
-           // but for now user sees banner and can tap input.
-        });
-        return false; // Don't actually dismiss
+        setState(() => _replyingTo = comment);
+        return false; 
       },
       background: Container(
         color: Colors.grey[100],
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text("Javob yozish", style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
-            const SizedBox(width: 8),
-            Icon(Icons.reply, color: Colors.grey[600]),
-          ],
-        ),
+        child: const Icon(Icons.reply, color: Colors.grey),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -304,6 +313,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. Avatar
             GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
@@ -323,93 +333,32 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
             const SizedBox(width: 12),
+            
+            // 2. Content & Footer
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          comment.authorName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(comment.timeAgo, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
-                    ],
+                  Text(
+                    comment.authorName,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.4)),
+                  const SizedBox(height: 2),
+                  Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.3)),
+                  const SizedBox(height: 6),
                   
-                  const SizedBox(height: 8),
-                  
-                  // Footer: Reply, Like, Author Badge
+                  // Footer: Reply & Time
                   Row(
                     children: [
                       InkWell(
-                        onTap: () {
-                           setState(() => _replyingTo = comment);
-                        },
+                        onTap: () => setState(() => _replyingTo = comment),
                         child: Text("Javob yozish", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600])),
                       ),
-                      const SizedBox(width: 16),
-                      
-                      // Like Logic (Mock visual toggle)
-                      InkWell(
-                        onTap: () {
-                          // TODO: Call API
-                        },
-                        child: Row(
-                          children: [
-                            Icon(
-                              comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                              size: 14,
-                              color: comment.isLiked ? Colors.red : Colors.grey[500],
-                            ),
-                            if (comment.likes > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 4),
-                                child: Text("${comment.likes}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Author Liked Badge
-                      if (comment.isLikedByAuthor)
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                           decoration: BoxDecoration(
-                             color: Colors.red.withOpacity(0.1),
-                             borderRadius: BorderRadius.circular(10),
-                             border: Border.all(color: Colors.red.withOpacity(0.2))
-                           ),
-                           child: Row(
-                             children: [
-                               CircleAvatar(
-                                 radius: 6,
-                                 backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
-                                 child: widget.post.authorAvatar.isEmpty ? Text(widget.post.authorName[0], style: const TextStyle(fontSize: 6)) : null,
-                               ),
-                               const SizedBox(width: 4),
-                               const Icon(Icons.favorite, size: 8, color: Colors.red),
-                             ],
-                           ),
-                         )
+                      const SizedBox(width: 12),
+                      Text(comment.timeAgo, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
                     ],
                   )
                 ],
               ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
 }
