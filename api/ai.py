@@ -65,7 +65,20 @@ async def chat_with_ai(
     await db.commit()
         
     # 2. Generate Response
-    response_text = await generate_response(req.message)
+    # Context Injection
+    context = (
+        f"Talaba ma'lumotlari:\n"
+        f"Ism: {student.full_name}\n"
+        f"Universitet: {student.university_name or 'Noma\'lum'}\n"
+        f"Fakultet: {student.faculty_name or 'Noma\'lum'}\n"
+        f"Yo'nalish: {student.specialty_name or 'Noma\'lum'}\n"
+        f"Bosqich: {student.level_name or ''} ({student.semester_name or ''})\n"
+        f"Ta'lim shakli: {student.payment_form or 'Noma\'lum'} (Moliya turi)\n"
+    )
+    
+    full_prompt = f"Context:\n{context}\n\nSavol: {req.message}"
+    
+    response_text = await generate_response(full_prompt)
     
     # 3. Save AI Response
     ai_msg = AiMessage(student_id=student.id, role="assistant", content=response_text)
