@@ -60,7 +60,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 
   void _startPolling() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _pollTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       if (mounted) {
         // Refresh ONLY the active scope to save bandwidth
         _fetchPosts(_getCurrentScope(), isSilent: true);
