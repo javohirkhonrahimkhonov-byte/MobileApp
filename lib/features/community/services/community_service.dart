@@ -65,10 +65,26 @@ class CommunityService {
     }
   }
 
+  Future<bool> likePost(String postId) async {
+    final token = await _authService.getToken(); // Use _authService instance
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/community/posts/$postId/like'),
+      headers: await _getHeaders(), // Use existing _getHeaders method
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['liked'] ?? false;
+    } else {
+      print("Failed to like post: ${response.statusCode}");
+      return false; // Or throw
+    }
+  }
+
   Post _mapJsonToPost(Map<String, dynamic> json) {
     return Post(
       id: json['id'].toString(),
-      authorName: json['author_name'] ?? "Talaba",
+      authorName: json['author_name'] ?? "Noma'lum",
       authorUsername: "@student", // Placeholder
       authorAvatar: "", // Placeholder
       authorRole: json['author_role'] ?? "Talaba",
@@ -79,8 +95,8 @@ class CommunityService {
       targetFacultyId: json['target_faculty_id']?.toString(),
       targetSpecialtyId: json['target_specialty_name'], // Mapping name to ID field as per backend logic
       
-      // Defaults for now (Backend doesn't have these yet)
-      likes: 0,
+      likes: json['likes_count'] ?? 0,
+      isLiked: json['is_liked_by_me'] ?? false,
       commentsCount: 0,
       isVerified: false,
     );

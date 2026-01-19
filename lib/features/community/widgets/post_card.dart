@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
-import '../screens/post_detail_screen.dart';
+import 'package:talabahamkor_mobile/features/community/screens/post_detail_screen.dart';
+import 'package:share_plus/share_plus.dart';
 import '../screens/user_profile_screen.dart';
 
+import '../services/community_service.dart';
+
 class PostCard extends StatefulWidget {
+  // ... (keep class definition)
   final Post post;
   final bool isDetail;
 
@@ -15,12 +19,14 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  // ... (state vars)
   late bool _isLiked;
   late int _likeCount;
   late int _repostCount;
   bool _isReposted = false; // Mock local state
   List<int>? _pollVotes;
   int? _userVote;
+  final CommunityService _communityService = CommunityService();
 
   @override
   void initState() {
@@ -31,7 +37,8 @@ class _PostCardState extends State<PostCard> {
     _pollVotes = widget.post.pollVotes != null ? List.from(widget.post.pollVotes!) : null;
     _userVote = widget.post.userVote;
   }
-
+  
+  // ... (votePoll)
   void _votePoll(int index) {
     if (_userVote != null) return; 
     setState(() {
@@ -40,11 +47,33 @@ class _PostCardState extends State<PostCard> {
     });
   }
 
-  void _toggleLike() {
+  Future<void> _toggleLike() async {
+    // Optimistic Update
     setState(() {
       _isLiked = !_isLiked;
       _likeCount += _isLiked ? 1 : -1;
     });
+
+    try {
+      final success = await _communityService.likePost(widget.post.id);
+      if (!success) {
+        // Revert if failed
+        if (mounted) {
+           setState(() {
+              _isLiked = !_isLiked;
+              _likeCount += _isLiked ? 1 : -1;
+           });
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Like bosilmadi")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+           setState(() {
+              _isLiked = !_isLiked;
+              _likeCount += _isLiked ? 1 : -1;
+           });
+      }
+    }
   }
 
   void _toggleRepost() {
@@ -55,8 +84,9 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _sharePost() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Havola nusxalandi! (Mock)")),
+    Share.share(
+      " ${widget.post.authorName} dan yangi post:\n\n${widget.post.content}\n\nTalaba Hamkor ilovasi orqali yuborildi.",
+      subject: "Choyxona Posti"
     );
   }
 
