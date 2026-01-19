@@ -90,6 +90,63 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  void _showDeleteDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Postni o'chirib yuborish"),
+        content: const Text("Haqiqatan ham bu postni o'chirmoqchimisiz?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish")),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await _communityService.deletePost(widget.post.id);
+              if (success && mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post o'chirildi")));
+                 // Ideally trigger a refresh in parent, but for now we rely on next poll/refresh
+              } else if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Post o'chirilmayapti")));
+              }
+            }, 
+            child: const Text("O'chirish", style: TextStyle(color: Colors.red))
+          ),
+        ],
+      )
+    );
+  }
+
+  void _showEditDialog() {
+    final controller = TextEditingController(text: widget.post.content);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Postni tahrirlash"),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish")),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await _communityService.editPost(widget.post.id, controller.text);
+              if (success && mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post yangilandi")));
+                 // Ideally trigger refresh
+              } else if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Post yangilanmadi")));
+              }
+            }, 
+            child: const Text("Saqlash")
+          ),
+        ],
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget content = Container(
@@ -153,12 +210,36 @@ class _PostCardState extends State<PostCard> {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_horiz, color: Colors.grey),
-                onPressed: () {},
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              )
+              if (widget.post.isMine)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                  onSelected: (value) {
+                    if (value == 'edit') _showEditDialog();
+                    if (value == 'delete') _showDeleteDialog();
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, color: Colors.blue, size: 20),
+                          SizedBox(width: 8),
+                          Text('Tahrirlash'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text('O\'chirib yuborish', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           ),

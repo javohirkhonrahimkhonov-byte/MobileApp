@@ -78,8 +78,39 @@ class CommunityService {
       final data = json.decode(response.body);
       return data['liked'] ?? false;
     } else {
-      print("Failed to like post: ${response.statusCode}");
       return false; // Or throw
+    }
+  }
+
+  Future<bool> deletePost(String postId) async {
+    try {
+      final response = await http.delete(
+         Uri.parse('${ApiConstants.communityPosts}/$postId'),
+         headers: await _getHeaders(),
+      );
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print("CommunityService: Error deleting post: $e");
+      return false;
+    }
+  }
+
+  Future<bool> editPost(String postId, String newContent) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.communityPosts}/$postId'),
+        headers: await _getHeaders(),
+        body: json.encode({
+          'content': newContent,
+          'category_type': 'university', // Ignored by backend update logic usually, but required by schema
+        }),
+      );
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print("CommunityService: Error editing post: $e");
+      return false;
     }
   }
 
@@ -97,10 +128,11 @@ class CommunityService {
       targetFacultyId: json['target_faculty_id']?.toString(),
       targetSpecialtyId: json['target_specialty_name'], // Mapping name to ID field as per backend logic
       
-      likes: json['likes_count'] ?? 0,
+      likesCount: json['likes_count'] ?? 0,
       isLiked: json['is_liked_by_me'] ?? false,
-      commentsCount: 0,
+      commentsCount: json['comments_count'] ?? 0,
       isVerified: false,
+      isMine: json['is_mine'] ?? false,
     );
   }
 
