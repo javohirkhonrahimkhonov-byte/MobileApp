@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'ai_chat_screen.dart';
 import 'konspekt_screen.dart';
+import '../student_module/screens/schedule_screen.dart';
 
 class AiScreen extends StatelessWidget {
   const AiScreen({super.key});
@@ -33,7 +34,9 @@ class AiScreen extends StatelessWidget {
             _buildAiButton(context, "Stipendiya haqida", Icons.monetization_on, () {}),
             _buildAiButton(context, "Hemis parolini tiklash", Icons.vpn_key, () {}),
             _buildAiButton(context, "Kredit-modul tizimi", Icons.school, () {}),
-            _buildAiButton(context, "Dars jadvali", Icons.calendar_today, () {}),
+            _buildAiButton(context, "Dars jadvali", Icons.calendar_today, () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
+            }),
             _buildAiButton(context, "Konspekt qilish (File/Matn)", Icons.note_alt, () {
                Navigator.push(context, MaterialPageRoute(builder: (_) => const KonspektScreen()));
             }),
