@@ -36,6 +36,7 @@ class _EditPostSheetState extends State<EditPostSheet> {
   }
 
   void _parseInitialContent() {
+    // 1. Try Markdown Parsing
     final RegExp titleRegex = RegExp(r'^\*\*(.*?)\*\*\n+(.*)', multiLine: true, dotAll: true);
     final match = titleRegex.firstMatch(widget.initialContent);
 
@@ -43,8 +44,15 @@ class _EditPostSheetState extends State<EditPostSheet> {
       _originalTitle = match.group(1)?.trim() ?? "";
       _originalBody = match.group(2)?.trim() ?? "";
     } else {
-      _originalTitle = "";
-      _originalBody = widget.initialContent;
+      // 2. Fallback: Split by newline if multiple lines
+      final lines = widget.initialContent.split('\n');
+      if (lines.length > 1) {
+        _originalTitle = lines.first.trim();
+        _originalBody = lines.sublist(1).join('\n').trim();
+      } else {
+        _originalTitle = "";
+        _originalBody = widget.initialContent;
+      }
     }
   }
 
