@@ -163,37 +163,7 @@ class _PostCardState extends State<PostCard> {
     return "";
   }
 
-  void _showDeleteDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Postni o'chirish"),
-        content: const Text("Haqiqatan ham ushbu postni o'chirmoqchimisiz?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              // Optimistic Delete: Notify parent immediately
-              if (widget.onDelete != null) widget.onDelete!();
-              
-              // Background API Call
-              try {
-                await CommunityService().deletePost(widget.post.id);
-              } catch (e) {
-                // If failed, we might want to reload or show error, but user asked for "just disappear"
-                // So we prioritize speed.
-              }
-            },
-            child: const Text("O'chirish", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showEditDialog() async {
     final result = await showModalBottomSheet(
@@ -313,13 +283,13 @@ class _PostCardState extends State<PostCard> {
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                            decoration: BoxDecoration(
-                             color: _getCategoryColor(widget.post.categoryType).withOpacity(0.1),
+                             color: _getCategoryColor(widget.post.scope ?? 'university').withOpacity(0.1),
                              borderRadius: BorderRadius.circular(4),
-                             border: Border.all(color: _getCategoryColor(widget.post.categoryType).withOpacity(0.3), width: 0.5)
+                             border: Border.all(color: _getCategoryColor(widget.post.scope ?? 'university').withOpacity(0.3), width: 0.5)
                            ),
                            child: Text(
-                             _getCategoryLabel(widget.post.categoryType),
-                             style: TextStyle(color: _getCategoryColor(widget.post.categoryType), fontSize: 10, fontWeight: FontWeight.bold),
+                             _getCategoryLabel(widget.post.scope ?? 'university'),
+                             style: TextStyle(color: _getCategoryColor(widget.post.scope ?? 'university'), fontSize: 10, fontWeight: FontWeight.bold),
                            ),
                          ),
                         const SizedBox(width: 4),
