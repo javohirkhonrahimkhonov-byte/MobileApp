@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 from typing import List
 
 from database.db_connect import AsyncSessionLocal
-from database.models import Student, ChoyxonaPost
+from database.models import Student, ChoyxonaPost, ChoyxonaPostLike, ChoyxonaPostRepost, ChoyxonaComment
 from api.dependencies import get_current_student, get_db
 from api.dependencies import get_current_student, get_db
 from api.schemas import PostCreateSchema, PostResponseSchema, CommentCreateSchema, CommentResponseSchema
