@@ -17,24 +17,46 @@ class EditPostSheet extends StatefulWidget {
 }
 
 class _EditPostSheetState extends State<EditPostSheet> {
-  late TextEditingController _controller;
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
   bool _isLoading = false;
   bool _hasChanges = false;
-  final CommunityService _communityService = CommunityService();
+  String? _originalTitle;
+  String? _originalBody;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialContent);
-    _controller.addListener(_checkChanges);
+    _parseInitialContent();
+    _titleController = TextEditingController(text: _originalTitle);
+    _contentController = TextEditingController(text: _originalBody);
+
+    _titleController.addListener(_checkForChanges);
+    _contentController.addListener(_checkForChanges);
   }
 
-  void _checkChanges() {
-    final hasChanges = _controller.text.trim() != widget.initialContent.trim();
-    if (hasChanges != _hasChanges) {
-      setState(() {
-        _hasChanges = hasChanges;
-      });
+  void _parseInitialContent() {
+    // Logic: If content starts with **Title**, extract it.
+    // Regex look for **Title** at start, followed by newlines.
+    final RegExp titleRegex = RegExp(r'^\*\*(.*?)\*\*\n+(.*)', multiLine: true, dotAll: true);
+    final match = titleRegex.firstMatch(widget.initialContent);
+
+    if (match != null) {
+      _originalTitle = match.group(1)?.trim() ?? "";
+      _originalBody = match.group(2)?.trim() ?? "";
+    } else {
+      _originalTitle = "";
+      _originalBody = widget.initialContent;
+    }
+  }
+
+  void _checkForChanges() {
+    final newTitle = _titleController.text.trim();
+    final newBody = _contentController.text.trim();
+    final hasChanges = newTitle != _originalTitle || newBody != _originalBody;
+    
+    if (_hasChanges != hasChanges) {
+      setState(() => _hasChanges = hasChanges);
     }
   }
 
@@ -42,23 +64,37 @@ class _EditPostSheetState extends State<EditPostSheet> {
     if (!_hasChanges) return;
 
     setState(() => _isLoading = true);
-    // Unfocus keyboard
-    FocusScope.of(context).unfocus();
+    final newTitle = _titleController.text.trim();
+    final newBody = _contentController.text.trim();
+    
+    // Combine back: **Title**\n\nBody
+    String finalContent = newBody;
+    if (newTitle.isNotEmpty) {
+      finalContent = "**$newTitle**\n\n$newBody";
+    }
 
-    final success = await _communityService.editPost(widget.postId, _controller.text.trim());
-
-    if (mounted) {
-      if (success) {
-        Navigator.pop(context, true); // Return TRUE to signal success
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Post muvaffaqiyatli yangilandi! ✅")),
-        );
-      } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Xatolik: Postni saqlab bo'lmadi ❌"), backgroundColor: Colors.red),
-        );
+    try {
+      final success = await CommunityService().editPost(widget.postId, finalContent);
+      if (mounted) {
+        if (success) {
+          Navigator.pop(context, true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Post muvaffaqiyatli o'zgartirildi ✅")),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Xatolik: Post o'zgartirilmadi ❌")),
+          );
+        }
       }
+    } catch (e) {
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Xatolik: $e")),
+          );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -68,12 +104,12 @@ class _EditPostSheetState extends State<EditPostSheet> {
     final shouldPop = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Chiqib ketish"),
-        content: const Text("Saqlanmagan o'zgarishlar bor. Haqiqatan ham chiqib ketmoqchimisiz?"),
+        title: const Text("Saqlanmagan o'zgarishlar"),
+        content: const Text("Haqiqatan ham chiqib ketmoqchimisiz? O'zgarishlar yo'qoladi."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Yo'q, qaytish"),
+            child: const Text("Yo'q", style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -88,80 +124,110 @@ class _EditPostSheetState extends State<EditPostSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leadingWidth: 100,
-        leading: TextButton(
-          onPressed: () async {
-            if (await _onWillPop()) {
-              Navigator.pop(context);
-            }
-          },
-          child: const Text(
-            "Bekor qilish",
-            style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.normal),
-          ),
-        ),
-        title: const Text(
-          "Postni tahrirlash",
-          style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: TextButton(
-              onPressed: (_hasChanges && !_isLoading) ? _handleSave : null,
-              style: TextButton.styleFrom(
-                backgroundColor: (_hasChanges && !_isLoading) ? AppTheme.primaryBlue : Colors.transparent,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: _isLoading 
-                ? const SizedBox(
-                    height: 16, 
-                    width: 16, 
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                  )
-                : Text(
-                    "Saqlash",
-                    style: TextStyle(
-                      fontSize: 16, 
-                      fontWeight: FontWeight.bold,
-                      color: (_hasChanges && !_isLoading) ? Colors.white : Colors.grey[400]
-                    ),
-                  ),
-            ),
-          )
-        ],
-      ),
-      body: PopScope(
-        canPop: !_hasChanges,
-        onPopInvoked: (didPop) async {
-          if (didPop) return;
-          final shouldPop = await _onWillPop();
-          if (shouldPop && context.mounted) {
-            Navigator.pop(context);
-          }
-        },
-        child: Column(
+    // Use PopScope for Android Back button protection
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // Important for overlay effect
+        body: Stack(
           children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                child: TextField(
-                  controller: _controller,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(fontSize: 18, height: 1.5, color: Colors.black87),
-                  decoration: const InputDecoration(
-                    hintText: "Fikringizni yozing...",
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+            // Barrier (Dismiss on tap)
+            GestureDetector(
+              onTap: () async {
+                 final shouldPop = await _onWillPop();
+                 if (shouldPop && context.mounted) Navigator.pop(context);
+              },
+              child: Container(color: Colors.transparent),
+            ),
+            
+            // Central Dialog Card
+            Center(
+              child: GestureDetector(
+                onTap: () {}, // Prevent tap propagation to barrier
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
+                  ),
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () async {
+                                final shouldPop = await _onWillPop();
+                                if (shouldPop && context.mounted) Navigator.pop(context);
+                              },
+                              child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                            ),
+                            const Text("Postni tahrirlash", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            _isLoading 
+                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                              : TextButton(
+                                  onPressed: _hasChanges ? _handleSave : null,
+                                  child: Text("Saqlash", style: TextStyle(
+                                    color: _hasChanges ? AppTheme.primaryBlue : Colors.grey, 
+                                    fontSize: 16, 
+                                    fontWeight: FontWeight.bold
+                                  )),
+                                ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      
+                      // Content Fields
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Title Field
+                              TextField(
+                                controller: _titleController,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                decoration: const InputDecoration(
+                                  hintText: "Mavzu (ixtiyoriy)",
+                                  border: InputBorder.none,
+                                  hintStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                maxLines: 1,
+                              ),
+                              const SizedBox(height: 12),
+                              // Body Field
+                              TextField(
+                                controller: _contentController,
+                                style: const TextStyle(fontSize: 16, height: 1.5),
+                                decoration: const InputDecoration(
+                                  hintText: "Izoh...",
+                                  border: InputBorder.none,
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                maxLines: null, // Infinite
+                                minLines: 10,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -170,11 +236,5 @@ class _EditPostSheetState extends State<EditPostSheet> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }
