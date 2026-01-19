@@ -107,7 +107,8 @@ class _EditPostSheetState extends State<EditPostSheet> {
       final success = await CommunityService().editPost(widget.postId, finalContent);
       if (mounted) {
         if (success) {
-          Navigator.pop(context, true);
+          // Return the new content string to update local UI immediately
+          Navigator.pop(context, finalContent); 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Post muvaffaqiyatli saqlandi ✅")),
           );
