@@ -229,9 +229,6 @@ class CommunityService {
           isLiked: json['is_liked'] ?? false,
           isLikedByAuthor: json['is_liked_by_author'] ?? false,
           authorRole: json['author_role'] ?? "Talaba",
-        )).toList();
-          isLikedByAuthor: json['is_liked_by_author'] ?? false,
-          authorRole: json['author_role'] ?? "Talaba",
           replyToUserName: json['reply_to_username'],
           replyToContent: json['reply_to_content'],
         )).toList();
