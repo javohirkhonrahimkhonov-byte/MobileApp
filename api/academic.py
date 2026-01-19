@@ -336,7 +336,7 @@ async def send_resource_to_bot(
              final_name += ".pdf" # Default assumption or we could sniff mime
              
         input_file = BufferedInputFile(content, filename=final_name)
-        await bot.send_document(chat_id=student.telegram_id, document=input_file, caption=f"📄 {req.name}")
+        await bot.send_document(chat_id=chat_id, document=input_file, caption=f"📄 {req.name}")
         
         return {"success": True, "message": "Sent to Telegram!"}
     except Exception as e:
