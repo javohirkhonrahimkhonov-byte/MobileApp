@@ -160,7 +160,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppTheme.textBlack,
                   ),
                 ),
-                ),
                 Text(
                   "ID: ${student.hemisLogin}",
                   style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
