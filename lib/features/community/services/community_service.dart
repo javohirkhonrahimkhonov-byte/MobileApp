@@ -269,7 +269,7 @@ class CommunityService {
   Future<bool> likeComment(String commentId) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/community/comments/$commentId/like'),
+        Uri.parse('${ApiConstants.backendUrl}/community/comments/$commentId/like'),
         headers: await _getHeaders(),
       );
       
