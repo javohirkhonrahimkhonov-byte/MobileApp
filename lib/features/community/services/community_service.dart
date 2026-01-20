@@ -243,7 +243,7 @@ class CommunityService {
     }
   }
 
-  Future<void> createComment(String postId, String content, {String? replyToId}) async {
+  Future<Comment> createComment(String postId, String content, {String? replyToId}) async {
     try {
       final body = {
         'content': content,
@@ -258,7 +258,25 @@ class CommunityService {
         body: json.encode(body),
       );
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonMap = json.decode(response.body);
+        
+        // Map manually because it's a single object, not list
+        return Comment(
+          id: jsonMap['id'].toString(),
+          authorName: jsonMap['author_name'] ?? "Noma'lum",
+          authorAvatar: jsonMap['author_avatar'] ?? "",
+          content: jsonMap['content'] ?? "",
+          timeAgo: _formatDate(jsonMap['created_at']),
+          likes: jsonMap['likes_count'] ?? 0,
+          isLiked: jsonMap['is_liked'] ?? false,
+          isLikedByAuthor: jsonMap['is_liked_by_author'] ?? false,
+          authorRole: jsonMap['author_role'] ?? "Talaba",
+          replyToUserName: jsonMap['reply_to_username'],
+          replyToContent: jsonMap['reply_to_content'],
+          isMine: jsonMap['is_mine'] ?? true, // Created by me, so true
+        );
+      } else {
         throw Exception("Failed to create comment: ${response.statusCode}");
       }
     } catch (e) {

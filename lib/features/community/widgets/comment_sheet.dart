@@ -120,13 +120,26 @@ class _CommentSheetState extends State<CommentSheet> {
     setState(() => _replyingTo = null); // Clear reply state from UI
 
     try {
-      await _service.createComment(widget.post.id, content, replyToId: replyId);
+      // 1. Send to server and GET the real comment back
+      final realComment = await _service.createComment(widget.post.id, content, replyToId: replyId);
       
-      // Reload to get REAL comment with real ID/Name
-      await _loadComments();
+      // 2. Replace temporary comment with real one
+      setState(() {
+        final index = _comments.indexWhere((c) => c.id == "temp_$tempId");
+        if (index != -1) {
+          _comments[index] = realComment;
+        } else {
+          // If for some reason temp is gone, just append
+          _comments.add(realComment);
+        }
+      });
       
-      // Update parent counter
+      // 3. Update parent counter (using LOCAL count, not fetching)
       widget.onCommentCountChanged?.call(_comments.length);
+      
+      // 4. Do NOT call _loadComments() here. 
+      // This avoids the race condition where server returns stale list.
+      // We rely on the returned object being correct.
       
     } catch (e) {
       // Rollback on error
