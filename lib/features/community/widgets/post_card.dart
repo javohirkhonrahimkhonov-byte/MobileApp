@@ -282,7 +282,9 @@ class _PostCardState extends State<PostCard> {
                             // If username exists, show it
                             if (widget.post.authorUsername.isNotEmpty) ...[
                                Text(
-                                 "@${widget.post.authorUsername}",
+                                 widget.post.authorUsername.startsWith('@') 
+                                     ? widget.post.authorUsername 
+                                     : "@${widget.post.authorUsername}",
                                  style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
                                ),
                                const SizedBox(width: 6),
