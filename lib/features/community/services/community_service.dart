@@ -186,7 +186,7 @@ class CommunityService {
     return Post(
       id: json['id'].toString(),
       authorName: json['author_name'] ?? "Noma'lum",
-      authorUsername: "@student", // Placeholder
+      authorUsername: json['author_username'] ?? "",
       authorAvatar: "", // Placeholder
       authorRole: json['author_role'] ?? "Talaba",
       content: json['content'] ?? "",
