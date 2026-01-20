@@ -340,7 +340,7 @@ async def get_comments(
         selectinload(ChoyxonaComment.parent_comment).selectinload(ChoyxonaComment.student),
         selectinload(ChoyxonaComment.likes),
         selectinload(ChoyxonaComment.post)
-    ).where(ChoyxonaComment.post_id == post_id).order_by(ChoyxonaComment.created_at)
+    ).where(ChoyxonaComment.post_id == post_id).order_by(desc(ChoyxonaComment.likes_count), desc(ChoyxonaComment.created_at))
     
     result = await db.execute(query)
     comments = result.scalars().all()
