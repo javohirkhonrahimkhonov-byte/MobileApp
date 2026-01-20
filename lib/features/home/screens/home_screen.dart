@@ -15,6 +15,7 @@ import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.
 import '../../certificates/screens/certificates_screen.dart';
 import '../../clubs/screens/clubs_screen.dart';
 import '../../appeals/screens/appeals_screen.dart';
+import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
