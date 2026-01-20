@@ -147,7 +147,12 @@ class _CommentSheetState extends State<CommentSheet> {
                 ),
               ),
 
-              // 2. List
+              // 2. Main Post (Pinned)
+              _buildPostHeader(),
+
+              const Divider(height: 1, thickness: 1),
+
+              // 3. Comments List (Scrollable)
               Expanded(
                 child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -155,12 +160,9 @@ class _CommentSheetState extends State<CommentSheet> {
                     ? _buildEmptyState()
                     : ListView.builder(
                         controller: scrollController, // Important for drag behavior
-                        itemCount: _comments.length + 1, // +1 for Post Header
+                        itemCount: _comments.length,
                         padding: const EdgeInsets.only(bottom: 20),
-                        itemBuilder: (context, index) {
-                          if (index == 0) return _buildPostHeader();
-                          return _buildCommentItem(_comments[index - 1]);
-                        },
+                        itemBuilder: (context, index) => _buildCommentItem(_comments[index]),
                       ),
               ),
 
@@ -229,9 +231,6 @@ class _CommentSheetState extends State<CommentSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // If empty, STILL show header so user knows what they are commenting on
-          _buildPostHeader(), 
-          const SizedBox(height: 40),
           Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
