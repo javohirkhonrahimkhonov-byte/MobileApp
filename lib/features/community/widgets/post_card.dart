@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/role_mapper.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../screens/user_profile_screen.dart'; 
