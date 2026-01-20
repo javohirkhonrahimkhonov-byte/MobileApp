@@ -16,6 +16,7 @@ import '../../certificates/screens/certificates_screen.dart';
 import '../../clubs/screens/clubs_screen.dart';
 import '../../appeals/screens/appeals_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
+import 'package:talabahamkor_mobile/features/notifications/services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,9 +28,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final DataService _dataService = DataService();
+  final NotificationService _notificationService = NotificationService();
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _dashboard;
   bool _isLoading = true;
+  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -37,7 +40,13 @@ class _HomeScreenState extends State<HomeScreen> {
     // Use WidgetsBinding to avoid blocking the initial build frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
+      _checkNotifications();
     });
+  }
+
+  Future<void> _checkNotifications() async {
+    final count = await _notificationService.getUnreadCount();
+    if (mounted) setState(() => _unreadCount = count);
   }
 
   Future<void> _loadData() async {
@@ -192,19 +201,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.notifications_none_rounded, size: 28),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+                    onPressed: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                      _checkNotifications(); // Refresh count on return
+                    },
                   ),
-                  Positioned(
-                    right: 12,
-                    top: 12,
-                    child: IgnorePointer(
-                      child: Container(
-                        width: 8, 
-                        height: 8, 
-                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)
-                      ),
-                    )
-                  ),
+                  if (_unreadCount > 0)
+                    Positioned(
+                      right: 12,
+                      top: 12,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 8, 
+                          height: 8, 
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)
+                        ),
+                      )
+                    ),
                 ],
               ),
               IconButton(
