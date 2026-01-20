@@ -427,13 +427,13 @@ def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: i
     # Logic: is_liked_by_author = True if the POST OWNER liked this comment.
     # To do this, we need post_owner_id. Comment->Post->Student.
     # We should eager load Post to check this.
+    # Identify Author role or "Author Like"
+    # Logic: is_liked_by_author = True if the POST OWNER liked this comment.
     is_liked_by_author = False
-    if comment.post and comment.post.likes:
-         # Wait, Post.likes is PostLikes. We need CommentLikes where liker == PostOwner.
-         # This is complex to check efficiently for every comment without massive eager loading.
-         # Simplification: We check if ANY like in comment.likes has student_id == comment.post.student_id
-         if comment.post and comment.likes:
-             is_liked_by_author = any(l.student_id == comment.post.student_id for l in comment.likes)
+    
+    # Safely check if post exists and if we have likes on the comment
+    if comment.post and comment.likes:
+         is_liked_by_author = any(l.student_id == comment.post.student_id for l in comment.likes)
 
     return CommentResponseSchema(
         id=comment.id,
