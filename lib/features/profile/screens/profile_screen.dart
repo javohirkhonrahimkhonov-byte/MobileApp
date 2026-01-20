@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
   Future<void> _saveUsername() async {
-     final value = _usernameController.text.toLowerCase().trim();
+     final value = _usernameController.text.trim();
      if (value.length < 2 || value.length > 25) {
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username 2-25 belgi bo'lishi kerak")));
        return;
