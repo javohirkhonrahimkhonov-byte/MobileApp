@@ -155,9 +155,12 @@ class _CommentSheetState extends State<CommentSheet> {
                     ? _buildEmptyState()
                     : ListView.builder(
                         controller: scrollController, // Important for drag behavior
-                        itemCount: _comments.length,
+                        itemCount: _comments.length + 1, // +1 for Post Header
                         padding: const EdgeInsets.only(bottom: 20),
-                        itemBuilder: (context, index) => _buildCommentItem(_comments[index]),
+                        itemBuilder: (context, index) {
+                          if (index == 0) return _buildPostHeader();
+                          return _buildCommentItem(_comments[index - 1]);
+                        },
                       ),
               ),
 
@@ -173,11 +176,62 @@ class _CommentSheetState extends State<CommentSheet> {
     );
   }
 
+  Widget _buildPostHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!))
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
+            child: widget.post.authorAvatar.isEmpty ? Text(widget.post.authorName[0]) : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.post.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text(
+                  widget.post.content, 
+                  maxLines: 3, 
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, height: 1.3)
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.favorite, size: 14, color: Colors.grey[400]),
+                    const SizedBox(width: 4),
+                    Text("${widget.post.likes}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    const SizedBox(width: 12),
+                    Icon(Icons.remove_red_eye, size: 14, color: Colors.grey[400]),
+                    const SizedBox(width: 4),
+                    Text("Ko'rildi", style: TextStyle(fontSize: 12, color: Colors.grey[600])), // Mock view count
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // If empty, STILL show header so user knows what they are commenting on
+          _buildPostHeader(), 
+          const SizedBox(height: 40),
           Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
@@ -192,6 +246,7 @@ class _CommentSheetState extends State<CommentSheet> {
       ),
     );
   }
+
 
   Widget _buildReplyPreview() {
     return Container(
