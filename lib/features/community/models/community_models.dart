@@ -26,6 +26,7 @@ class Post {
   final String? targetSpecialtyId;
   final bool isMine;
   final bool isRepostedByMe;
+  final DateTime createdAt; // Added
 
   Post({
     required this.id,
@@ -34,7 +35,8 @@ class Post {
     required this.authorAvatar,
     required this.authorRole,
     required this.content,
-    this.timeAgo = "Hozirgina",
+    this.timeAgo = "Hozirgina", // Can be calculated from createdAt
+    required this.createdAt, // Added
     this.likes = 0,
     this.commentsCount = 0,
     this.sharesCount = 0,
@@ -63,7 +65,7 @@ class Post {
       content: json['content'],
       scope: json['category_type'],
       authorName: json['author_name'],
-      authorUsername: json['author_username'] ?? "", // Default empty if null
+      authorUsername: json['author_username'] ?? "",
       authorAvatar: json['author_avatar'] ?? "",
       authorRole: json['author_role'] ?? "Talaba",
       createdAt: DateTime.parse(json['created_at']),
@@ -73,7 +75,6 @@ class Post {
       isLiked: json['is_liked_by_me'] ?? false,
       isRepostedByMe: json['is_reposted_by_me'] ?? false,
       isMine: json['is_mine'] ?? false,
-      // Handle other fields like polls if needed
       targetUniversityId: json['target_university_id']?.toString(),
       targetFacultyId: json['target_faculty_id']?.toString(),
       targetSpecialtyId: json['target_specialty_name'],
@@ -108,6 +109,7 @@ class Post {
     String? targetSpecialtyId,
     bool? isMine,
     bool? isRepostedByMe,
+    DateTime? createdAt,
   }) {
     return Post(
       id: id ?? this.id,
@@ -117,6 +119,7 @@ class Post {
       authorRole: authorRole ?? this.authorRole,
       content: content ?? this.content,
       timeAgo: timeAgo ?? this.timeAgo,
+      createdAt: createdAt ?? this.createdAt,
       likes: likes ?? this.likes,
       commentsCount: commentsCount ?? this.commentsCount,
       sharesCount: sharesCount ?? this.sharesCount,
@@ -143,10 +146,12 @@ class Post {
 
 class Comment {
   final String id;
+  final String postId; // Added
   final String authorName;
   final String authorAvatar;
   final String content;
-  final String timeAgo; // RESTORED
+  final String timeAgo;
+  final DateTime createdAt; // Added
   final int likes;
   final bool isLiked;
   final bool isLikedByAuthor;
@@ -157,10 +162,12 @@ class Comment {
 
   Comment({
     required this.id,
+    required this.postId, // Added
     required this.authorName,
     this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
+    required this.createdAt, // Added
     this.likes = 0,
     this.isLiked = false,
     this.isLikedByAuthor = false,
@@ -173,27 +180,29 @@ class Comment {
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
       id: json['id'].toString(),
-      postId: json['post_id']?.toString() ?? "0", // if needed
+      postId: json['post_id']?.toString() ?? "0",
       content: json['content'],
       authorName: json['author_name'],
       authorAvatar: json['author_avatar'] ?? "",
-      authorRole: "Talaba", // Default
-      createdAt: DateTime.parse(json['created_at']), // Fix time parsing if needed
-      timeAgo: "Hozirgina", // formatting handled elsewhere or here
+      authorRole: "Talaba",
+      createdAt: DateTime.parse(json['created_at']),
+      timeAgo: "Hozirgina", 
       likes: json['likes_count'] ?? 0,
       isLiked: json['is_liked'] ?? false,
       isMine: json['is_mine'] ?? false,
       isLikedByAuthor: json['is_liked_by_author'] ?? false,
-      replyToUserName: json['reply_user'], // map reply_user name
+      replyToUserName: json['reply_user'],
     );
   }
 
   Comment copyWith({
     String? id,
+    String? postId,
     String? authorName,
     String? authorAvatar,
     String? content,
     String? timeAgo,
+    DateTime? createdAt,
     int? likes,
     bool? isLiked,
     bool? isLikedByAuthor,
@@ -204,10 +213,12 @@ class Comment {
   }) {
     return Comment(
       id: id ?? this.id,
+      postId: postId ?? this.postId,
       authorName: authorName ?? this.authorName,
       authorAvatar: authorAvatar ?? this.authorAvatar,
       content: content ?? this.content,
       timeAgo: timeAgo ?? this.timeAgo,
+      createdAt: createdAt ?? this.createdAt,
       likes: likes ?? this.likes,
       isLiked: isLiked ?? this.isLiked,
       isLikedByAuthor: isLikedByAuthor ?? this.isLikedByAuthor,
