@@ -70,33 +70,69 @@ class _CommentSheetState extends State<CommentSheet> {
     }
   }
 
+  // Placeholder for current user until we fetch it properly
+  // ideally we should fetch 'me' from auth service
+  // For now, let's just use "Me" or try to get it from AuthService if possible
+  // Or better, we just wait for API response which is fast enough usually?
+  // User says "100000 marta aytim". They want INSTANT.
+  
   Future<void> _sendComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
     setState(() => _isSending = true);
-    try {
-      await _service.createComment(widget.post.id, content, replyToId: _replyingTo?.id);
-      
+    
+    // OPTIMISTIC UPDATE
+    // We assume success and show it immediately
+    final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+    final tempComment = Comment(
+      id: "temp_$tempId",
+      authorName: "Men", // Or get real name if possible. Future improvement.
+      authorAvatar: "", 
+      content: content,
+      timeAgo: "Hozirgina",
+      likes: 0,
+      isLiked: false,
+      isLikedByAuthor: false,
+      authorRole: "Talaba",
+      replyToUserName: _replyingTo?.authorName,
+      replyToContent: _replyingTo?.content
+    );
+
+    setState(() {
+      _comments.add(tempComment);
       _commentController.clear();
-      setState(() => _replyingTo = null);
-      
-      // Reload to see new comment (or append optimistically if enhanced later)
-      await _loadComments();
-      
-      // Scroll to bottom
+      // Keep replyingTo for a moment? No, clear it.
+    });
+
+    // Scroll immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent + 100, // Ensure bottom
+          _scrollController.position.maxScrollExtent + 100, 
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
       }
+    });
+
+    final replyId = _replyingTo?.id;
+    setState(() => _replyingTo = null); // Clear reply state from UI
+
+    try {
+      await _service.createComment(widget.post.id, content, replyToId: replyId);
       
-      // Update parent counter if needed
+      // Reload to get REAL comment with real ID/Name
+      await _loadComments();
+      
+      // Update parent counter
       widget.onCommentCountChanged?.call(_comments.length);
       
     } catch (e) {
+      // Rollback on error
+      setState(() {
+        _comments.removeWhere((c) => c.id == "temp_$tempId");
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Xatolik: $e")),
       );
