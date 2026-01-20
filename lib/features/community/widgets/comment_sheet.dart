@@ -484,7 +484,7 @@ class _CommentSheetState extends State<CommentSheet> {
             ),
           ),
           
-          // Like
+          // Like & Delete
           Column(
             children: [
               InkWell(
@@ -497,10 +497,64 @@ class _CommentSheetState extends State<CommentSheet> {
               ),
               if (comment.likes > 0)
                 Text("${comment.likes}", style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                
+              if (comment.isMine) ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => _deleteComment(comment.id),
+                  child: Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: Colors.red[300],
+                  ),
+                ),
+              ]
             ],
           )
         ],
       ),
     );
+  }
+
+  void _deleteComment(String commentId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("O'chirish"),
+        content: const Text("Haqiqatan ham bu sharhni o'chirmoqchimisiz?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Yo'q")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text("Ha", style: TextStyle(color: Colors.red))
+          ),
+        ],
+      )
+    );
+    
+    if (confirm != true) return;
+
+    // Optimistic Delete
+    final deletedComment = _comments.firstWhere((c) => c.id == commentId);
+    setState(() {
+      _comments.removeWhere((c) => c.id == commentId);
+    });
+    widget.onCommentCountChanged?.call(_comments.length);
+
+    final success = await _service.deleteComment(commentId);
+    
+    if (!success) {
+      // Rollback
+      setState(() {
+         // This puts it at the end, sorting might be messed up but at least data is back
+         // Ideally we should reload
+        _comments.add(deletedComment);
+      });
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("O'chirishda xatolik bo'ldi")),
+        );
+      }
+    }
   }
 }

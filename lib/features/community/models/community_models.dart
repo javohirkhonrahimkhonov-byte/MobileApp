@@ -130,6 +130,7 @@ class Comment {
   final String? authorRole;
   final String? replyToUserName;
   final String? replyToContent;
+  final bool isMine;
 
   Comment({
     required this.id,
@@ -143,6 +144,7 @@ class Comment {
     this.authorRole,
     this.replyToUserName,
     this.replyToContent,
+    this.isMine = false,
   });
 
   Comment copyWith({
@@ -157,6 +159,7 @@ class Comment {
     String? authorRole,
     String? replyToUserName,
     String? replyToContent,
+    bool? isMine,
   }) {
     return Comment(
       id: id ?? this.id,
@@ -170,6 +173,7 @@ class Comment {
       authorRole: authorRole ?? this.authorRole,
       replyToUserName: replyToUserName ?? this.replyToUserName,
       replyToContent: replyToContent ?? this.replyToContent,
+      isMine: isMine ?? this.isMine,
     );
   }
 }

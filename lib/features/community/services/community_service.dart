@@ -231,6 +231,7 @@ class CommunityService {
           authorRole: json['author_role'] ?? "Talaba",
           replyToUserName: json['reply_to_username'],
           replyToContent: json['reply_to_content'],
+          isMine: json['is_mine'] ?? false,
         )).toList();
       } else {
         print("CommunityService: Failed to load comments: ${response.statusCode}");
@@ -279,6 +280,20 @@ class CommunityService {
       return false;
     } catch (e) {
       print("CommunityService: Error liking comment: $e");
+      return false;
+    }
+  }
+
+  Future<bool> deleteComment(String commentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.backendUrl}/community/comments/$commentId'),
+        headers: await _getHeaders(),
+      );
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print("CommunityService: Error deleting comment: $e");
       return false;
     }
   }
