@@ -285,7 +285,8 @@ class _PostCardState extends State<PostCard> {
                           runSpacing: 4,
                           children: [
                             // If username exists AND is not just 'student' (default), show it
-                            if (widget.post.authorUsername.isNotEmpty && widget.post.authorUsername.toLowerCase() != 'student') ...[
+                            if (widget.post.authorUsername.isNotEmpty 
+                                && widget.post.authorUsername.toLowerCase().replaceAll('@', '') != 'student') ...[
                                Text(
                                  widget.post.authorUsername.startsWith('@') 
                                      ? widget.post.authorUsername 

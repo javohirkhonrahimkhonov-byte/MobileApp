@@ -31,7 +31,7 @@ class Post {
   Post({
     required this.id,
     required this.authorName,
-    this.authorUsername = "@student",
+    this.authorUsername = "",
     required this.authorAvatar,
     required this.authorRole,
     required this.content,
