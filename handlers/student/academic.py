@@ -140,6 +140,7 @@ async def show_gpa(call: CallbackQuery, session: AsyncSession):
         return await call.answer("❌ Talaba ma'lumotlari topilmadi.", show_alert=True)
 
     token = account.student.hemis_token
+    await call.answer()
     await call.message.edit_text("⏳ GPA ma'lumotlari yuklanmoqda...", reply_markup=None)
 
     # Get GPA
@@ -167,6 +168,7 @@ async def show_grades(call: CallbackQuery, session: AsyncSession, state: FSMCont
     
     token = account.student.hemis_token
     student_login = account.student.hemis_login
+    await call.answer()
     try:
         await call.message.edit_text("⏳ Baholar yuklanmoqda...", reply_markup=None)
     except Exception:

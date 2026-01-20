@@ -7,7 +7,7 @@ from datetime import datetime
 
 from database.db_connect import get_db
 from database.models import StudentNotification
-from api.auth import get_current_student
+from api.dependencies import get_current_student
 
 router = APIRouter()
 
