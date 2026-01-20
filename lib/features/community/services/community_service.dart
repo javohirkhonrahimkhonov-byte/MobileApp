@@ -335,5 +335,17 @@ class CommunityService {
     await Future.delayed(const Duration(milliseconds: 300));
     return [];
   }
+  Future<Student?> getCurrentUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profileStr = prefs.getString('user_profile');
+      if (profileStr != null) {
+        return Student.fromJson(json.decode(profileStr));
+      }
+    } catch (e) {
+      print("Error getting cached user: $e");
+    }
+    return null;
+  }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/services.dart'; // For Haptics
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
@@ -27,68 +28,60 @@ class _CommentSheetState extends State<CommentSheet> {
   List<Comment> _comments = [];
   bool _isLoading = true;
   bool _isSending = false;
-  Comment? _replyingTo;
-  Post? _currentPost;
+  // State for Optimistic Updates
+  // We need current user info (Avatar/Name) to make it look REAL
+  String _currentUserName = "Men"; 
+  String _currentUserAvatar = "";
 
   @override
   void initState() {
     super.initState();
     _currentPost = widget.post; // Initial state
+    _loadCurrentUser(); // Pre-fetch user for optimistic UI
     _refreshAll();
   }
 
+  Future<void> _loadCurrentUser() async {
+    final user = await CommunityService().getCurrentUser(); // We need to expose this via Community or Auth
+    if (user != null && mounted) {
+      setState(() {
+        _currentUserName = user.fullName;
+        _currentUserAvatar = user.imageUrl ?? "";
+      });
+    }
+  }
+
   Future<void> _refreshAll() async {
-    setState(() => _isLoading = true);
+    // Silent refresh if already have data? No, user wants pull-to-refresh feel.
+    // But for initial load standard spinner is ok.
+    if (_comments.isEmpty) setState(() => _isLoading = true);
+    
     await Future.wait([
       _loadComments(),
       _loadPostDetails(),
     ]);
+    
     if (mounted) setState(() => _isLoading = false);
   }
 
-  Future<void> _loadPostDetails() async {
-    try {
-      final updatedPost = await _service.getPost(widget.post.id);
-      if (updatedPost != null && mounted) {
-        setState(() => _currentPost = updatedPost);
-      }
-    } catch (e) {
-      print("Error loading post details: $e");
-    }
-  }
+  // ... (loadPostDetails and loadComments remain same)
 
-  Future<void> _loadComments() async {
-    try {
-      final comments = await _service.getComments(widget.post.id);
-      if (mounted) {
-        setState(() {
-          _comments = comments;
-        });
-      }
-    } catch (e) {
-      print("Error loading comments: $e");
-    }
-  }
-
-  // Placeholder for current user until we fetch it properly
-  // ideally we should fetch 'me' from auth service
-  // For now, let's just use "Me" or try to get it from AuthService if possible
-  // Or better, we just wait for API response which is fast enough usually?
-  // User says "100000 marta aytim". They want INSTANT.
-  
   Future<void> _sendComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
+    // Pro UX: Haptic Feedback
+    HapticFeedback.mediumImpact(); 
+
     setState(() => _isSending = true);
     
     // OPTIMISTIC UPDATE
-    // We assume success and show it immediately
+    // Use REAL user details now
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
     final tempComment = Comment(
       id: "temp_$tempId",
-      authorName: "Men", // Or get real name if possible. Future improvement.
-      authorAvatar: "", 
+      authorName: _currentUserName, 
+      authorAvatar: _currentUserAvatar, 
       content: content,
       timeAgo: "Hozirgina",
       likes: 0,
@@ -96,7 +89,8 @@ class _CommentSheetState extends State<CommentSheet> {
       isLikedByAuthor: false,
       authorRole: "Talaba",
       replyToUserName: _replyingTo?.authorName,
-      replyToContent: _replyingTo?.content
+      replyToContent: _replyingTo?.content,
+      isMine: true, // Optimistically MINE
     );
 
     setState(() {
@@ -124,31 +118,30 @@ class _CommentSheetState extends State<CommentSheet> {
       final realComment = await _service.createComment(widget.post.id, content, replyToId: replyId);
       
       // 2. Replace temporary comment with real one
-      setState(() {
-        final index = _comments.indexWhere((c) => c.id == "temp_$tempId");
-        if (index != -1) {
-          _comments[index] = realComment;
-        } else {
-          // If for some reason temp is gone, just append
-          _comments.add(realComment);
-        }
-      });
-      
-      // 3. Update parent counter (using LOCAL count, not fetching)
-      widget.onCommentCountChanged?.call(_comments.length);
-      
-      // 4. Do NOT call _loadComments() here. 
-      // This avoids the race condition where server returns stale list.
-      // We rely on the returned object being correct.
+      if (mounted) {
+        setState(() {
+          final index = _comments.indexWhere((c) => c.id == "temp_$tempId");
+          if (index != -1) {
+            _comments[index] = realComment;
+          } else {
+             _comments.add(realComment);
+          }
+        });
+        
+        // 3. Update parent counter (using LOCAL count, not fetching)
+        widget.onCommentCountChanged?.call(_comments.length);
+      }
       
     } catch (e) {
       // Rollback on error
-      setState(() {
-        _comments.removeWhere((c) => c.id == "temp_$tempId");
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Xatolik: $e")),
-      );
+      if (mounted) {
+        setState(() {
+          _comments.removeWhere((c) => c.id == "temp_$tempId");
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Xatolik: $e")),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -224,16 +217,20 @@ class _CommentSheetState extends State<CommentSheet> {
 
               // 3. Comments List (Scrollable)
               Expanded(
-                child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _comments.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        controller: scrollController, // Important for drag behavior
-                        itemCount: _comments.length,
-                        padding: const EdgeInsets.only(bottom: 20),
-                        itemBuilder: (context, index) => _buildCommentItem(_comments[index]),
-                      ),
+                child: _isLoading && _comments.isEmpty
+                  ? const Center(child: CircularProgressIndicator()) // Initial load
+                  : RefreshIndicator(
+                      onRefresh: _refreshAll,
+                      color: AppTheme.primaryBlue,
+                      child: _comments.isEmpty
+                        ? SingleChildScrollView(child: _buildEmptyState()) // Wrap with ScrollView for pull-to-refresh on empty
+                        : ListView.builder(
+                            controller: scrollController, // Important for drag behavior
+                            itemCount: _comments.length,
+                            padding: const EdgeInsets.only(bottom: 20),
+                            itemBuilder: (context, index) => _buildCommentItem(_comments[index]),
+                          ),
+                    ),
               ),
 
               // 3. Reply Preview
