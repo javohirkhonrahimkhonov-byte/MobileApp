@@ -31,15 +31,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (value == current) return;
     
     setState(() => _isCheckingUsername = true);
-    final available = await Provider.of<AuthProvider>(context, listen: false).checkUsernameAvailability(value);
     
-    if (mounted) {
-      setState(() {
-        _isCheckingUsername = false;
-        if (!available) {
-           _usernameError = "Bu username allaqachon olingan";
-        }
-      });
+    try {
+      final available = await Provider.of<AuthProvider>(context, listen: false).checkUsernameAvailability(value);
+      
+      if (mounted) {
+        setState(() {
+          if (!available) {
+             _usernameError = "Bu username allaqachon olingan";
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+         setState(() {
+           _usernameError = "Tekshirishda xatolik";
+         });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingUsername = false);
+      }
     }
   }
 
@@ -167,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           decoration: InputDecoration(
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                            hintText: "username",
+                            hintText: "Foydalanuvchi nomi",
                             prefixText: "@",
                             prefixStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                             border: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue)),
