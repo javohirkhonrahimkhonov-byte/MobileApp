@@ -447,9 +447,45 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Widget _buildCommentItem(Comment comment) {
+    // Swipe to Delete (Only if Mine)
+    if (comment.isMine) {
+      return Dismissible(
+        key: Key(comment.id),
+        direction: DismissDirection.startToEnd, // Swipe Right -> "o'ng tomonga"
+        background: Container(
+          color: Colors.red[50],
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: const Icon(Icons.delete_outline, color: Colors.red),
+        ),
+        confirmDismiss: (direction) async {
+          return await showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text("O'chirish"),
+              content: const Text("Ushbu sharhni o'chirmoqchimisiz?"),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Yo'q")),
+                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Ha", style: TextStyle(color: Colors.red))),
+              ],
+            ),
+          );
+        },
+        onDismissed: (direction) {
+          _deleteComment(comment.id);
+        },
+        child: _buildCommentContent(comment),
+      );
+    } else {
+      return _buildCommentContent(comment);
+    }
+  }
+
+  Widget _buildCommentContent(Comment comment) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
+        color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey[100]!))
       ),
       child: Row(
@@ -458,11 +494,9 @@ class _CommentSheetState extends State<CommentSheet> {
           // Avatar
           GestureDetector(
             onTap: () {
-               // Optional: Close sheet if routing? Or keep? 
-               // For now, simple push
                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: comment.authorName,
-                  authorUsername: "@${comment.authorName}", // Should be username
+                  authorUsername: "@student",
                   authorAvatar: comment.authorAvatar,
                   authorRole: comment.authorRole ?? "Talaba",
                )));
@@ -472,21 +506,27 @@ class _CommentSheetState extends State<CommentSheet> {
               backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
               radius: 18,
               child: comment.authorAvatar.isEmpty 
-                ? Text(comment.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
                 : null,
             ),
           ),
           const SizedBox(width: 12),
           
+          // Main Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header: Name + Time
                 Row(
                   children: [
-                    Text(
-                      comment.authorName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    Flexible(
+                      child: Text(
+                        comment.authorName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Text(comment.timeAgo, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
@@ -499,79 +539,93 @@ class _CommentSheetState extends State<CommentSheet> {
                      margin: const EdgeInsets.symmetric(vertical: 6),
                      padding: const EdgeInsets.all(8),
                      decoration: BoxDecoration(
-                       color: const Color(0xFFF5F7FA),
-                       border: const Border(left: BorderSide(color: AppTheme.primaryBlue, width: 2)),
-                       borderRadius: BorderRadius.circular(4)
+                       color: Colors.grey[50],
+                       borderRadius: BorderRadius.circular(8),
+                       border: Border.all(color: Colors.grey[200]!)
                      ),
-                     child: Text(
-                       "${comment.replyToUserName}: ${comment.replyToContent ?? '...'}",
-                       style: TextStyle(color: Colors.grey[700], fontSize: 11),
-                       maxLines: 1, overflow: TextOverflow.ellipsis,
-                     ),
+                     child: IntrinsicHeight(
+                       child: Row(
+                         children: [
+                           Container(width: 2, color: AppTheme.primaryBlue),
+                           const SizedBox(width: 8),
+                           Expanded(
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Text(
+                                   comment.replyToUserName!, 
+                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)
+                                 ),
+                                 Text(
+                                   comment.replyToContent ?? "Izoh",
+                                   maxLines: 1,
+                                   overflow: TextOverflow.ellipsis,
+                                   style: TextStyle(fontSize: 11, color: Colors.grey[600])
+                                 ),
+                               ],
+                             ),
+                           )
+                         ],
+                       ),
+                     )
                    ),
 
                 const SizedBox(height: 4),
-                Text(comment.content, style: const TextStyle(fontSize: 14)),
+                Text(
+                  comment.content, 
+                  style: const TextStyle(fontSize: 13, height: 1.3)
+                ),
                 
                 const SizedBox(height: 8),
-                InkWell(
-                  onTap: () => setState(() => _replyingTo = comment),
-                  child: Text("Javob yozish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey[600])),
-                )
+                // Reply Button
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() {
+                      _replyingTo = comment;
+                    });
+                    // Focus input
+                    // We need a FocusNode to focus programmatically, but usually tapping the field is enough for now.
+                    // Or we can just scroll to bottom.
+                  },
+                  child: Text(
+                    "Javob yozish",
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ),
               ],
             ),
           ),
-          
-          // Like & Delete
-          Column(
-            children: [
-              InkWell(
-                onTap: () => _toggleCommentLike(comment.id),
-                child: Icon(
-                  comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                  size: 16,
-                  color: comment.isLiked ? Colors.red : Colors.grey[400],
-                ),
-              ),
-              if (comment.likes > 0)
-                Text("${comment.likes}", style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                
-              if (comment.isMine) ...[
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => _deleteComment(comment.id),
+
+          // Like Button (Right Side, Center Vertical-ish)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 8), // Small padding
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () => _toggleCommentLike(comment.id),
                   child: Icon(
-                    Icons.delete_outline,
-                    size: 16,
-                    color: Colors.red[300],
+                    comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                    size: 18,
+                    color: comment.isLiked ? Colors.red : Colors.grey[400],
                   ),
                 ),
-              ]
-            ],
-          )
+                const SizedBox(height: 2),
+                if (comment.likes > 0)
+                  Text(
+                    "${comment.likes}",
+                    style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   void _deleteComment(String commentId) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("O'chirish"),
-        content: const Text("Haqiqatan ham bu sharhni o'chirmoqchimisiz?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Yo'q")),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true), 
-            child: const Text("Ha", style: TextStyle(color: Colors.red))
-          ),
-        ],
-      )
-    );
-    
-    if (confirm != true) return;
-
     // Optimistic Delete
     final deletedComment = _comments.firstWhere((c) => c.id == commentId);
     setState(() {
