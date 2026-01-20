@@ -97,6 +97,20 @@ async def check_new_grades():
                         except Exception as e:
                             logger.error(f"Failed to notify {student.full_name}: {e}")
                     
+                    # Create Notification in DB for Mobile App
+                    try:
+                        notif_body = "\n".join(changes).replace("<b>", "").replace("</b>", "")
+                        new_notif = StudentNotification(
+                            student_id=student.id,
+                            title="⚡️ Yangi Baholar!",
+                            body=notif_body,
+                            type="grade",
+                            is_read=False
+                        )
+                        session.add(new_notif)
+                    except Exception as e:
+                        logger.error(f"Failed to create app notification: {e}")
+                    
                     # Update Cache in DB
                     if cache_entry:
                         cache_entry.data = fresh_subjects
