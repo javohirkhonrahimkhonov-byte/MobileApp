@@ -108,7 +108,7 @@ class _CommentSheetState extends State<CommentSheet> {
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
     final tempComment = Comment(
       id: "temp_$tempId",
-      postId: widget.postId,
+      postId: widget.post.id,
       authorName: _currentUserName, 
       authorAvatar: _currentUserAvatar, 
       content: content,
