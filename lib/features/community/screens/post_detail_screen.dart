@@ -415,10 +415,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                      size: 18, 
-                      color: comment.isLiked ? Colors.red : Colors.grey[500]
+                    child: Column(
+                      children: [
+                        Icon(
+                          comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                          size: 18, 
+                          color: comment.isLiked ? Colors.red : Colors.grey[500]
+                        ),
+                        if (comment.likes > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              "${comment.likes}", 
+                              style: TextStyle(fontSize: 10, color: comment.isLiked ? Colors.red : Colors.grey[600], fontWeight: FontWeight.bold)
+                            ),
+                          )
+                      ],
                     ),
                   ),
                 ),

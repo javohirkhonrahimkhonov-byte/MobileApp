@@ -144,6 +144,34 @@ class Comment {
     this.replyToUserName,
     this.replyToContent,
   });
+
+  Comment copyWith({
+    String? id,
+    String? authorName,
+    String? authorAvatar,
+    String? content,
+    String? timeAgo,
+    int? likes,
+    bool? isLiked,
+    bool? isLikedByAuthor,
+    String? authorRole,
+    String? replyToUserName,
+    String? replyToContent,
+  }) {
+    return Comment(
+      id: id ?? this.id,
+      authorName: authorName ?? this.authorName,
+      authorAvatar: authorAvatar ?? this.authorAvatar,
+      content: content ?? this.content,
+      timeAgo: timeAgo ?? this.timeAgo,
+      likes: likes ?? this.likes,
+      isLiked: isLiked ?? this.isLiked,
+      isLikedByAuthor: isLikedByAuthor ?? this.isLikedByAuthor,
+      authorRole: authorRole ?? this.authorRole,
+      replyToUserName: replyToUserName ?? this.replyToUserName,
+      replyToContent: replyToContent ?? this.replyToContent,
+    );
+  }
 }
 
 class Chat {

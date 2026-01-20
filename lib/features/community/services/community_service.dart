@@ -266,6 +266,23 @@ class CommunityService {
     }
   }
 
+  Future<bool> likeComment(String commentId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/community/comments/$commentId/like'),
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("CommunityService: Error liking comment: $e");
+      return false;
+    }
+  }
+
   Future<List<Chat>> getChats() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return [
