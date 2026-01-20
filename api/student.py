@@ -73,5 +73,54 @@ async def upload_profile_image(
                 "image_url": full_url
             }
         }
+        return {
+            "success": True,
+            "data": {
+                "image_url": full_url
+            }
+        }
     except Exception as e:
         return {"success": False, "message": f"Server xatosi: {str(e)}"}
+
+from api.schemas import UsernameUpdateSchema
+import re
+from fastapi import HTTPException
+
+@router.post("/username")
+async def set_username(
+    data: UsernameUpdateSchema,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """Set or update username"""
+    username = data.username.lower().strip()
+    
+    # Validation
+    if not (2 <= len(username) <= 25):
+        raise HTTPException(status_code=400, detail="Username 2 va 25 belgi oralig'ida bo'lishi kerak")
+        
+    if not re.match(r"^[a-z0-9_]+$", username):
+        raise HTTPException(status_code=400, detail="Username faqat lotin harflari, raqamlar va _ dan iborat bo'lishi mumkin")
+    
+    # Check uniqueness
+    existing = await db.scalar(select(Student).where(Student.username == username))
+    if existing and existing.id != student.id:
+        raise HTTPException(status_code=400, detail="Bu username allaqachon olingan")
+        
+    student.username = username
+    await db.commit()
+    
+    return {"success": True, "username": username}
+
+@router.get("/check-username")
+async def check_username_availability(
+    username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Check if username is available (True if available)"""
+    username = username.lower().strip()
+    if not username: 
+        return {"available": False}
+        
+    existing = await db.scalar(select(Student).where(Student.username == username))
+    return {"available": existing is None}

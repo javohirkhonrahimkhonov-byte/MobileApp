@@ -36,12 +36,16 @@ class StudentProfileSchema(BaseModel):
     district_name: Optional[str] = None
     accommodation_name: Optional[str] = None
     
-    is_registered_bot: bool = False # New Field
+    is_registered_bot: bool = False 
+    username: Optional[str] = None # New Field
     
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+class UsernameUpdateSchema(BaseModel):
+    username: str
 
 class ActivityImageSchema(BaseModel):
     file_id: str
