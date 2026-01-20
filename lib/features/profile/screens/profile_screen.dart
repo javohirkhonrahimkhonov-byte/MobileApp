@@ -6,8 +6,60 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
 import '../../../../core/services/data_service.dart'; // Ensure DataService is imported
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Username State
+  bool _isEditingUsername = false;
+  final TextEditingController _usernameController = TextEditingController();
+  String? _usernameError;
+  bool _isCheckingUsername = false;
+  bool _isSavingUsername = false;
+
+  void _onUsernameChanged(String value) async {
+    setState(() => _usernameError = null);
+    
+    if (value.length < 2) return;
+    
+    setState(() => _isCheckingUsername = true);
+    final available = await Provider.of<AuthProvider>(context, listen: false).checkUsernameAvailability(value);
+    
+    if (mounted) {
+      setState(() {
+        _isCheckingUsername = false;
+        if (!available) {
+           _usernameError = "Bu username allaqachon olingan";
+        }
+      });
+    }
+  }
+
+  Future<void> _saveUsername() async {
+     final value = _usernameController.text.toLowerCase().trim();
+     if (value.length < 2 || value.length > 25) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username 2-25 belgi bo'lishi kerak")));
+       return;
+     }
+     if (_usernameError != null) return;
+     
+     setState(() => _isSavingUsername = true);
+     final result = await Provider.of<AuthProvider>(context, listen: false).updateUsername(value);
+     setState(() => _isSavingUsername = false);
+     
+     if (result['success'] == true) {
+       setState(() {
+         _isEditingUsername = false;
+       });
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username saqlandi!")));
+     } else {
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? "Xatolik")));
+     }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +68,11 @@ class ProfileScreen extends StatelessWidget {
 
     if (student == null) {
       return const Center(child: Text("Ma'lumot topilmadi"));
+    }
+    
+    // Initialize controller only once if not editing or empty
+    if (!_isEditingUsername && _usernameController.text.isEmpty && student.username != null) {
+      _usernameController.text = student.username!;
     }
 
     return SingleChildScrollView(
@@ -51,12 +108,8 @@ class ProfileScreen extends StatelessWidget {
                               ? Image.network(
                                   student.imageUrl!, 
                                   fit: BoxFit.cover,
-                                  headers: const {
-                                    'User-Agent': 'Mozilla/5.0',
-                                  },
-                                  errorBuilder: (ctx, err, stack) {
-                                    return _buildInitials(student.fullName);
-                                  },
+                                  headers: const {'User-Agent': 'Mozilla/5.0'},
+                                  errorBuilder: (ctx, err, stack) => _buildInitials(student.fullName),
                                 )
                               : _buildInitials(student.fullName),
                         ),
@@ -88,12 +141,91 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 Text(
                   "ID: ${student.hemisLogin}",
-                  style: TextStyle(
-                    fontSize: 14, 
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
                 ),
+                
+                // --- USERNAME SECTION ---
+                const SizedBox(height: 12),
+                if (_isEditingUsername)
+                  Container(
+                    width: 220,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _usernameError != null ? Colors.red : AppTheme.primaryBlue.withOpacity(0.3))
+                    ),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _usernameController,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                          decoration: InputDecoration(
+                            hintText: "username",
+                            prefixText: "@",
+                            isDense: true,
+                            border: InputBorder.none,
+                            errorText: _usernameError,
+                            errorStyle: const TextStyle(color: Colors.red, fontSize: 11),
+                            suffixIcon: _isCheckingUsername 
+                              ? const SizedBox(width: 12, height: 12, child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2))) 
+                              : null
+                          ),
+                          onChanged: _onUsernameChanged,
+                        ),
+                        // Validation Error Below Border (Red) - Handled by InputDecoration.errorText or Custom
+                        // Using custom text for better control if needed, but errorText works well.
+                        
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () => setState(() => _isEditingUsername = false),
+                              child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            ),
+                            if (_isSavingUsername)
+                               const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                            else
+                               TextButton(
+                                 onPressed: _saveUsername,
+                                 child: const Text("Saqlash", style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
+                               )
+                          ],
+                        )
+                      ],
+                    ),
+                  )
+                else
+                  GestureDetector(
+                    onTap: () => setState(() => _isEditingUsername = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey[300]!)
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            student.username != null ? "@${student.username}" : "Username o'rnatish",
+                            style: TextStyle(
+                              color: student.username != null ? Colors.black87 : AppTheme.primaryBlue, 
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.edit, size: 14, color: Colors.grey[600])
+                        ],
+                      ),
+                    ),
+                  ),
+                // -----------------------
+
               ],
             ),
           ),

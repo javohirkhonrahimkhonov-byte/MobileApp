@@ -92,4 +92,22 @@ class AuthProvider with ChangeNotifier {
     
     notifyListeners();
   }
+  
+  // --- Username Methods ---
+  
+  Future<bool> checkUsernameAvailability(String username) async {
+    return await _authService.checkUsernameAvailability(username);
+  }
+  
+  Future<Map<String, dynamic>> updateUsername(String username) async {
+    final result = await _authService.setUsername(username);
+    if (result['success'] == true) {
+       // Update local state
+       if (_currentUser != null) {
+         _currentUser = _currentUser!.copyWith(username: username);
+         notifyListeners();
+       }
+    }
+    return result;
+  }
 }
