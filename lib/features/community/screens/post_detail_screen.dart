@@ -274,30 +274,34 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  void _toggleCommentLike(String commentId) {
+  void _toggleCommentLike(String commentId) async {
+    // 1. Optimistic Update
+    final index = _comments.indexWhere((c) => c.id == commentId);
+    if (index == -1) return;
+
+    final oldComment = _comments[index];
+    final bool newLiked = !oldComment.isLiked;
+    final int newCount = newLiked ? oldComment.likes + 1 : oldComment.likes - 1;
+
     setState(() {
-      final index = _comments.indexWhere((c) => c.id == commentId);
-      if (index != -1) {
-        final comment = _comments[index];
-        final newIsLiked = !comment.isLiked;
-        final newLikes = newIsLiked ? comment.likes + 1 : comment.likes - 1;
-        
-        _comments[index] = Comment(
-          id: comment.id,
-          authorName: comment.authorName,
-          authorAvatar: comment.authorAvatar,
-          content: comment.content,
-          timeAgo: comment.timeAgo,
-          likes: newLikes,
-          isLiked: newIsLiked,
-          isLikedByAuthor: comment.isLikedByAuthor, // Keep existing state
-          authorRole: comment.authorRole
-        );
-      }
+      _comments[index] = oldComment.copyWith(
+        isLiked: newLiked,
+        likes: newCount
+      );
     });
 
-    // API Call (Fire & Forget)
-    // _service.likeComment(commentId);
+    // 2. API Call
+    final success = await _service.likeComment(commentId);
+    
+    // 3. Rollback if failed
+    if (!success) {
+      if (mounted) {
+         setState(() {
+           _comments[index] = oldComment; // Revert
+         });
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik: Like saqlanmadi")));
+      }
+    }
   }
 
   Widget _buildCommentItem(Comment comment) {
