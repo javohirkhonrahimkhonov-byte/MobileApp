@@ -247,40 +247,52 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Text(
-                            widget.post.authorName, 
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                          ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.post.authorName, 
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (widget.post.isVerified)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Icon(Icons.verified, color: Colors.blue, size: 16),
+                              ),
+                            if (widget.post.isTyutor)
+                               Container(
+                                 margin: const EdgeInsets.only(left: 4),
+                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                 decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
+                                 child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
+                               ),
+                          ],
                         ),
-                        if (widget.post.isVerified)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 4),
-                            child: Icon(Icons.verified, color: Colors.blue, size: 16),
-                          ),
-                        if (widget.post.isTyutor)
-                           Container(
-                             margin: const EdgeInsets.only(left: 4),
-                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                             decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
-                             child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
-                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(
-                          widget.post.authorRole,
-                          style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                        ),
+                        // Username or Role Line
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            // If username exists, show it
+                            if (widget.post.authorUsername.isNotEmpty) ...[
+                               Text(
+                                 "@${widget.post.authorUsername}",
+                                 style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
+                               ),
+                               const SizedBox(width: 6),
+                               const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                               const SizedBox(width: 6),
+                            ],
+                            
+                            Text(
+                              widget.post.authorRole,
+                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            ),
                         const SizedBox(width: 8),
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),

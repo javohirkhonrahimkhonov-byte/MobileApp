@@ -57,6 +57,29 @@ class Post {
     this.isRepostedByMe = false,
   });
 
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      id: json['id'].toString(),
+      content: json['content'],
+      scope: json['category_type'],
+      authorName: json['author_name'],
+      authorUsername: json['author_username'] ?? "", // Default empty if null
+      authorAvatar: json['author_avatar'] ?? "",
+      authorRole: json['author_role'] ?? "Talaba",
+      createdAt: DateTime.parse(json['created_at']),
+      likes: json['likes_count'] ?? 0,
+      commentsCount: json['comments_count'] ?? 0,
+      repostsCount: json['reposts_count'] ?? 0,
+      isLiked: json['is_liked_by_me'] ?? false,
+      isRepostedByMe: json['is_reposted_by_me'] ?? false,
+      isMine: json['is_mine'] ?? false,
+      // Handle other fields like polls if needed
+      targetUniversityId: json['target_university_id']?.toString(),
+      targetFacultyId: json['target_faculty_id']?.toString(),
+      targetSpecialtyId: json['target_specialty_name'],
+    );
+  }
+
   Post copyWith({
     String? id,
     String? authorName,
@@ -146,6 +169,24 @@ class Comment {
     this.replyToContent,
     this.isMine = false,
   });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      id: json['id'].toString(),
+      postId: json['post_id']?.toString() ?? "0", // if needed
+      content: json['content'],
+      authorName: json['author_name'],
+      authorAvatar: json['author_avatar'] ?? "",
+      authorRole: "Talaba", // Default
+      createdAt: DateTime.parse(json['created_at']), // Fix time parsing if needed
+      timeAgo: "Hozirgina", // formatting handled elsewhere or here
+      likes: json['likes_count'] ?? 0,
+      isLiked: json['is_liked'] ?? false,
+      isMine: json['is_mine'] ?? false,
+      isLikedByAuthor: json['is_liked_by_author'] ?? false,
+      replyToUserName: json['reply_user'], // map reply_user name
+    );
+  }
 
   Comment copyWith({
     String? id,
