@@ -6,3 +6,14 @@ __pycache__/
 nohup.out
 uploads/
 *.log
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+android/.gradle
+.idea/
+*.iml
