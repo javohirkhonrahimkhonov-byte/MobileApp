@@ -378,6 +378,37 @@ async def toggle_comment_like(
     
     return {"status": "success", "liked": liked, "count": comment.likes_count}
 
+@router.delete("/comments/{comment_id}")
+async def delete_comment(
+    comment_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    from database.models import ChoyxonaComment
+    comment = await db.get(ChoyxonaComment, comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Komment topilmadi")
+    
+    # Allow deletion if:
+    # 1. User is the author of the comment
+    # 2. User is the author of the POST (admin of thread)
+    # But user requirement says: "User faqat o'z kommentini o'chira... olsin"
+    # So we strictly check comment author.
+    
+    if comment.student_id != student.id:
+        raise HTTPException(status_code=403, detail="Siz faqat o'zingizning kommentingizni o'chira olasiz")
+        
+    await db.delete(comment)
+    
+    # Decrement Post comment count (Optional but good for consistency)
+    if comment.post_id:
+        post = await db.get(ChoyxonaPost, comment.post_id)
+        if post:
+            post.comments_count = max(0, post.comments_count - 1)
+
+    await db.commit()
+    return {"status": "success", "message": "Komment o'chirildi"}
+
 def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: int):
     from api.schemas import CommentResponseSchema
     
@@ -417,6 +448,8 @@ def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: i
         is_liked_by_author=is_liked_by_author,
         author_role="Talaba", # Placeholder
         
+        is_mine=(comment.student_id == current_user_id),
+
         reply_to_username=reply_user,
         reply_to_content=reply_content
     )

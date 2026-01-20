@@ -167,5 +167,7 @@ class CommentResponseSchema(BaseModel):
     reply_to_username: Optional[str] = None
     reply_to_content: Optional[str] = None
     
+    is_mine: bool = False
+    
     class Config:
         from_attributes = True
