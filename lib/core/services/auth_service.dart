@@ -85,7 +85,7 @@ class AuthService {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'Avtorizatsiya yo\'q'};
       
-      final url = Uri.parse("${ApiConstants.baseUrl}/student/username");
+      final url = Uri.parse("${ApiConstants.backendUrl}/student/username");
       final response = await http.post(
         url,
         headers: {
@@ -119,7 +119,7 @@ class AuthService {
       final token = await getToken();
       if (token == null) return false;
       
-      final url = Uri.parse("${ApiConstants.baseUrl}/student/check-username?username=$username");
+      final url = Uri.parse("${ApiConstants.backendUrl}/student/check-username?username=$username");
       final response = await http.get(
         url,
         headers: {
