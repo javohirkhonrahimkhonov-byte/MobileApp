@@ -1,0 +1,108 @@
+import 'package:flutter/material.dart';
+import '../services/community_service.dart';
+import '../../../../core/models/student.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../screens/user_profile_screen.dart';
+
+class UserSearchDelegate extends SearchDelegate {
+  final CommunityService _service = CommunityService();
+
+  @override
+  String get searchFieldLabel => "Talabalarni qidirish...";
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            query = '';
+            showSuggestions(context);
+          },
+        ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildSearchList();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    if (query.length < 2) {
+       return Container(
+         color: Colors.white,
+         child: const Center(
+           child: Column(
+             mainAxisAlignment: MainAxisAlignment.center,
+             children: [
+               Icon(Icons.search, size: 64, color: Colors.grey),
+               SizedBox(height: 16),
+               Text("Username yoki ism kiriting\n(kamida 2 ta harf)", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+             ],
+           ),
+         ),
+       );
+    }
+    return _buildSearchList();
+  }
+
+  Widget _buildSearchList() {
+    return FutureBuilder<List<Student>>(
+      future: _service.searchStudents(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+           return const Center(child: Text("Xatolik yuz berdi"));
+        }
+        
+        final students = snapshot.data ?? [];
+        
+        if (students.isEmpty) {
+          return const Center(child: Text("Hech kim topilmadi"));
+        }
+
+        return ListView.builder(
+          itemCount: students.length,
+          itemBuilder: (context, index) {
+            final student = students[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundImage: student.imageUrl != null && student.imageUrl!.isNotEmpty
+                    ? NetworkImage(student.imageUrl!)
+                    : null,
+                child: (student.imageUrl == null || student.imageUrl!.isEmpty)
+                    ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
+                    : null,
+              ),
+              title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text("@${student.username ?? 'usernamesiz'}", style: TextStyle(color: Colors.grey[600])),
+              onTap: () {
+                // Navigate to Profile
+                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                  authorName: student.fullName,
+                  authorUsername: student.username ?? "",
+                  authorAvatar: student.imageUrl ?? "",
+                  authorRole: "Talaba" // Default role
+                )));
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}

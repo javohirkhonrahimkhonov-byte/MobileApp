@@ -7,6 +7,7 @@ import '../widgets/post_card.dart';
 import '../widgets/shimmer_post.dart';
 import '../screens/create_post_screen.dart';
 import 'chat_list_screen.dart';
+import '../widgets/user_search_delegate.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -152,7 +153,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           actions: [
             IconButton(
               icon: const Icon(Icons.search, color: Colors.black),
-              onPressed: () {},
+              onPressed: () {
+                showSearch(context: context, delegate: UserSearchDelegate());
+              },
             ),
             IconButton(
               icon: Stack(

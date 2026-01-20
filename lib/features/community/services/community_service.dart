@@ -27,6 +27,24 @@ class CommunityService {
     };
   }
 
+  Future<List<Student>> searchStudents(String query) async {
+    try {
+      if (query.length < 2) return [];
+      
+      final url = Uri.parse('${ApiConstants.baseUrl}/student/search?query=$query');
+      final response = await http.get(url, headers: await _getHeaders());
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Student.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Error searching students: $e");
+      return [];
+    }
+  }
+
   Future<void> createPost(Post post) async {
     try {
       final response = await http.post(
