@@ -277,27 +277,32 @@ class _PostCardState extends State<PostCard> {
                         ),
                         // Username or Role Line
                         const SizedBox(height: 2),
-                        Row(
+                        // Username or Role Line
+                        const SizedBox(height: 2),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          runSpacing: 4,
                           children: [
-                            // If username exists, show it
-                            if (widget.post.authorUsername.isNotEmpty) ...[
+                            // If username exists AND is not just 'student' (default), show it
+                            if (widget.post.authorUsername.isNotEmpty && widget.post.authorUsername.toLowerCase() != 'student') ...[
                                Text(
                                  widget.post.authorUsername.startsWith('@') 
                                      ? widget.post.authorUsername 
                                      : "@${widget.post.authorUsername}",
                                  style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
                                ),
-                               const SizedBox(width: 6),
                                const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                               const SizedBox(width: 6),
                             ],
                             
                             Text(
                               RoleMapper.getLabel(widget.post.authorRole),
                               style: TextStyle(color: Colors.grey[600], fontSize: 13),
                             ),
-                        const SizedBox(width: 8),
-                         Container(
+                            
+                             const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                            
+                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                            decoration: BoxDecoration(
                              color: _getCategoryColor(widget.post.scope ?? 'university').withOpacity(0.1),
@@ -309,13 +314,13 @@ class _PostCardState extends State<PostCard> {
                              style: TextStyle(color: _getCategoryColor(widget.post.scope ?? 'university'), fontSize: 10, fontWeight: FontWeight.bold),
                            ),
                          ),
-                        const SizedBox(width: 4),
+                        
                         Text(
                           "• ${widget.post.timeAgo}",
                           style: TextStyle(color: Colors.grey[400], fontSize: 13),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
