@@ -96,19 +96,43 @@ async def set_username(
     username = data.username.lower().strip()
     
     # Validation
-    if not (2 <= len(username) <= 25):
-        raise HTTPException(status_code=400, detail="Username 2 va 25 belgi oralig'ida bo'lishi kerak")
+    if not (5 <= len(username) <= 32):
+        raise HTTPException(status_code=400, detail="Username kamida 5 ta harfdan iborat bo'lishi kerak")
         
-    if not re.match(r"^[a-z0-9_]+$", username):
-        raise HTTPException(status_code=400, detail="Username faqat lotin harflari, raqamlar va _ dan iborat bo'lishi mumkin")
+    if not re.match(r"^[a-z][a-z0-9_]*$", username):
+        raise HTTPException(status_code=400, detail="Username faqat lotin harflari, raqamlar va _ dan iborat bo'lishi va harf bilan boshlanishi kerak")
     
-    # Check uniqueness
-    existing = await db.scalar(select(Student).where(Student.username == username))
-    if existing and existing.id != student.id:
-        raise HTTPException(status_code=400, detail="Bu username allaqachon olingan")
-        
+    # Check uniqueness in TakenUsername table
+    from database.models import TakenUsername
+    
+    # Check if this exact username is taken by someone else
+    existing = await db.scalar(select(TakenUsername).where(TakenUsername.username == username))
+    
+    if existing:
+        if existing.student_id != student.id:
+            raise HTTPException(status_code=400, detail="Bu username allaqachon olingan")
+        else:
+            # Already mine, just return success (idempotent)
+            return {"success": True, "username": username}
+            
+    # If I had an old username, remove it from TakenUsername to free it up
+    if student.username and student.username != username:
+        old_taken = await db.scalar(select(TakenUsername).where(TakenUsername.username == student.username))
+        if old_taken:
+            await db.delete(old_taken)
+            
+    # Insert new
+    new_taken = TakenUsername(username=username, student_id=student.id)
+    db.add(new_taken)
+    
+    # Update Student record
     student.username = username
-    await db.commit()
+    
+    try:
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Xatolik: {str(e)}")
     
     return {"success": True, "username": username}
 
@@ -122,5 +146,38 @@ async def check_username_availability(
     if not username: 
         return {"available": False}
         
-    existing = await db.scalar(select(Student).where(Student.username == username))
+    from database.models import TakenUsername
+    existing = await db.scalar(select(TakenUsername).where(TakenUsername.username == username))
+    
     return {"available": existing is None}
+
+from sqlalchemy import or_
+
+@router.get("/search")
+async def search_students(
+    query: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Search students by username or name"""
+    query = query.strip()
+    if len(query) < 2:
+        return []
+        
+    if query.startswith("@"):
+        query = query[1:]
+        
+    search_term = f"%{query}%"
+    
+    # Priority: Username match > Name match
+    # We can just fetch all matches
+    stmt = select(Student).where(
+        or_(
+            Student.username.ilike(search_term),
+            Student.full_name.ilike(search_term)
+        )
+    ).limit(20)
+    
+    result = await db.execute(stmt)
+    students = result.scalars().all()
+    
+    return [StudentProfileSchema.model_validate(s).model_dump() for s in students]

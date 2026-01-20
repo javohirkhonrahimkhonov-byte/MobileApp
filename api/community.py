@@ -129,6 +129,8 @@ def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
         content=post.content,
         category_type=post.category_type,
         author_name=author.full_name if author else "Unknown",
+        author_username=author.username if author else None,
+        author_avatar=author.image_url,
         author_role="Talaba", 
         created_at=post.created_at,
         target_university_id=post.target_university_id,
@@ -440,6 +442,7 @@ def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: i
         post_id=comment.post_id,
         content=comment.content,
         author_name=author.full_name if author else "Noma'lum",
+        author_username=author.username if author else None,
         author_avatar=author.image_url, 
         created_at=comment.created_at,
         

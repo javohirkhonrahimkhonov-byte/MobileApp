@@ -128,6 +128,8 @@ class PostResponseSchema(BaseModel):
     content: str
     category_type: str
     author_name: str
+    author_username: Optional[str] = None # NEW
+    author_avatar: Optional[str] = None   # NEW
     author_role: str
     created_at: datetime
     

@@ -237,6 +237,8 @@ class Student(Base):
     accommodation_name: Mapped[str | None] = mapped_column(String(128), nullable=True) # Ijaradagi uyda
     
     missed_hours: Mapped[int] = mapped_column(Integer, default=0) # New Field
+    username: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True) # Unique Username
+    hemis_role: Mapped[str | None] = mapped_column(String(50), nullable=True) # HEMIS role code (e.g. 'student', 'teacher')
     
     # --- AI Context ---
     ai_context: Mapped[str | None] = mapped_column(Text, nullable=True) # Summarized info for AI
@@ -258,6 +260,8 @@ class Student(Base):
     documents: Mapped[list["UserDocument"]] = relationship(
         "UserDocument", back_populates="student", cascade="all, delete-orphan"
     )
+
+
     certificates: Mapped[list["UserCertificate"]] = relationship(
         "UserCertificate", back_populates="student", cascade="all, delete-orphan"
     )
@@ -271,6 +275,17 @@ class Student(Base):
     def __repr__(self):
         return f"<Student {self.full_name}>"
 
+
+
+class TakenUsername(Base):
+    __tablename__ = "taken_usernames"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    
+    student: Mapped["Student"] = relationship("Student")
 
 # ============================================================
 # TELEGRAM ACCOUNT
