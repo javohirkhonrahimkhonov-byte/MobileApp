@@ -108,10 +108,12 @@ class _CommentSheetState extends State<CommentSheet> {
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
     final tempComment = Comment(
       id: "temp_$tempId",
+      postId: widget.postId,
       authorName: _currentUserName, 
       authorAvatar: _currentUserAvatar, 
       content: content,
       timeAgo: "Hozirgina",
+      createdAt: DateTime.now(),
       likes: 0,
       isLiked: false,
       isLikedByAuthor: false,

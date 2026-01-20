@@ -194,7 +194,8 @@ class CommunityService {
       scope: json['category_type'],
       targetUniversityId: json['target_university_id']?.toString(),
       targetFacultyId: json['target_faculty_id']?.toString(),
-      targetSpecialtyId: json['target_specialty_name'], // Mapping name to ID field as per backend logic
+      targetSpecialtyId: json['target_specialty_name'], 
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
       
       likes: json['likes_count'] ?? 0,
       isLiked: json['is_liked_by_me'] ?? false,
@@ -240,12 +241,16 @@ class CommunityService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Comment(
+        return data.map((json) {
+          final createdAtStr = json['created_at'];
+          return Comment(
           id: json['id'].toString(),
+          postId: postId,
           authorName: json['author_name'] ?? "Talaba",
           authorAvatar: json['author_avatar'] ?? "",
           content: json['content'] ?? "",
-          timeAgo: _formatDate(json['created_at']),
+          timeAgo: _formatDate(createdAtStr),
+          createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
           likes: json['likes_count'] ?? 0,
           isLiked: json['is_liked'] ?? false,
           isLikedByAuthor: json['is_liked_by_author'] ?? false,
@@ -253,7 +258,8 @@ class CommunityService {
           replyToUserName: json['reply_to_username'],
           replyToContent: json['reply_to_content'],
           isMine: json['is_mine'] ?? false,
-        )).toList();
+        );
+        }).toList();
       } else {
         print("CommunityService: Failed to load comments: ${response.statusCode}");
         return [];
@@ -283,12 +289,15 @@ class CommunityService {
         final jsonMap = json.decode(response.body);
         
         // Map manually because it's a single object, not list
+        final createdAtStr = jsonMap['created_at'];
         return Comment(
           id: jsonMap['id'].toString(),
+          postId: postId,
           authorName: jsonMap['author_name'] ?? "Noma'lum",
           authorAvatar: jsonMap['author_avatar'] ?? "",
           content: jsonMap['content'] ?? "",
-          timeAgo: _formatDate(jsonMap['created_at']),
+          timeAgo: _formatDate(createdAtStr),
+          createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
           likes: jsonMap['likes_count'] ?? 0,
           isLiked: jsonMap['is_liked'] ?? false,
           isLikedByAuthor: jsonMap['is_liked_by_author'] ?? false,

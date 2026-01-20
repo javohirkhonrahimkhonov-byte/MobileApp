@@ -62,6 +62,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       authorRole: _selectedScope == 'specialty' ? "Guruhdoshingiz" : "Talaba",
       content: title.isNotEmpty ? "$title\n\n$content" : content,
       timeAgo: "Hozirgina",
+      createdAt: DateTime.now(),
       scope: _selectedScope,
       // Poll logic if needed
       pollOptions: _isPoll ? _pollControllers.map((c) => c.text).where((t) => t.isNotEmpty).toList() : null,
