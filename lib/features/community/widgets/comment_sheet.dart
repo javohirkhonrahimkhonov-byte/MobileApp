@@ -32,6 +32,10 @@ class _CommentSheetState extends State<CommentSheet> {
   // We need current user info (Avatar/Name) to make it look REAL
   String _currentUserName = "Men"; 
   String _currentUserAvatar = "";
+  
+  // Variables needed for logic
+  Comment? _replyingTo;
+  Post? _currentPost;
 
   @override
   void initState() {
@@ -62,6 +66,30 @@ class _CommentSheetState extends State<CommentSheet> {
     ]);
     
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadPostDetails() async {
+    try {
+      final updatedPost = await _service.getPost(widget.post.id);
+      if (updatedPost != null && mounted) {
+        setState(() => _currentPost = updatedPost);
+      }
+    } catch (e) {
+      print("Error loading post details: $e");
+    }
+  }
+
+  Future<void> _loadComments() async {
+    try {
+      final comments = await _service.getComments(widget.post.id);
+      if (mounted) {
+        setState(() {
+          _comments = comments;
+        });
+      }
+    } catch (e) {
+      print("Error loading comments: $e");
+    }
   }
 
   // ... (loadPostDetails and loadComments remain same)
