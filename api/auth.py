@@ -17,10 +17,10 @@ async def login_via_hemis(
     db: AsyncSession = Depends(get_session)
 ):
     # 1. AUTHENTICATE
-    token = await HemisService.authenticate(creds.login, creds.password)
+    token, error = await HemisService.authenticate(creds.login, creds.password)
     
     if not token:
-        raise HTTPException(status_code=401, detail="Login yoki parol noto'g'ri")
+        raise HTTPException(status_code=401, detail=error or "Login yoki parol noto'g'ri")
         
     # 2. GET PROFILE
     me = await HemisService.get_me(token)

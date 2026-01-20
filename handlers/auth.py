@@ -18,6 +18,7 @@ from keyboards.inline_kb import (
 )
 from models.states import AuthStates
 from services.hemis_service import HemisService
+from services.grade_checker import send_welcome_report
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -629,6 +630,9 @@ async def process_hemis_password(message: Message, state: FSMContext, session: A
         reply_markup=get_student_main_menu_kb(led_clubs=led_clubs),
         parse_mode="HTML"
     )
+    
+    # Send Welcome Grade Report
+    await send_welcome_report(student.id)
 
 
 # =====================================================================
@@ -804,3 +808,6 @@ async def process_phone(message: Message, state: FSMContext, session: AsyncSessi
             reply_markup=get_student_main_menu_kb(led_clubs=led_clubs),
             parse_mode="HTML"
         )
+        
+        # Send Welcome Grade Report
+        await send_welcome_report(student_id)

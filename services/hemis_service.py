@@ -19,7 +19,7 @@ class HemisService:
 
     @staticmethod
     async def authenticate(login: str, password: str):
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             # --- TEST CREDENTIALS ---
             if login == "test_tutor" and password == "123":
                 return "test_token_tutor", None
@@ -33,6 +33,8 @@ class HemisService:
                     timeout=15
                 )
                 
+                # logger.info(f"Auth Response ({response.status_code}): {response.text[:200]}") # Debug Log
+
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("success") is False:
@@ -41,14 +43,18 @@ class HemisService:
                     token = data.get("data", {}).get("token") or data.get("token")
                     return token, None
                 elif response.status_code == 401:
-                     return None, "Login yoki parol noto'g'ri"
+                     try:
+                         data = response.json()
+                         return None, data.get("error", "Login yoki parol noto'g'ri")
+                     except:
+                         return None, "Login yoki parol noto'g'ri"
                 elif response.status_code == 404:
                      return None, "Bunday foydalanuvchi topilmadi"
                 else:
                      return None, f"Server xatosi: {response.status_code}"
             except Exception as e:
                 logger.error(f"Auth Error: {e}")
-                return None, "Tarmoq xatoligi"
+                return None, "Tarmoq xatoligi (SSL/Timeout)"
 
     @staticmethod
     async def get_me(token: str):
@@ -67,7 +73,7 @@ class HemisService:
             }
         # ------------------------
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
@@ -89,14 +95,29 @@ class HemisService:
     async def get_student_absence(token: str, semester_code: str = None, student_id: int = None):
         # Simplified Cache Logic
         key = f"attendance_{semester_code}" if semester_code else "attendance_all"
+        
+        def calculate_totals(data):
+            total, excused, unexcused = 0, 0, 0
+            for item in data:
+                hour = item.get("hour", 2)
+                total += hour
+                status_code = str(item.get("absent_status", {}).get("code", "12"))
+                if status_code == "11": 
+                    excused += hour
+                else: 
+                    unexcused += hour
+            return total, excused, unexcused
+
         if student_id:
             try:
                 async with AsyncSessionLocal() as session:
                     cache = await session.scalar(select(StudentCache).where(StudentCache.student_id == student_id, StudentCache.key == key))
-                    if cache: return 0, 0, 0, cache.data # Return cached items if valid
+                    if cache: 
+                        t, e, u = calculate_totals(cache.data)
+                        return t, e, u, cache.data
             except: pass
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
@@ -108,7 +129,8 @@ class HemisService:
                 )
                 if response.status_code == 200:
                     data = response.json().get("data", [])
-                    return 0, 0, 0, data # Simplified return
+                    t, e, u = calculate_totals(data)
+                    return t, e, u, data
                 return 0, 0, 0, []
             except: return 0, 0, 0, []
 
@@ -122,7 +144,7 @@ class HemisService:
                     if cache: return cache.data
             except: pass
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
@@ -149,7 +171,7 @@ class HemisService:
                     if cache: return cache.data
             except: pass
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
@@ -238,7 +260,7 @@ class HemisService:
 
     @staticmethod
     async def get_student_resources(token: str, subject_id: str, semester_code: str = None):
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"
@@ -261,7 +283,7 @@ class HemisService:
 
     @staticmethod
     async def download_resource_file(token: str, url: str):
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             try:
                 headers = HemisService.HEADERS.copy()
                 headers["Authorization"] = f"Bearer {token}"

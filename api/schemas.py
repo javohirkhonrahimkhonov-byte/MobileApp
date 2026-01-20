@@ -147,13 +147,25 @@ class PostResponseSchema(BaseModel):
 
 class CommentCreateSchema(BaseModel):
     content: str
+    reply_to_comment_id: Optional[int] = None
 
 class CommentResponseSchema(BaseModel):
     id: int
     post_id: int
     content: str
     author_name: str
+    author_avatar: Optional[str] = None
     created_at: datetime
+    
+    # New Fields for Frontend UI
+    likes_count: int = 0
+    is_liked: bool = False
+    is_liked_by_author: bool = False
+    author_role: str = "Talaba"
+    
+    # Reply info
+    reply_to_username: Optional[str] = None
+    reply_to_content: Optional[str] = None
     
     class Config:
         from_attributes = True

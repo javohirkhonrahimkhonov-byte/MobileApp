@@ -264,6 +264,9 @@ class Student(Base):
     feedbacks: Mapped[list["StudentFeedback"]] = relationship(
         "StudentFeedback", back_populates="student", cascade="all, delete-orphan"
     )
+    notifications: Mapped[list["StudentNotification"]] = relationship(
+        "StudentNotification", back_populates="student", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Student {self.full_name}>"
@@ -751,14 +754,34 @@ class ChoyxonaComment(Base):
     student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    reply_to_comment_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("choyxona_comments.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+    
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
     post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="comments")
     student: Mapped["Student"] = relationship("Student")
+    parent_comment: Mapped["ChoyxonaComment"] = relationship("ChoyxonaComment", remote_side=[id], backref="replies")
+    likes: Mapped[list["ChoyxonaCommentLike"]] = relationship("ChoyxonaCommentLike", back_populates="comment", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Comment {self.id} on Post {self.post_id}>"
+
+
+class ChoyxonaCommentLike(Base):
+    __tablename__ = "choyxona_comment_likes"
+    __table_args__ = (UniqueConstraint('comment_id', 'student_id', name='_user_comment_like_uc'),)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    comment_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_comments.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    
+    comment: Mapped["ChoyxonaComment"] = relationship("ChoyxonaComment", back_populates="likes")
+
+    def __repr__(self):
+        return f"<ChoyxonaCommentLike {self.id} on Comment {self.comment_id}>"
 
 
 class ChoyxonaPostLike(Base):
@@ -827,3 +850,26 @@ class MarketItem(Base):
 
     def __repr__(self):
         return f"<MarketItem {self.id} {self.title}>"
+
+
+# ============================================================
+# NOTIFICATIONS
+# ============================================================
+
+class StudentNotification(Base):
+    __tablename__ = "student_notifications"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[str] = mapped_column(String(50), default="info") # 'grade', 'info', 'alert'
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+    
+    student: Mapped["Student"] = relationship("Student", back_populates="notifications")
+
+    def __repr__(self):
+        return f"<Notification {self.id} for {self.student_id}>"

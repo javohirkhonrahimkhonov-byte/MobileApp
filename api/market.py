@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from sqlalchemy.orm import joinedload
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
@@ -41,7 +42,6 @@ class MarketItemResponse(BaseModel):
 # --- Endpoints ---
 
 @router.get("", response_model=List[MarketItemResponse])
-@router.get("", response_model=List[MarketItemResponse])
 async def get_market_items(
     cat: Optional[MarketCategory] = None,
     sort: str = "newest", # newest, popular, oldest
@@ -51,7 +51,7 @@ async def get_market_items(
     student: Student = Depends(get_current_student),
     db: AsyncSession = Depends(get_session)
 ):
-    stmt = select(MarketItem).where(MarketItem.is_active == True)
+    stmt = select(MarketItem).options(joinedload(MarketItem.student)).where(MarketItem.is_active == True)
     
     # Sorting Logic
     if sort == "popular":
@@ -74,9 +74,6 @@ async def get_market_items(
     
     resp_list = []
     for item in items:
-        # Fetch student name efficiently? 
-        # Ideally eager load, but for now lazy loading is okay for 50 items
-        # Or join in query.
         resp_list.append(MarketItemResponse(
             id=item.id,
             title=item.title,
@@ -87,7 +84,7 @@ async def get_market_items(
             views_count=item.views_count,
             created_at=item.created_at,
             is_my=(item.student_id == student.id),
-            student_name=item.student.full_name, # Accessing relationship
+            student_name=item.student.full_name, # Accessing relationship safe now
             contact_phone=item.contact_phone or item.student.phone,
             telegram_username=item.telegram_username
         ))

@@ -171,7 +171,15 @@ async def update_post(
     student: Student = Depends(get_current_student),
     db: AsyncSession = Depends(get_db)
 ):
-    post = await db.get(ChoyxonaPost, post_id)
+    # Eager load relationships to prevent 500 error during mapping
+    query = select(ChoyxonaPost).options(
+        selectinload(ChoyxonaPost.likes),
+        selectinload(ChoyxonaPost.reposts)
+    ).where(ChoyxonaPost.id == post_id)
+    
+    result = await db.execute(query)
+    post = result.scalar_one_or_none()
+    
     if not post:
         raise HTTPException(status_code=404, detail="Post topilmadi")
         
@@ -290,15 +298,26 @@ async def create_comment(
     new_comment = ChoyxonaComment(
         post_id=post_id,
         student_id=student.id,
-        content=data.content
+        content=data.content,
+        reply_to_comment_id=data.reply_to_comment_id
     )
     
     db.add(new_comment)
-    post.comments_count += 1 # Increment comment count
+    post.comments_count += 1 
     await db.commit()
     await db.refresh(new_comment)
     
-    return _map_comment(new_comment, student)
+    # Reload to get parent if needed
+    if new_comment.reply_to_comment_id:
+        query = select(ChoyxonaComment).options(
+            selectinload(ChoyxonaComment.parent_comment).selectinload(ChoyxonaComment.student),
+            selectinload(ChoyxonaComment.student),
+            selectinload(ChoyxonaComment.post) # For author check
+        ).where(ChoyxonaComment.id == new_comment.id)
+        res = await db.execute(query)
+        new_comment = res.scalar_one()
+
+    return _map_comment(new_comment, student, student.id)
 
 @router.get("/posts/{post_id}/comments", response_model=List[CommentResponseSchema])
 async def get_comments(
@@ -310,26 +329,94 @@ async def get_comments(
     Get comments for a post.
     """
     from database.models import ChoyxonaComment
-    # No strict access check needed for READ if we assume anyone who can see the post can see comments
-    # But technically we should check context again. 
-    # For now, minimal check:
+    
     post = await db.get(ChoyxonaPost, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post topilmadi")
 
-    # Eager load student
-    query = select(ChoyxonaComment).options(selectinload(ChoyxonaComment.student)).where(ChoyxonaComment.post_id == post_id).order_by(ChoyxonaComment.created_at)
+    # Eager load student, parent, likes, and post (for owner check)
+    query = select(ChoyxonaComment).options(
+        selectinload(ChoyxonaComment.student),
+        selectinload(ChoyxonaComment.parent_comment).selectinload(ChoyxonaComment.student),
+        selectinload(ChoyxonaComment.likes),
+        selectinload(ChoyxonaComment.post)
+    ).where(ChoyxonaComment.post_id == post_id).order_by(ChoyxonaComment.created_at)
+    
     result = await db.execute(query)
     comments = result.scalars().all()
     
-    return [_map_comment(c, c.student) for c in comments]
+    return [_map_comment(c, c.student, student.id) for c in comments]
 
-def _map_comment(comment: "ChoyxonaComment", author: Student):
+@router.post("/comments/{comment_id}/like")
+async def toggle_comment_like(
+    comment_id: int,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    from database.models import ChoyxonaComment, ChoyxonaCommentLike
+    comment = await db.get(ChoyxonaComment, comment_id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Komment topilmadi")
+
+    existing_like = await db.scalar(select(ChoyxonaCommentLike).where(ChoyxonaCommentLike.comment_id == comment_id, ChoyxonaCommentLike.student_id == student.id))
+    
+    if existing_like:
+        await db.delete(existing_like)
+        # Atomic Decrement
+        comment.likes_count = ChoyxonaComment.likes_count - 1
+        liked = False
+    else:
+        new_like = ChoyxonaCommentLike(comment_id=comment_id, student_id=student.id)
+        db.add(new_like)
+        # Atomic Increment
+        comment.likes_count = ChoyxonaComment.likes_count + 1
+        liked = True
+
+    await db.commit()
+    # Refresh to get the actual integer value after SQL update
+    await db.refresh(comment)
+    
+    return {"status": "success", "liked": liked, "count": comment.likes_count}
+
+def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: int):
     from api.schemas import CommentResponseSchema
+    
+    reply_user = None
+    reply_content = None
+    
+    if comment.parent_comment:
+        reply_user = comment.parent_comment.student.full_name if comment.parent_comment.student else "Noma'lum"
+        reply_content = comment.parent_comment.content
+
+    # Determine if liked by me
+    # If loaded eagerly:
+    is_liked = any(l.student_id == current_user_id for l in comment.likes) if comment.likes else False
+    
+    # Identify Author role or "Author Like"
+    # Logic: is_liked_by_author = True if the POST OWNER liked this comment.
+    # To do this, we need post_owner_id. Comment->Post->Student.
+    # We should eager load Post to check this.
+    is_liked_by_author = False
+    if comment.post and comment.post.likes:
+         # Wait, Post.likes is PostLikes. We need CommentLikes where liker == PostOwner.
+         # This is complex to check efficiently for every comment without massive eager loading.
+         # Simplification: We check if ANY like in comment.likes has student_id == comment.post.student_id
+         if comment.post and comment.likes:
+             is_liked_by_author = any(l.student_id == comment.post.student_id for l in comment.likes)
+
     return CommentResponseSchema(
         id=comment.id,
         post_id=comment.post_id,
         content=comment.content,
         author_name=author.full_name if author else "Noma'lum",
-        created_at=comment.created_at
+        author_avatar=author.image_url, 
+        created_at=comment.created_at,
+        
+        likes_count=comment.likes_count,
+        is_liked=is_liked,
+        is_liked_by_author=is_liked_by_author,
+        author_role="Talaba", # Placeholder
+        
+        reply_to_username=reply_user,
+        reply_to_content=reply_content
     )
