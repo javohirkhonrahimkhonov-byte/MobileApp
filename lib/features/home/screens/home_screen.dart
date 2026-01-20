@@ -190,8 +190,19 @@ class _HomeScreenState extends State<HomeScreen> {
               const Spacer(),
               Stack(
                 children: [
-                  IconButton(icon: const Icon(Icons.notifications_none_rounded, size: 28), onPressed: () {}),
-                  Positioned(right: 12, top: 12, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, size: 28),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+                  ),
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: Container(
+                      width: 8, 
+                      height: 8, 
+                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)
+                    )
+                  ),
                 ],
               ),
               IconButton(

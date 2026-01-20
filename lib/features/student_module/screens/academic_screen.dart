@@ -146,6 +146,8 @@ class _AcademicScreenState extends State<AcademicScreen> {
     );
   }
 
+  bool _navigationLock = false;
+
   Widget _buildMenuItem(BuildContext context, String title, IconData icon, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -175,27 +177,31 @@ class _AcademicScreenState extends State<AcademicScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
-        onTap: () {
-          if (title == "Davomat") {
-             Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceScreen()));
-             return;
-          }
-          if (title == "Dars Jadvali") {
-             Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
-             return;
-          }
-          if (title == "O'zlashtirish") { 
-             Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
-             return;
-          }
-          if (title == "Fanlar va resurslar") {
-             Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()));
-             return;
-          }
+        onTap: () async {
+          if (_navigationLock) return;
           
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("$title bo'limi tez orada ishga tushadi")),
-          );
+          setState(() => _navigationLock = true);
+          
+          try {
+            if (title == "Davomat") {
+               await Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceScreen()));
+            } else if (title == "Dars Jadvali") {
+               await Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen()));
+            } else if (title == "O'zlashtirish") { 
+               await Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
+            } else if (title == "Fanlar va resurslar") {
+               await Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()));
+            } else {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text("$title bo'limi tez orada ishga tushadi")),
+               );
+            }
+          } finally {
+            // Ensure lock is released even if navigation fails or returns
+            if (mounted) {
+               setState(() => _navigationLock = false);
+            }
+          }
         },
       ),
     );
