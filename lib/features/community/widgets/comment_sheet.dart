@@ -446,14 +446,32 @@ class _CommentSheetState extends State<CommentSheet> {
     );
   }
 
+  String _getShortName(String fullName) {
+    // "RAHIMXONOV JAVOHIRXON ..." -> "Javohirxon"
+    final parts = fullName.trim().split(' ');
+    if (parts.length >= 2) {
+      // Return 2nd word (First Name assuming Surname First format)
+      // Capitalize first letter, lower others for nicer look?
+      // User input seems to be ALL CAPS. Let's fix that too eventually, but for now just take the word.
+      return parts[1];
+    }
+    return parts.isNotEmpty ? parts[0] : "Talaba";
+  }
+
   Widget _buildCommentItem(Comment comment) {
-    // Swipe to Delete (Only if Mine)
+    // Indentation for replies (Visual Threading)
+    // "t tab surilib"
+    final double indent = comment.replyToUserName != null ? 32.0 : 0.0;
+    
+    final content = _buildCommentContent(comment);
+
     if (comment.isMine) {
       return Dismissible(
         key: Key(comment.id),
-        direction: DismissDirection.startToEnd, // Swipe Right -> "o'ng tomonga"
+        direction: DismissDirection.startToEnd,
         background: Container(
           color: Colors.red[50],
+          margin: EdgeInsets.only(left: indent), // Indent background too
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: const Icon(Icons.delete_outline, color: Colors.red),
@@ -474,10 +492,16 @@ class _CommentSheetState extends State<CommentSheet> {
         onDismissed: (direction) {
           _deleteComment(comment.id);
         },
-        child: _buildCommentContent(comment),
+        child: Padding(
+          padding: EdgeInsets.only(left: indent),
+          child: content
+        ),
       );
     } else {
-      return _buildCommentContent(comment);
+      return Padding(
+        padding: EdgeInsets.only(left: indent),
+        child: content
+      );
     }
   }
 
@@ -512,111 +536,97 @@ class _CommentSheetState extends State<CommentSheet> {
           ),
           const SizedBox(width: 12),
           
-          // Main Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header: Name + Time
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        comment.authorName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(comment.timeAgo, style: TextStyle(color: Colors.grey[400], fontSize: 11)),
-                  ],
+                // 1. Name (Shortened)
+                Text(
+                  _getShortName(comment.authorName),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 
-                // Quote Block
+                // 2. Reply Context (Telegram Style)
                 if (comment.replyToUserName != null)
                    Container(
-                     margin: const EdgeInsets.symmetric(vertical: 6),
-                     padding: const EdgeInsets.all(8),
-                     decoration: BoxDecoration(
-                       color: Colors.grey[50],
-                       borderRadius: BorderRadius.circular(8),
-                       border: Border.all(color: Colors.grey[200]!)
+                     margin: const EdgeInsets.only(top: 4, bottom: 4),
+                     padding: const EdgeInsets.only(left: 8),
+                     decoration: const BoxDecoration(
+                       border: Border(left: BorderSide(color: AppTheme.primaryBlue, width: 2))
                      ),
-                     child: IntrinsicHeight(
-                       child: Row(
-                         children: [
-                           Container(width: 2, color: AppTheme.primaryBlue),
-                           const SizedBox(width: 8),
-                           Expanded(
-                             child: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 Text(
-                                   comment.replyToUserName!, 
-                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)
-                                 ),
-                                 Text(
-                                   comment.replyToContent ?? "Izoh",
-                                   maxLines: 1,
-                                   overflow: TextOverflow.ellipsis,
-                                   style: TextStyle(fontSize: 11, color: Colors.grey[600])
-                                 ),
-                               ],
-                             ),
-                           )
-                         ],
-                       ),
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Text(
+                           comment.replyToUserName!, 
+                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)
+                         ),
+                         Text(
+                           comment.replyToContent ?? "...",
+                           maxLines: 1,
+                           overflow: TextOverflow.ellipsis,
+                           style: TextStyle(fontSize: 11, color: Colors.grey[600])
+                         ),
+                       ],
                      )
                    ),
 
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
+                
+                // 3. Main Comment Content
                 Text(
                   comment.content, 
-                  style: const TextStyle(fontSize: 13, height: 1.3)
+                  style: const TextStyle(fontSize: 13, height: 1.3, color: Colors.black87)
                 ),
                 
                 const SizedBox(height: 8),
-                // Reply Button
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    setState(() {
-                      _replyingTo = comment;
-                    });
-                    // Focus input
-                    // We need a FocusNode to focus programmatically, but usually tapping the field is enough for now.
-                    // Or we can just scroll to bottom.
-                  },
-                  child: Text(
-                    "Javob yozish",
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // Like Button (Right Side, Center Vertical-ish)
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8), // Small padding
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () => _toggleCommentLike(comment.id),
-                  child: Icon(
-                    comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                    size: 18,
-                    color: comment.isLiked ? Colors.red : Colors.grey[400],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                if (comment.likes > 0)
-                  Text(
-                    "${comment.likes}",
-                    style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-                  ),
+                // 4. Action Row (Time, Reply, Likes)
+                Row(
+                  children: [
+                    // Time
+                    Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                    
+                    const SizedBox(width: 16),
+                    
+                    // Reply Button
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() {
+                          _replyingTo = comment;
+                        });
+                      },
+                      child: Text(
+                        "Javob berish", // YouTube style
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Like Count & Icon
+                    GestureDetector(
+                      onTap: () => _toggleCommentLike(comment.id),
+                      child: Row(
+                        children: [
+                           Icon(
+                            comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
+                            color: comment.isLiked ? Colors.red : Colors.grey[600],
+                          ),
+                          if (comment.likes > 0) ...[
+                             const SizedBox(width: 4),
+                             Text(
+                               "${comment.likes}",
+                               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                             ),
+                          ]
+                        ],
+                      ),
+                    ),
+                  ],
+                )
               ],
             ),
           ),
