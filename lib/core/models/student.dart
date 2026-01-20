@@ -10,6 +10,7 @@ class Student {
   final String? imageUrl;
   final String? username; // New field
   final int missedHours;
+  final String? role;
 
   Student({
     required this.id,
@@ -23,6 +24,7 @@ class Student {
     this.imageUrl,
     this.username,
     this.missedHours = 0,
+    this.role,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {

@@ -4,6 +4,7 @@ import '../../../../core/services/auth_service.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
+import '../../../../core/utils/role_mapper.dart'; // Import Mapper
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
@@ -198,7 +199,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       color: AppTheme.primaryBlue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4)
                     ),
-                    child: Text(widget.authorRole, style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text(RoleMapper.getLabel(widget.authorRole), style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                    
                   // Username Section (Only if Me)

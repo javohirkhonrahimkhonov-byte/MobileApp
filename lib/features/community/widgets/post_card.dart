@@ -290,7 +290,7 @@ class _PostCardState extends State<PostCard> {
                             ],
                             
                             Text(
-                              widget.post.authorRole,
+                              RoleMapper.getLabel(widget.post.authorRole),
                               style: TextStyle(color: Colors.grey[600], fontSize: 13),
                             ),
                         const SizedBox(width: 8),

@@ -5,6 +5,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
 import '../../../../core/services/data_service.dart'; // Ensure DataService is imported
+import '../../../../core/utils/role_mapper.dart'; // Import Mapper
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -159,9 +160,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppTheme.textBlack,
                   ),
                 ),
+                ),
                 Text(
                   "ID: ${student.hemisLogin}",
                   style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey[300]!)
+                  ),
+                  child: Text(
+                    RoleMapper.getLabel(student.role),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.bold),
+                  ),
                 ),
                 
                 // --- USERNAME SECTION ---
