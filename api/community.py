@@ -452,7 +452,6 @@ def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: i
         likes_count=comment.likes_count,
         is_liked=is_liked,
         is_liked_by_author=is_liked_by_author,
-        author_role="Talaba", # Placeholder
         
         is_mine=(comment.student_id == current_user_id),
 
