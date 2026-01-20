@@ -120,6 +120,7 @@ async def get_posts(
     return [_map_post(p, p.student, student.id) for p in posts]
 
 def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
+    from utils.role_mapper import get_role_label
     # Use stored counts
     is_liked = any(l.student_id == current_user_id for l in post.likes) if post.likes else False
     is_reposted = any(r.student_id == current_user_id for r in post.reposts) if post.reposts else False
@@ -131,7 +132,7 @@ def _map_post(post: ChoyxonaPost, author: Student, current_user_id: int):
         author_name=author.full_name if author else "Unknown",
         author_username=author.username if author else None,
         author_avatar=author.image_url,
-        author_role="Talaba", 
+        author_role=get_role_label(author.hemis_role) if author else "Talaba", 
         created_at=post.created_at,
         target_university_id=post.target_university_id,
         target_faculty_id=post.target_faculty_id,
@@ -413,6 +414,7 @@ async def delete_comment(
 
 def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: int):
     from api.schemas import CommentResponseSchema
+    from utils.role_mapper import get_role_label
     
     reply_user = None
     reply_content = None
@@ -444,6 +446,7 @@ def _map_comment(comment: "ChoyxonaComment", author: Student, current_user_id: i
         author_name=author.full_name if author else "Noma'lum",
         author_username=author.username if author else None,
         author_avatar=author.image_url, 
+        author_role=get_role_label(author.hemis_role) if author else "Talaba",
         created_at=comment.created_at,
         
         likes_count=comment.likes_count,
