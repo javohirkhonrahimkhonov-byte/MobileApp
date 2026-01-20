@@ -35,17 +35,45 @@ class _CommentSheetState extends State<CommentSheet> {
     _loadComments();
   }
 
+  Post? _currentPost;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPost = widget.post; // Initial state
+    _refreshAll();
+  }
+
+  Future<void> _refreshAll() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _loadComments(),
+      _loadPostDetails(),
+    ]);
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadPostDetails() async {
+    try {
+      final updatedPost = await _service.getPost(widget.post.id);
+      if (updatedPost != null && mounted) {
+        setState(() => _currentPost = updatedPost);
+      }
+    } catch (e) {
+      print("Error loading post details: $e");
+    }
+  }
+
   Future<void> _loadComments() async {
     try {
       final comments = await _service.getComments(widget.post.id);
       if (mounted) {
         setState(() {
           _comments = comments;
-          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      print("Error loading comments: $e");
     }
   }
 
@@ -179,6 +207,8 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Widget _buildPostHeader() {
+    final post = _currentPost ?? widget.post;
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -190,18 +220,18 @@ class _CommentSheetState extends State<CommentSheet> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: widget.post.authorAvatar.isNotEmpty ? NetworkImage(widget.post.authorAvatar) : null,
-            child: widget.post.authorAvatar.isEmpty ? Text(widget.post.authorName[0]) : null,
+            backgroundImage: post.authorAvatar.isNotEmpty ? NetworkImage(post.authorAvatar) : null,
+            child: post.authorAvatar.isEmpty ? Text(post.authorName[0]) : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.post.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
                 Text(
-                  widget.post.content, 
+                  post.content, 
                   maxLines: 3, 
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13, height: 1.3)
@@ -209,13 +239,17 @@ class _CommentSheetState extends State<CommentSheet> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.favorite, size: 14, color: Colors.grey[400]),
+                    Icon(
+                      post.isLiked ? Icons.favorite : Icons.favorite_border, 
+                      size: 14, 
+                      color: post.isLiked ? Colors.red : Colors.grey[400]
+                    ),
                     const SizedBox(width: 4),
-                    Text("${widget.post.likes}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    Text("${post.likes}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                     const SizedBox(width: 12),
                     Icon(Icons.remove_red_eye, size: 14, color: Colors.grey[400]),
                     const SizedBox(width: 4),
-                    Text("Ko'rildi", style: TextStyle(fontSize: 12, color: Colors.grey[600])), // Mock view count
+                    Text("Ko'rildi", style: TextStyle(fontSize: 12, color: Colors.grey[600])), 
                   ],
                 )
               ],
