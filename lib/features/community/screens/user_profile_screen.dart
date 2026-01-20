@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/auth_service.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
@@ -29,10 +30,79 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoading = true;
   List<Post> _posts = [];
 
+  bool _isMe = false;
+  
+  // Username Editing State
+  bool _isEditingUsername = false;
+  TextEditingController _usernameController = TextEditingController();
+  String? _usernameError;
+  bool _isCheckingUsername = false;
+  String? _currentUsername;
+
   @override
   void initState() {
     super.initState();
     _loadUserPosts();
+    _checkIfMe();
+  }
+  
+  Future<void> _checkIfMe() async {
+    final me = await AuthService().getSavedUser();
+    if (me != null && mounted) {
+      if (me.full_name == widget.authorName) { // Fallback check by name as we don't pass ID to widget
+        setState(() {
+          _isMe = true;
+          _currentUsername = me.username;
+          _usernameController.text = me.username ?? "";
+        });
+      }
+    }
+  }
+  
+  void _onUsernameChanged(String value) async {
+    // Debounce or immediate check?
+    // Let's do simple check first.
+    setState(() => _usernameError = null);
+    
+    if (value.length < 2) {
+       return; // Wait for more chars
+    }
+    
+    setState(() => _isCheckingUsername = true);
+    final available = await AuthService().checkUsernameAvailability(value);
+    
+    if (mounted) {
+      setState(() {
+        _isCheckingUsername = false;
+        if (!available && value != _currentUsername) {
+           _usernameError = "Bu username allaqachon olingan";
+        }
+      });
+    }
+  }
+  
+  Future<void> _saveUsername() async {
+     final value = _usernameController.text.trim();
+     if (value.length < 2 || value.length > 25) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username 2-25 belgi bo'lishi kerak")));
+       return;
+     }
+     
+     if (_usernameError != null) return;
+     
+     setState(() => _isLoading = true);
+     final result = await AuthService().setUsername(value);
+     setState(() => _isLoading = false);
+     
+     if (result['success'] == true) {
+       setState(() {
+         _currentUsername = result['username'];
+         _isEditingUsername = false;
+       });
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username saqlandi!")));
+     } else {
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? "Xatolik")));
+     }
   }
 
   Future<void> _loadUserPosts() async {
@@ -113,32 +183,106 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                          : null,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  
-                  // Centered & Split Name
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        Text(
-                          line1.toUpperCase(), 
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                        ),
-                        if (line2.isNotEmpty)
-                          Text(
-                            line2.toUpperCase(), 
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                          ),
-                      ],
+                  const SizedBox(height: 16),
+                   
+                  // Name
+                  Text(line1, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  if (line2.isNotEmpty)
+                    Text(line2, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                   
+                  const SizedBox(height: 4),
+                  // Role
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4)
                     ),
+                    child: Text(widget.authorRole, style: const TextStyle(color: AppTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
-                  
-                  const SizedBox(height: 8),
-                  Text(widget.authorRole, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                  
-                  const SizedBox(height: 24),
+                   
+                  // Username Section (Only if Me)
+                  if (_isMe) ...[
+                     const SizedBox(height: 16),
+                     if (_isEditingUsername)
+                        SizedBox( // Changed from Container to SizedBox for width constraint
+                          width: 200,
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _usernameController,
+                                textAlign: TextAlign.center,
+                                decoration: InputDecoration(
+                                  prefixText: "@",
+                                  hintText: "username",
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                                  border: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: _usernameError != null ? Colors.red : AppTheme.primaryBlue)
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: _usernameError != null ? Colors.red : AppTheme.primaryBlue, width: 2)
+                                  ),
+                                ),
+                                onChanged: _onUsernameChanged,
+                              ),
+                              if (_usernameError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    _usernameError!,
+                                    style: const TextStyle(color: Colors.red, fontSize: 11),
+                                  ),
+                                ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => setState(() => _isEditingUsername = false),
+                                    child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey, fontSize: 12))
+                                  ),
+                                  TextButton(
+                                    onPressed: _saveUsername,
+                                    child: const Text("Saqlash", style: TextStyle(color: AppTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold))
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
+                        )
+                     else
+                        GestureDetector(
+                          onTap: () {
+                             if (_currentUsername == null) {
+                                setState(() => _isEditingUsername = true);
+                             }
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _currentUsername != null ? "@$_currentUsername" : "Username o'rnatish",
+                                style: TextStyle(
+                                  color: _currentUsername != null ? Colors.black54 : AppTheme.primaryBlue,
+                                  fontSize: 14,
+                                  fontWeight: _currentUsername != null ? FontWeight.normal : FontWeight.bold
+                                ),
+                              ),
+                              if (_currentUsername != null)
+                                IconButton(
+                                  icon: const Icon(Icons.edit, size: 14, color: Colors.grey),
+                                  onPressed: () => setState(() => _isEditingUsername = true),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  splashRadius: 16,
+                                )
+                            ],
+                          )
+                        ),
+                  ],
+                   
+                  const SizedBox(height: 16), // This SizedBox is before Dynamic Stats
                   
                   // Dynamic Stats
                   Row(

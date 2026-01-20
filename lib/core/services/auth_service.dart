@@ -187,6 +187,64 @@ class AuthService {
      return null;
   }
 
+  // --- Username Features ---
+  
+  Future<Map<String, dynamic>> setUsername(String username) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {"success": false, "message": "Avtorizatsiyadan o'tilmagan"};
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/student/username'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({"username": username}),
+      );
+
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      
+      if (response.statusCode == 200) {
+        // Update local cache if successful
+        final prefs = await SharedPreferences.getInstance();
+        final profileStr = prefs.getString('user_profile');
+        if (profileStr != null) {
+          final profile = jsonDecode(profileStr);
+          profile['username'] = username;
+          await prefs.setString('user_profile', jsonEncode(profile));
+        }
+        return {"success": true, "username": username};
+      } else {
+        return {"success": false, "message": body['detail'] ?? "Xatolik yuz berdi"};
+      }
+    } catch (e) {
+      return {"success": false, "message": "Internet bilan muammo: $e"};
+    }
+  }
+
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      final token = await getToken();
+      if (token == null) return false;
+
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/student/check-username?username=$username'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+       if (response.statusCode == 200) {
+         final body = jsonDecode(response.body);
+         return body['available'] == true;
+       }
+       return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
