@@ -26,6 +26,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     if (value.length < 2) return;
     
+    // Don't check if it's my own current username
+    final current = Provider.of<AuthProvider>(context, listen: false).currentUser?.username;
+    if (value == current) return;
+    
     setState(() => _isCheckingUsername = true);
     final available = await Provider.of<AuthProvider>(context, listen: false).checkUsernameAvailability(value);
     
@@ -38,6 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
+
+  // ... (build methods)
+
+
 
   Future<void> _saveUsername() async {
      final value = _usernameController.text.toLowerCase().trim();
@@ -147,84 +155,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // --- USERNAME SECTION ---
                 const SizedBox(height: 12),
                 if (_isEditingUsername)
-                  Container(
-                    width: 220,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _usernameError != null ? Colors.red : AppTheme.primaryBlue.withOpacity(0.3))
-                    ),
-                    child: Column(
-                      children: [
-                        TextField(
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 180,
+                        child: TextField(
                           controller: _usernameController,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textBlack),
                           decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
                             hintText: "username",
                             prefixText: "@",
-                            isDense: true,
-                            border: InputBorder.none,
-                            errorText: _usernameError,
-                            errorStyle: const TextStyle(color: Colors.red, fontSize: 11),
-                            suffixIcon: _isCheckingUsername 
-                              ? const SizedBox(width: 12, height: 12, child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2))) 
-                              : null
+                            prefixStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                            border: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue)),
+                            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+                            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue, width: 2)),
+                            // Hide default error to show custom one centered
+                            errorStyle: const TextStyle(height: 0, fontSize: 0), 
                           ),
                           onChanged: _onUsernameChanged,
                         ),
-                        // Validation Error Below Border (Red) - Handled by InputDecoration.errorText or Custom
-                        // Using custom text for better control if needed, but errorText works well.
+                      ),
+                      
+                      if (_usernameError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            _usernameError!,
+                            style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ),
                         
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () => setState(() => _isEditingUsername = false),
-                              child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () => setState(() => _isEditingUsername = false),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              child: Text("Bekor qilish", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                             ),
-                            if (_isSavingUsername)
-                               const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            else
-                               TextButton(
-                                 onPressed: _saveUsername,
-                                 child: const Text("Saqlash", style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
-                               )
-                          ],
-                        )
-                      ],
-                    ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (_isSavingUsername)
+                             const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          else
+                             InkWell(
+                               onTap: _saveUsername,
+                               borderRadius: BorderRadius.circular(20),
+                               child: const Padding(
+                                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                 child: Text("Saqlash", style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 13)),
+                               ),
+                             ),
+                        ],
+                      )
+                    ],
                   )
                 else
                   GestureDetector(
                     onTap: () => setState(() => _isEditingUsername = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey[300]!)
-                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             student.username != null ? "@${student.username}" : "Username o'rnatish",
                             style: TextStyle(
-                              color: student.username != null ? Colors.black87 : AppTheme.primaryBlue, 
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14
+                              color: student.username != null ? Colors.grey[800] : AppTheme.primaryBlue, 
+                              fontWeight: student.username != null ? FontWeight.w500 : FontWeight.bold,
+                              fontSize: 15
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.edit, size: 14, color: Colors.grey[600])
+                          Icon(Icons.edit, size: 14, color: Colors.grey[400])
                         ],
                       ),
                     ),
                   ),
-                // -----------------------
 
               ],
             ),
