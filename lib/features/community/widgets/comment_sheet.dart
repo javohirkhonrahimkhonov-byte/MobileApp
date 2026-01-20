@@ -28,13 +28,6 @@ class _CommentSheetState extends State<CommentSheet> {
   bool _isLoading = true;
   bool _isSending = false;
   Comment? _replyingTo;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadComments();
-  }
-
   Post? _currentPost;
 
   @override
