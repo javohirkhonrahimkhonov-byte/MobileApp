@@ -36,12 +36,16 @@ class StudentProfileSchema(BaseModel):
     district_name: Optional[str] = None
     accommodation_name: Optional[str] = None
     
-    is_registered_bot: bool = False # New Field
+    is_registered_bot: bool = False 
+    username: Optional[str] = None # New Field
     
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+class UsernameUpdateSchema(BaseModel):
+    username: str
 
 class ActivityImageSchema(BaseModel):
     file_id: str
@@ -124,6 +128,8 @@ class PostResponseSchema(BaseModel):
     content: str
     category_type: str
     author_name: str
+    author_username: Optional[str] = None # NEW
+    author_avatar: Optional[str] = None   # NEW
     author_role: str
     created_at: datetime
     
@@ -132,22 +138,42 @@ class PostResponseSchema(BaseModel):
     target_faculty_id: Optional[int]
     target_specialty_name: Optional[str]
 
-    # Likes
+    target_specialty_name: Optional[str]
+
+    # Likes & Comments & Reposts
     likes_count: int = 0
+    comments_count: int = 0
+    reposts_count: int = 0
     is_liked_by_me: bool = False
+    is_reposted_by_me: bool = False
+    is_mine: bool = False
 
     class Config:
         from_attributes = True
 
 class CommentCreateSchema(BaseModel):
     content: str
+    reply_to_comment_id: Optional[int] = None
 
 class CommentResponseSchema(BaseModel):
     id: int
     post_id: int
     content: str
     author_name: str
+    author_avatar: Optional[str] = None
     created_at: datetime
+    
+    # New Fields for Frontend UI
+    likes_count: int = 0
+    is_liked: bool = False
+    is_liked_by_author: bool = False
+    author_role: str = "Talaba"
+    
+    # Reply info
+    reply_to_username: Optional[str] = None
+    reply_to_content: Optional[str] = None
+    
+    is_mine: bool = False
     
     class Config:
         from_attributes = True

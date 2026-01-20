@@ -281,27 +281,21 @@ async def msg_process_konspekt(message: Message, state: FSMContext, bot: Bot):
             
         # B) Fayl yuborilganda (Document)
         elif message.document:
+            import io
+            from utils.document_parser import extract_text_from_stream
+            
             file_id = message.document.file_id
             file_name = message.document.file_name
             
-            # Download file
-            file = await bot.get_file(file_id)
-            file_path = file.file_path
+            # Download to Memory
+            file_stream = io.BytesIO()
+            await bot.download(message.document, destination=file_stream)
             
-            downloaded_file = await bot.download_file(file_path)
-            
-            # Save temporarily
-            temp_path = f"/tmp/{file_name}"
-            with open(temp_path, "wb") as f:
-                f.write(downloaded_file.read())
-                
-            # Extract text
+            # Extract text from stream
             ext = file_name.split(".")[-1]
-            text_content = extract_text_from_file(temp_path, ext)
+            text_content = extract_text_from_stream(file_stream, ext)
             
-            # Cleanup
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+            # No cleanup needed as it's in RAM
                 
         else:
             await processing_msg.edit_text("❌ Iltimos, fayl yoki matn yuboring.")

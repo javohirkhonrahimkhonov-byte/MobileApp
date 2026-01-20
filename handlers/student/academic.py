@@ -83,7 +83,8 @@ async def show_subject_resources(call: CallbackQuery, session: AsyncSession):
         row = []
         for i, topic in enumerate(topics_list, 1):
             if topic['has_files']:
-                row.append(InlineKeyboardButton(text=str(i), callback_data=f"dl_topic_{subj_id}_{topic['id']}"))
+                # ADDED: _{sem_code}
+                row.append(InlineKeyboardButton(text=str(i), callback_data=f"dl_topic_{subj_id}_{topic['id']}_{sem_code}"))
             if len(row) == 5:
                 kb_list.append(row)
                 row = []
@@ -140,6 +141,7 @@ async def show_gpa(call: CallbackQuery, session: AsyncSession):
         return await call.answer("❌ Talaba ma'lumotlari topilmadi.", show_alert=True)
 
     token = account.student.hemis_token
+    await call.answer()
     await call.message.edit_text("⏳ GPA ma'lumotlari yuklanmoqda...", reply_markup=None)
 
     # Get GPA
@@ -167,6 +169,7 @@ async def show_grades(call: CallbackQuery, session: AsyncSession, state: FSMCont
     
     token = account.student.hemis_token
     student_login = account.student.hemis_login
+    await call.answer()
     try:
         await call.message.edit_text("⏳ Baholar yuklanmoqda...", reply_markup=None)
     except Exception:
@@ -656,6 +659,7 @@ async def download_single_topic(call: CallbackQuery, session: AsyncSession):
         parts = call.data.split("_")
         subj_id = parts[2]
         topic_id = parts[3]
+        sem_code = parts[4] if len(parts) > 4 else "11" # Extracted sem_code
         
         tg_id = call.from_user.id
         account = await session.scalar(select(TgAccount).where(TgAccount.telegram_id == tg_id))
@@ -664,33 +668,13 @@ async def download_single_topic(call: CallbackQuery, session: AsyncSession):
 
         await call.answer("Fayllar tayyorlanmoqda...", show_alert=False)
         
-        # Try finding in current semester first, but resource topic IDs are usually global for the request
-        # However, to find the topic in the list, we need the list.
-        # Ideally we should pass sem_code in callback, checking if we have it.
-        # Wait, dl_topic callback is: dl_topic_{subj_id}_{topic_id}
-        # It misses sem_code! We need to add it or guess it.
-        # But get_student_resources needs sem_code to be accurate.
-        # Let's see if we can get it from somewhere or default to 11/current.
-        # Actually, let's update proper callback first?
-        # User didn't report dl_topic broken yet, but let's fix it if we can.
-        # Existing callback format: dl_topic_{subj_id}_{topic_id} (Length 4)
-        # We can't easily change it without breaking compatibility if sent messages exist.
-        # Use default logic: try getting resources without semester (if it works?) or try to get CURRENT sem.
-        # Or... let's check if get_me can help.
-        # For now, let's just use what we have in show_subject_resources (line 41).
-        
-        # But wait, lines 681-683: parts = call.data.split("_")
-        # dl_topic_subjectId_topicId
-        # We don't have sem_code here. 
-        # I will leave this one as is for now unless I update the button generation at line 86.
-        # Line 86: InlineKeyboardButton(text=str(i), callback_data=f"dl_topic_{subj_id}_{topic['id']}")
-        # I should update line 86 too!
-        
-        resources = await HemisService.get_student_resources(token, subject_id=subj_id)
+        # Pass sem_code here!
+        resources = await HemisService.get_student_resources(token, subject_id=subj_id, semester_code=sem_code)
         target_topic = next((r for r in resources if str(r.get("id")) == str(topic_id)), None)
         
         if not target_topic:
-            return await call.answer("Mavzu topilmadi", show_alert=True)
+            # Fallback check without semester if failed? No, sem_code should be correct now.
+            return await call.message.answer("❌ Mavzu topilmadi (Metadata yangilangan bo'lishi mumkin)")
 
         # Extract files
         all_files = []
@@ -700,7 +684,7 @@ async def download_single_topic(call: CallbackQuery, session: AsyncSession):
                     all_files.append({"id": item.get("id"), "url": f.get("url"), "name": f.get("name")})
 
         if not all_files:
-            return await call.answer("Ushbu mavzuda fayllar yo'q", show_alert=True)
+            return await call.message.answer("❌ Ushbu mavzuda fayllar yo'q")
 
         service = HemisService()
         for f_data in all_files:
@@ -713,8 +697,8 @@ async def download_single_topic(call: CallbackQuery, session: AsyncSession):
                     continue
                 except: pass
 
-            # Download
-            content, filename = await service.download_resource_file(token, resource_id=f_id, url=f_data["url"])
+            # KEY FIX: Removed invalid 'resource_id' arg
+            content, filename = await service.download_resource_file(token, url=f_data["url"])
             if content:
                 input_file = BufferedInputFile(content, filename=filename or f_data["name"])
                 sent = await call.message.answer_document(input_file, caption=f_data["name"])
@@ -728,6 +712,7 @@ async def download_single_topic(call: CallbackQuery, session: AsyncSession):
 
     except Exception as e:
         logger.error(f"Download Topic Error: {e}")
+        await call.message.answer("❌ Xatolik yuz berdi")
 
 @router.callback_query(F.data.startswith("dl_all_"))
 async def download_all_resources(call: CallbackQuery, session: AsyncSession):

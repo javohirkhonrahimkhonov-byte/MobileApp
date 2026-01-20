@@ -237,6 +237,8 @@ class Student(Base):
     accommodation_name: Mapped[str | None] = mapped_column(String(128), nullable=True) # Ijaradagi uyda
     
     missed_hours: Mapped[int] = mapped_column(Integer, default=0) # New Field
+    username: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True) # Unique Username
+    hemis_role: Mapped[str | None] = mapped_column(String(50), nullable=True) # HEMIS role code (e.g. 'student', 'teacher')
     
     # --- AI Context ---
     ai_context: Mapped[str | None] = mapped_column(Text, nullable=True) # Summarized info for AI
@@ -258,16 +260,32 @@ class Student(Base):
     documents: Mapped[list["UserDocument"]] = relationship(
         "UserDocument", back_populates="student", cascade="all, delete-orphan"
     )
+
+
     certificates: Mapped[list["UserCertificate"]] = relationship(
         "UserCertificate", back_populates="student", cascade="all, delete-orphan"
     )
     feedbacks: Mapped[list["StudentFeedback"]] = relationship(
         "StudentFeedback", back_populates="student", cascade="all, delete-orphan"
     )
+    notifications: Mapped[list["StudentNotification"]] = relationship(
+        "StudentNotification", back_populates="student", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Student {self.full_name}>"
 
+
+
+class TakenUsername(Base):
+    __tablename__ = "taken_usernames"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    
+    student: Mapped["Student"] = relationship("Student")
 
 # ============================================================
 # TELEGRAM ACCOUNT
@@ -724,8 +742,12 @@ class ChoyxonaPost(Base):
     target_specialty_name: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True) # Direction ID o'rniga name ishlatilmoqda chunki alohida jadval yo'q
 
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
-
     
+    # Denormalized Counts for Performance
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
+    comments_count: Mapped[int] = mapped_column(Integer, default=0)
+    reposts_count: Mapped[int] = mapped_column(Integer, default=0)
+
     # Relationships
     student: Mapped["Student"] = relationship("Student")
     university: Mapped["University"] = relationship("University")
@@ -733,6 +755,7 @@ class ChoyxonaPost(Base):
     
     comments: Mapped[list["ChoyxonaComment"]] = relationship("ChoyxonaComment", back_populates="post", cascade="all, delete-orphan")
     likes: Mapped[list["ChoyxonaPostLike"]] = relationship("ChoyxonaPostLike", back_populates="post", cascade="all, delete-orphan")
+    reposts: Mapped[list["ChoyxonaPostRepost"]] = relationship("ChoyxonaPostRepost", back_populates="post", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ChoyxonaPost {self.id} by {self.student_id} ({self.category_type})>"
@@ -746,14 +769,34 @@ class ChoyxonaComment(Base):
     student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    reply_to_comment_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("choyxona_comments.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+    
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
     post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="comments")
     student: Mapped["Student"] = relationship("Student")
+    parent_comment: Mapped["ChoyxonaComment"] = relationship("ChoyxonaComment", remote_side=[id], backref="replies")
+    likes: Mapped[list["ChoyxonaCommentLike"]] = relationship("ChoyxonaCommentLike", back_populates="comment", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Comment {self.id} on Post {self.post_id}>"
+
+
+class ChoyxonaCommentLike(Base):
+    __tablename__ = "choyxona_comment_likes"
+    __table_args__ = (UniqueConstraint('comment_id', 'student_id', name='_user_comment_like_uc'),)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    comment_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_comments.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    
+    comment: Mapped["ChoyxonaComment"] = relationship("ChoyxonaComment", back_populates="likes")
+
+    def __repr__(self):
+        return f"<ChoyxonaCommentLike {self.id} on Comment {self.comment_id}>"
 
 
 class ChoyxonaPostLike(Base):
@@ -769,3 +812,79 @@ class ChoyxonaPostLike(Base):
 
     def __repr__(self):
         return f"<ChoyxonaPostLike {self.id} on Post {self.post_id} by Student {self.student_id}>"
+
+class ChoyxonaPostRepost(Base):
+    __tablename__ = "choyxona_post_reposts"
+    __table_args__ = (UniqueConstraint('post_id', 'student_id', name='_user_post_repost_uc'),)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("choyxona_posts.id", ondelete="CASCADE"), nullable=False)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow)
+    
+    post: Mapped["ChoyxonaPost"] = relationship("ChoyxonaPost", back_populates="reposts")
+
+    def __repr__(self):
+        return f"<ChoyxonaPostRepost {self.id} on Post {self.post_id} by Student {self.student_id}>"
+
+
+# ============================================================
+# TALABA BOZORI (MARKET)
+# ============================================================
+
+class MarketCategory(str, enum.Enum):
+    BOOKS = "books"       # Kitoblar
+    TECH = "tech"         # Texnika
+    HOUSING = "housing"   # Kvartira / Ijaraga sherik
+    JOBS = "jobs"         # Ish / Vakansiya
+    LOST_FOUND = "lost"   # Yo'qolgan buyumlar
+    OTHER = "other"       # Boshqa
+
+class MarketItem(Base):
+    __tablename__ = "market_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    price: Mapped[str] = mapped_column(String(128), nullable=True) # "100.000 so'm" or "Kelishilgan"
+    category: Mapped[str] = mapped_column(String(32), default=MarketCategory.OTHER.value, index=True)
+    
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    telegram_username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    
+    views_count: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+
+    # Relationships
+    student: Mapped["Student"] = relationship("Student")
+
+    def __repr__(self):
+        return f"<MarketItem {self.id} {self.title}>"
+
+
+# ============================================================
+# NOTIFICATIONS
+# ============================================================
+
+class StudentNotification(Base):
+    __tablename__ = "student_notifications"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    student_id: Mapped[int] = mapped_column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[str] = mapped_column(String(50), default="info") # 'grade', 'info', 'alert'
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(), default=datetime.utcnow, index=True)
+    
+    student: Mapped["Student"] = relationship("Student", back_populates="notifications")
+
+    def __repr__(self):
+        return f"<Notification {self.id} for {self.student_id}>"

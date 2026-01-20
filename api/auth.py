@@ -17,10 +17,10 @@ async def login_via_hemis(
     db: AsyncSession = Depends(get_session)
 ):
     # 1. AUTHENTICATE
-    token = await HemisService.authenticate(creds.login, creds.password)
+    token, error = await HemisService.authenticate(creds.login, creds.password)
     
     if not token:
-        raise HTTPException(status_code=401, detail="Login yoki parol noto'g'ri")
+        raise HTTPException(status_code=401, detail=error or "Login yoki parol noto'g'ri")
         
     # 2. GET PROFILE
     me = await HemisService.get_me(token)
@@ -87,6 +87,20 @@ async def login_via_hemis(
     st_status = get_name("studentStatus")
     image_url = me.get("image") # URL string
 
+    # Parse Role
+    raw_type = me.get("type", "student")
+    role_code = "student"
+    
+    if raw_type == "student":
+        role_code = "student"
+    else:
+        # Check roles array
+        roles = me.get("roles", [])
+        if roles and isinstance(roles, list) and len(roles) > 0:
+            role_code = roles[0].get("code", "employee")
+        else:
+            role_code = "employee"
+
     result = await db.execute(select(Student).where(Student.hemis_login == h_login))
     student = result.scalar_one_or_none()
     
@@ -97,6 +111,8 @@ async def login_via_hemis(
             hemis_id=h_id,
             hemis_password=creds.password,
             hemis_token=token,
+            # Role
+            hemis_role=role_code,
             # Profile Fields
             university_name=uni_name,
             faculty_name=fac_name,
@@ -118,6 +134,7 @@ async def login_via_hemis(
         student.hemis_password = creds.password 
         if full_name_db: student.full_name = full_name_db
         if h_id: student.hemis_id = h_id
+        student.hemis_role = role_code # Update role
         
         # Update Profile
         student.university_name = uni_name

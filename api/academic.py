@@ -19,13 +19,16 @@ async def get_grades(
     if not student.hemis_token:
          return {"success": False, "message": "No Token", "data": []}
          
-    # 1. Get current semester (optional, or just fetch all active)
-    # Getting subject list usually defaults to current sem if None, or we can fetch 'me' to find it.
-    # For now, let's try fetching with default (None) or '11' if we want to be safe, 
-    # but strictly speaking we should look it up. The bot uses context or current.
-    # We will fetch without semester param first (defaults to active).
-    
-    subjects = await HemisService.get_student_subject_list(student.hemis_token)
+    # 1. Fetch ME to get current semester (Critical for correct grades)
+    me_data = await HemisService.get_me(student.hemis_token)
+    semester_code = None
+    if me_data:
+        sem = me_data.get("semester", {})
+        if sem and isinstance(sem, dict):
+             semester_code = sem.get("code") or sem.get("id")
+
+    # 2. Fetch Subjects with Semester Code
+    subjects = await HemisService.get_student_subject_list(student.hemis_token, semester_code=semester_code)
     
     parsed_data = []
     
@@ -60,11 +63,18 @@ async def get_subjects(
 
     import asyncio
     
-    # 1. Fetch data concurrently
-    # Note: We use None for sem_code to let HemisService handle defaults
-    subjects_task = HemisService.get_student_subject_list(student.hemis_token, student_id=student.id)
-    absence_task = HemisService.get_student_absence(student.hemis_token, student_id=student.id)
-    schedule_task = HemisService.get_student_schedule_cached(student.hemis_token, student_id=student.id)
+    # 1. Determine Semester Code (Critical for correct subject list)
+    me_data = await HemisService.get_me(student.hemis_token)
+    sem_code = None
+    if me_data:
+        sem = me_data.get("semester", {})
+        if sem and isinstance(sem, dict):
+             sem_code = str(sem.get("code") or sem.get("id"))
+    
+    # 2. Fetch data concurrently using explicit semester code
+    subjects_task = HemisService.get_student_subject_list(student.hemis_token, semester_code=sem_code, student_id=student.id)
+    absence_task = HemisService.get_student_absence(student.hemis_token, semester_code=sem_code, student_id=student.id)
+    schedule_task = HemisService.get_student_schedule_cached(student.hemis_token, semester_code=sem_code, student_id=student.id)
     
     subjects_data, attendance_result, schedule_data = await asyncio.gather(
         subjects_task, absence_task, schedule_task
@@ -174,9 +184,19 @@ async def get_attendance(
     if not student.hemis_token:
         return {"success": False, "message": "No Token"}
 
-    # Fetch attendance
+    # 1. Determine Semester Code
+    sem_code = semester
+    if not sem_code:
+        # Fetch ME to get current semester (Critical for correct data)
+        me_data = await HemisService.get_me(student.hemis_token)
+        if me_data:
+            sem = me_data.get("semester", {})
+            if sem and isinstance(sem, dict):
+                 sem_code = str(sem.get("code") or sem.get("id"))
+    
+    # 2. Fetch attendance
     # get_student_absence returns (0,0,0, list)
-    _, _, _, data = await HemisService.get_student_absence(student.hemis_token, semester_code=semester, student_id=student.id)
+    _, _, _, data = await HemisService.get_student_absence(student.hemis_token, semester_code=sem_code, student_id=student.id)
     
     # Logic: If data is empty and semester is NOT provided (default), we might want to check the previous semester or verify current.
     # However, HemisService.get_student_absence already defaults to current if None.
@@ -316,7 +336,7 @@ async def send_resource_to_bot(
              final_name += ".pdf" # Default assumption or we could sniff mime
              
         input_file = BufferedInputFile(content, filename=final_name)
-        await bot.send_document(chat_id=student.telegram_id, document=input_file, caption=f"📄 {req.name}")
+        await bot.send_document(chat_id=chat_id, document=input_file, caption=f"📄 {req.name}")
         
         return {"success": True, "message": "Sent to Telegram!"}
     except Exception as e:

@@ -77,10 +77,16 @@ async def daily_context_update():
 
 app = FastAPI(lifespan=lifespan)
 
+from services.grade_checker import check_new_grades
+
 @app.on_event("startup")
 async def start_scheduler():
     # Tashkent is UTC+5. 03:30 -> 22:30 previous day UTC
     scheduler.add_job(daily_context_update, 'cron', hour=22, minute=30)
+    
+    # Grade Checker (Every 30 minutes)
+    scheduler.add_job(check_new_grades, 'interval', minutes=30)
+    
     scheduler.start()
 
 
@@ -105,7 +111,14 @@ async def bot_webhook(request: Request):
 #   API MOUNTING
 # ============================================================
 from api import router as api_router
+from fastapi.staticfiles import StaticFiles
+
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount Static Files (for user uploads)
+import os
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================
 #   MAIN

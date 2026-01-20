@@ -28,3 +28,156 @@ async def get_my_profile(
     data['is_registered_bot'] = True if tg_acc else False
     
     return data
+
+from fastapi import UploadFile, File, Request
+import shutil
+import time
+import os
+
+@router.post("/image")
+async def upload_profile_image(
+    request: Request,
+    file: UploadFile = File(...),
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Upload and set a custom profile image for the student.
+    """
+    try:
+        # Validate Image
+        if not file.content_type.startswith("image/"):
+             return {"success": False, "message": "Faqat rasm yuklash mumkin"}
+             
+        # Create Filename
+        ext = file.filename.split(".")[-1]
+        filename = f"{student.id}_{int(time.time())}.{ext}"
+        file_path = f"static/uploads/{filename}"
+        
+        # Save File
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Build URL
+        # e.g. https://api.example.com/static/uploads/123.jpg
+        base_url = str(request.base_url).rstrip("/")
+        full_url = f"{base_url}/{file_path}"
+        
+        # Update DB
+        student.image_url = full_url
+        await db.commit()
+        
+        return {
+            "success": True,
+            "data": {
+                "image_url": full_url
+            }
+        }
+        return {
+            "success": True,
+            "data": {
+                "image_url": full_url
+            }
+        }
+    except Exception as e:
+        return {"success": False, "message": f"Server xatosi: {str(e)}"}
+
+from api.schemas import UsernameUpdateSchema
+import re
+from fastapi import HTTPException
+
+@router.post("/username")
+async def set_username(
+    data: UsernameUpdateSchema,
+    student: Student = Depends(get_current_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """Set or update username"""
+    username = data.username.lower().strip()
+    
+    # Validation
+    if not (5 <= len(username) <= 32):
+        raise HTTPException(status_code=400, detail="Username kamida 5 ta harfdan iborat bo'lishi kerak")
+        
+    if not re.match(r"^[a-z][a-z0-9_]*$", username):
+        raise HTTPException(status_code=400, detail="Username faqat lotin harflari, raqamlar va _ dan iborat bo'lishi va harf bilan boshlanishi kerak")
+    
+    # Check uniqueness in TakenUsername table
+    from database.models import TakenUsername
+    
+    # Check if this exact username is taken by someone else
+    existing = await db.scalar(select(TakenUsername).where(TakenUsername.username == username))
+    
+    if existing:
+        if existing.student_id != student.id:
+            raise HTTPException(status_code=400, detail="Bu username allaqachon olingan")
+        else:
+            # Already mine, just return success (idempotent)
+            return {"success": True, "username": username}
+            
+    # If I had an old username, remove it from TakenUsername to free it up
+    if student.username and student.username != username:
+        old_taken = await db.scalar(select(TakenUsername).where(TakenUsername.username == student.username))
+        if old_taken:
+            await db.delete(old_taken)
+            
+    # Insert new
+    new_taken = TakenUsername(username=username, student_id=student.id)
+    db.add(new_taken)
+    
+    # Update Student record
+    student.username = username
+    
+    try:
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Xatolik: {str(e)}")
+    
+    return {"success": True, "username": username}
+
+@router.get("/check-username")
+async def check_username_availability(
+    username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Check if username is available (True if available)"""
+    username = username.lower().strip()
+    if not username: 
+        return {"available": False}
+        
+    from database.models import TakenUsername
+    existing = await db.scalar(select(TakenUsername).where(TakenUsername.username == username))
+    
+    return {"available": existing is None}
+
+from sqlalchemy import or_
+
+@router.get("/search")
+async def search_students(
+    query: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Search students by username or name"""
+    query = query.strip()
+    if len(query) < 2:
+        return []
+        
+    if query.startswith("@"):
+        query = query[1:]
+        
+    search_term = f"%{query}%"
+    
+    # Priority: Username match > Name match
+    # We can just fetch all matches
+    stmt = select(Student).where(
+        or_(
+            Student.username.ilike(search_term),
+            Student.full_name.ilike(search_term)
+        )
+    ).limit(20)
+    
+    result = await db.execute(stmt)
+    students = result.scalars().all()
+    
+    return [StudentProfileSchema.model_validate(s).model_dump() for s in students]

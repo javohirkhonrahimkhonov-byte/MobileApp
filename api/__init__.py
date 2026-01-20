@@ -34,3 +34,9 @@ router.include_router(documents_router)
 
 from .community import router as community_router
 router.include_router(community_router, prefix="/community", tags=["Community"])
+
+from .market import router as market_router
+router.include_router(market_router)
+
+from .notifications import router as notifications_router
+router.include_router(notifications_router, prefix="/student/notifications", tags=["Notifications"])

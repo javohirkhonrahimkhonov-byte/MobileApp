@@ -60,14 +60,30 @@ async def get_dashboard_stats(
              # 2. Get GPA & Absence for Current Semester
              gpa = await HemisService.get_student_performance(student.hemis_token, semester_code=current_sem)
              
-             total, excused, unexcused, _ = await HemisService.get_student_absence(
+             _, _, _, attendance_list = await HemisService.get_student_absence(
                  student.hemis_token, 
                  semester_code=current_sem,
                  student_id=student.id
              )
-             missed_total = total
-             missed_excused = excused
-             missed_unexcused = unexcused
+             
+             # Calculate manually as Service returns 0s
+             for item in attendance_list:
+                 hours = item.get("hour") or 2 # default 2 hours per lesson usually
+                 # Safe parse
+                 if isinstance(hours, str):
+                      try: hours = int(hours)
+                      except: hours = 2
+                 
+                 status = item.get("absent_status")
+                 # 11: Sababli (Excused), 12: Sababsiz (Unexcused)
+                 # Some APIs use is_valid or is_excused
+                 is_excused = (status == 11) or (item.get("is_valid") == True) or (item.get("is_excused") == True)
+                 
+                 missed_total += hours
+                 if is_excused:
+                     missed_excused += hours
+                 else:
+                     missed_unexcused += hours
              
              # Cache in DB (Optional, but good for profile view fallback)
              # student.missed_hours = missed_total 
