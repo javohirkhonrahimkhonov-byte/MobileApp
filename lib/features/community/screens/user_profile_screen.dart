@@ -49,7 +49,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _checkIfMe() async {
     final me = await AuthService().getSavedUser();
     if (me != null && mounted) {
-      if (me.full_name == widget.authorName) { // Fallback check by name as we don't pass ID to widget
+      if (me.fullName == widget.authorName) { // Fallback check by name as we don't pass ID to widget
         setState(() {
           _isMe = true;
           _currentUsername = me.username;

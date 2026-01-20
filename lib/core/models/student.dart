@@ -8,6 +8,7 @@ class Student {
   final String? facultyName;
   final String? semesterName;
   final String? imageUrl;
+  final String? username; // New field
   final int missedHours;
 
   Student({
@@ -20,10 +21,12 @@ class Student {
     this.semesterName,
     this.universityName,
     this.imageUrl,
+    this.username,
     this.missedHours = 0,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
+    // ... (helpers remain same)
     // Helper to get nested name safely
     String? getName(String key) {
       if (json[key] is Map) {
@@ -33,12 +36,12 @@ class Student {
     }
 
     // Helper to capitalize first letter
-    // Helper to capitalize first letter (Sentence case)
     String sentenceCase(String text) {
       if (text.isEmpty) return "";
       return text[0].toUpperCase() + text.substring(1).toLowerCase();
     }
-
+    
+    // ... Name Logic Copied ...
     String fullName = "";
     if (json['lastname'] != null && json['firstname'] != null) {
       fullName = "${sentenceCase(json['lastname'].toString())} ${sentenceCase(json['firstname'].toString())}";
@@ -52,28 +55,25 @@ class Student {
       }
     }
 
-    // Helper to extract and prettify
     String? getPrettyName(String key) {
-      String? val = getName(key); // getName extracts from map
-      if (val != null) return sentenceCase(val);
-      // Try direct key fallback
-      var direct = json["${key}_name"] ?? json[key];
-      if (direct != null) return sentenceCase(direct.toString());
-      return null;
+       String? val = getName(key);
+       if (val != null) return sentenceCase(val);
+       var direct = json["${key}_name"] ?? json[key];
+       if (direct != null) return sentenceCase(direct.toString());
+       return null;
     }
 
     return Student(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       fullName: fullName.trim(),
       hemisLogin: json['login'] ?? json['hemis_login'] ?? '',
-      groupNumber: (getName('group') != null) 
-          ? getName('group')! 
-          : json['group_number']?.toString(),
+      groupNumber: (getName('group') != null) ? getName('group')! : json['group_number']?.toString(),
       specialtyName: getPrettyName('specialty'),
       facultyName: getPrettyName('faculty'),
       semesterName: getPrettyName('semester'),
       universityName: json['university_name'] ?? getPrettyName('university') ?? "Jizzax davlat pedagogika universiteti",
       imageUrl: json['image'] ?? json['image_url'],
+      username: json['username'], // Map username
       missedHours: json['missed_hours'] ?? 0,
     );
   }
@@ -89,6 +89,7 @@ class Student {
       'semester_name': semesterName,
       'university_name': universityName,
       'image_url': imageUrl,
+      'username': username,
       'missed_hours': missedHours,
     };
   }
@@ -103,6 +104,7 @@ class Student {
     String? facultyName,
     String? semesterName,
     String? imageUrl,
+    String? username,
     int? missedHours,
   }) {
     return Student(
@@ -115,6 +117,7 @@ class Student {
       facultyName: facultyName ?? this.facultyName,
       semesterName: semesterName ?? this.semesterName,
       imageUrl: imageUrl ?? this.imageUrl,
+      username: username ?? this.username,
       missedHours: missedHours ?? this.missedHours,
     );
   }
