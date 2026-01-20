@@ -37,6 +37,9 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
 
+# Alias for backward compatibility
+get_db = get_session
+
 
 def get_session_factory():
     """
