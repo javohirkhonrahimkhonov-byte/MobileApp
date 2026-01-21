@@ -575,15 +575,46 @@ class _CommentSheetState extends State<CommentSheet> {
 
                 const SizedBox(height: 2),
                 
-                // 3. Main Comment Content
-                Text(
-                  comment.content, 
-                  style: const TextStyle(fontSize: 13, height: 1.3, color: Colors.black87)
+                // 3. Main Comment Content + Like Button
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        comment.content, 
+                        style: const TextStyle(fontSize: 13, height: 1.3, color: Colors.black87)
+                      ),
+                    ),
+                    
+                    // Like Count & Icon (Moved here)
+                    GestureDetector(
+                      onTap: () => _toggleCommentLike(comment.id),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+                        child: Column( // Column for Icon + Count stack or Row? User said "Like button". Usually Icon.
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                             Icon(
+                              comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                              size: 18, // Slightly larger
+                              color: comment.isLiked ? Colors.red : Colors.grey[400],
+                            ),
+                            if (comment.likes > 0)
+                               Text(
+                                 "${comment.likes}",
+                                 style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                               ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
 
-                // 4. Action Row (Time, Reply, Likes)
+                // 4. Action Row (Time, Reply)
                 Row(
                   children: [
                     // Time
@@ -600,31 +631,8 @@ class _CommentSheetState extends State<CommentSheet> {
                         });
                       },
                       child: Text(
-                        "Javob berish", // YouTube style
+                        "Javob berish", 
                         style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Like Count & Icon
-                    GestureDetector(
-                      onTap: () => _toggleCommentLike(comment.id),
-                      child: Row(
-                        children: [
-                           Icon(
-                            comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                            size: 16,
-                            color: comment.isLiked ? Colors.red : Colors.grey[600],
-                          ),
-                          if (comment.likes > 0) ...[
-                             const SizedBox(width: 4),
-                             Text(
-                               "${comment.likes}",
-                               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                             ),
-                          ]
-                        ],
                       ),
                     ),
                   ],
