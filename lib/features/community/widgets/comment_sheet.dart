@@ -56,16 +56,15 @@ class _CommentSheetState extends State<CommentSheet> {
   }
 
   Future<void> _refreshAll() async {
-    // Silent refresh if already have data? No, user wants pull-to-refresh feel.
-    // But for initial load standard spinner is ok.
     if (_comments.isEmpty) setState(() => _isLoading = true);
     
-    await Future.wait([
-      _loadComments(),
-      _loadPostDetails(),
-    ]);
+    // 1. Load Comments FIRST (Priority)
+    await _loadComments();
     
     if (mounted) setState(() => _isLoading = false);
+
+    // 2. Load Post Details in Background (don't block UI)
+    _loadPostDetails(); 
   }
 
   Future<void> _loadPostDetails() async {
