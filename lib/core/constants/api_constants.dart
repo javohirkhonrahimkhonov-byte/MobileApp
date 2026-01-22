@@ -9,13 +9,13 @@ class ApiConstants {
   // FIXED: Using IP directly because Emulator DNS is failing to resolve 'tengdoshbozor.uz'
   static const String backendUrl = 'http://38.242.223.171/api/v1';
   
-  // Auth (Proxy via our Bot Backend)
-  static const String authLogin = '$backendUrl/auth/hemis';
+  // Auth (Direct HEMIS)
+  static const String authLogin = '$baseUrl/auth/login';
   
   // Account
   // Account
-  // FIXED: Point to our backend to get the enriched profile (with mapped Uni name & First Name)
-  static const String profile = '$backendUrl/student/me';
+  // FIXED: Point to HEMIS directly as Backend Proxy is blocked
+  static const String profile = '$baseUrl/account/me';
   
   // Dashboard
   static const String dashboard = '$backendUrl/student/dashboard';
