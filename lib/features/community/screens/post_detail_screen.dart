@@ -55,7 +55,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
-  Future<void> _loadComments() async {
+  Future<void> _loadComments({bool quiet = false}) async {
+    if (!quiet) {
+       if (mounted) setState(() => _isLoading = true);
+    }
     try {
       final comments = await _service.getComments(widget.post.id);
       if (mounted) {
@@ -65,7 +68,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !quiet) setState(() => _isLoading = false);
     }
   }
 
@@ -80,13 +83,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _commentController.clear();
       FocusScope.of(context).unfocus();
       
-      // Optimistic Update: Show immediately at bottom
+      // 1. Optimistic Update: Show immediately at bottom
       setState(() {
         _comments.add(newComment);
       });
 
-      // Background Sync: Reload to ensure correct sort/state
-      _loadComments(); 
+      // 2. Silent Background Sync: Ensure consistency without hiding list
+      _loadComments(quiet: true); 
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +98,123 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
+  }
+
+  Widget _buildCommentItem(Comment comment) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey[100]!)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.blue[100],
+                backgroundImage: comment.authorAvatar.isNotEmpty 
+                  ? NetworkImage(comment.authorAvatar) 
+                  : null,
+                child: comment.authorAvatar.isEmpty 
+                  ? Text(comment.authorName.isNotEmpty ? comment.authorName[0].toUpperCase() : "?", 
+                      style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
+                  : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          comment.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        // Like Button for Comment
+                         GestureDetector(
+                           onTap: () async {
+                              // Optimistic Like
+                              final oldState = comment.isLiked;
+                              final oldCount = comment.likes;
+                              
+                              setState(() {
+                                final index = _comments.indexOf(comment);
+                                if (index != -1) {
+                                  _comments[index] = comment.copyWith(
+                                    isLiked: !oldState,
+                                    likes: oldState ? oldCount - 1 : oldCount + 1
+                                  );
+                                }
+                              });
+                              
+                              final success = await _service.likeComment(comment.id);
+                              if (!success) {
+                                // Revert on failure
+                                setState(() {
+                                  final index = _comments.indexOf(comment);
+                                  if (index != -1) {
+                                     _comments[index] = comment.copyWith(isLiked: oldState, likes: oldCount);
+                                  }
+                                });
+                              }
+                           },
+                           child: Row(
+                             children: [
+                               Icon(
+                                 comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                                 size: 16,
+                                 color: comment.isLiked ? Colors.red : Colors.grey,
+                               ),
+                               if (comment.likes > 0)
+                                 Padding(
+                                   padding: const EdgeInsets.only(left: 4),
+                                   child: Text("${comment.likes}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                 )
+                             ],
+                           ),
+                         )
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    if (comment.content.startsWith("🚫"))
+                        Text(comment.content, style: TextStyle(color: Colors.grey[500], fontStyle: FontStyle.italic))
+                    else
+                        Text(comment.content, style: const TextStyle(fontSize: 14)),
+                    
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          comment.timeAgo,
+                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        ),
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () {
+                             // Reply logic (simplified: populate input)
+                             _commentController.text = ""; // TODO: Implement @mention logic if needed
+                             FocusScope.of(context).requestFocus();
+                          },
+                          child: Text(
+                            "Javob berish", 
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -201,91 +321,32 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                          ),
                          child: TextField(
                            controller: _commentController,
-                           decoration: const InputDecoration(
+                           decoration: InputDecoration(
                              hintText: "Fikringizni yozing...",
                              border: InputBorder.none,
-                             contentPadding: EdgeInsets.symmetric(vertical: 10),
+                             contentPadding: const EdgeInsets.symmetric(vertical: 10),
                            ),
                            minLines: 1,
                            maxLines: 4,
                          ),
                        ),
                      ),
-                     
                      const SizedBox(width: 8),
-                     
-                     // Send Button
-                     IconButton(
-                       onPressed: _isSending ? null : _sendComment,
-                       icon: _isSending 
-                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                         : const CircleAvatar(
-                             backgroundColor: AppTheme.primaryBlue,
-                             radius: 20,
-                             child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                           ),
-                     )
+                     CircleAvatar(
+                        backgroundColor: AppTheme.primaryBlue,
+                        child: IconButton(
+                          icon: _isSending 
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                          onPressed: _isSending ? null : _sendComment,
+                        ),
+                      )
                   ],
                 ),
               ),
-            )
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCommentItem(Comment comment) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!))
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.grey[300],
-            radius: 18,
-            child: Text(comment.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            comment.authorName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          // Role Display in Comment
-                          Text(
-                            RoleMapper.getLabel(comment.authorRole),
-                            style: TextStyle(color: Colors.grey[600], fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(comment.content, style: const TextStyle(fontSize: 14, height: 1.4)),
-              ],
-            ),
-          )
-        ],
       ),
     );
   }
