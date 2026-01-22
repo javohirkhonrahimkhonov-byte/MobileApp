@@ -61,16 +61,19 @@ class AuthService {
         final body = jsonDecode(response.body);
         final data = body['data'];
         
-        if (data != null && (data['token'] != null || body['token'] != null)) {
-          final token = data['token'] ?? body['token'];
-          final role = data['role'] ?? 'student';
+        // Robust extraction: Token might be in 'data' or at root
+        final token = data?['token'] ?? body['token'];
+        
+        if (token != null) {
+          final role = data?['role'] ?? body['role'] ?? 'student';
           
           await _saveToken(token);
           await _saveRole(role); 
           
-          if (data['profile'] != null) {
-             await _saveProfile(data['profile']);
-             return Student.fromJson(data['profile']);
+          final profileMap = data?['profile'] ?? body['profile'];
+          if (profileMap != null) {
+             await _saveProfile(profileMap);
+             return Student.fromJson(profileMap);
           }
           return await fetchAndSaveProfile(token);
         } else {
