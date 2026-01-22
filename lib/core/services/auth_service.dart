@@ -48,34 +48,44 @@ class AuthService {
 
     final url = Uri.parse(ApiConstants.authLogin);
     try {
+      print('AuthService: Attempting login to $url');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'login': login, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 15));
+
+      print('AuthService: Response ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final data = body['data'];
         
-        if (data != null && data['token'] != null) {
-          final token = data['token'];
+        if (data != null && (data['token'] != null || body['token'] != null)) {
+          final token = data['token'] ?? body['token'];
           final role = data['role'] ?? 'student';
           
           await _saveToken(token);
-          await _saveRole(role); // NEW: Save Role
+          await _saveRole(role); 
           
           if (data['profile'] != null) {
              await _saveProfile(data['profile']);
              return Student.fromJson(data['profile']);
           }
           return await fetchAndSaveProfile(token);
+        } else {
+             throw Exception("Token topilmadi. Javob: ${response.body}");
         }
+      } else if (response.statusCode == 401 || response.statusCode == 400) {
+           final body = jsonDecode(response.body);
+           throw Exception(body['error'] ?? "Login yoki parol noto'g'ri");
+      } else {
+           throw Exception("Server xatosi: ${response.statusCode}");
       }
     } catch (e) {
       print('Auth Error: $e');
+      throw e; // Rethrow to stop loading in Provider
     }
-    return null;
   }
   
   // --- Username Methods ---
@@ -151,13 +161,17 @@ class AuthService {
   Future<Student?> fetchAndSaveProfile(String token) async {
     try {
       final url = Uri.parse(ApiConstants.profile);
+      print('AuthService: Fetching profile from $url');
+      
       final response = await http.get(
         url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json'
         },
-      );
+      ).timeout(const Duration(seconds: 15));
+      
+      print('AuthService: Profile Response ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -165,11 +179,13 @@ class AuthService {
         
         await _saveProfile(profileData);
         return Student.fromJson(profileData);
+      } else {
+        throw Exception("Profilni yuklab bo'lmadi: ${response.statusCode}");
       }
     } catch (e) {
       print('Profile Error: $e');
+      throw e;
     }
-    return null;
   }
 
   Future<void> _saveToken(String token) async {
