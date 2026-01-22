@@ -75,16 +75,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     setState(() => _isSending = true);
     try {
-      // Capture the returned comment
-      final newComment = await _service.createComment(widget.post.id, content);
+      await _service.createComment(widget.post.id, content);
       
       _commentController.clear();
       FocusScope.of(context).unfocus();
       
-      // Append strictly to UI list
-      setState(() {
-        _comments.add(newComment);
-      });
+      _loadComments(); // Refresh list from server
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
