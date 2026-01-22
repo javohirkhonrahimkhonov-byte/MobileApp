@@ -75,12 +75,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     setState(() => _isSending = true);
     try {
-      await _service.createComment(widget.post.id, content);
+      final newComment = await _service.createComment(widget.post.id, content);
       
       _commentController.clear();
       FocusScope.of(context).unfocus();
       
-      _loadComments(); // Refresh list from server
+      // Optimistic Update: Show immediately at bottom
+      setState(() {
+        _comments.add(newComment);
+      });
+
+      // Background Sync: Reload to ensure correct sort/state
+      _loadComments(); 
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
