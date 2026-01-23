@@ -76,9 +76,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (!mounted) return;
       
       FocusScope.of(context).unfocus();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Post muvaffaqiyatli chop etildi!")),
-      );
+      // Removed success toast as requested
       
       Navigator.pop(context, true); // Return TRUE to refresh feed
     } catch (e) {

@@ -144,10 +144,8 @@ class _PostCardState extends State<PostCard> {
            if (!success && mounted) {
               // Revert on failure
               setState(() => _currentContent = widget.post.content); 
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tahrirlashda xatolik!")));
-           } else if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post yangilandi!")));
-           }
+              // Removed toast as requested
+           } 
        }
     });
   }
