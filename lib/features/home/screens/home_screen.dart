@@ -398,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => SubscriptionScreen()));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
