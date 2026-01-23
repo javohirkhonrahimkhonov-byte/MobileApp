@@ -4,6 +4,9 @@ import '../models/market_item.dart';
 import '../services/market_service.dart';
 import 'create_market_item_screen.dart';
 import 'market_item_detail_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/auth_provider.dart';
+import '../../profile/screens/subscription_screen.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -57,6 +60,11 @@ class _MarketScreenState extends State<MarketScreen> {
         });
       }
     } catch (e) {
+      if (e.toString().contains("PREMIUM_REQUIRED")) {
+        if (mounted) {
+          await Provider.of<AuthProvider>(context, listen: false).loadUser();
+        }
+      }
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -71,18 +79,18 @@ class _MarketScreenState extends State<MarketScreen> {
           if (_isLoading)
             const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
           else if (_featuredItems.isEmpty && _newItems.isEmpty)
-             const SliverFillRemaining(child: Center(child: Text("Hozircha e'lonlar yo'q")))
+            const SliverFillRemaining(child: Center(child: Text("Hozircha e'lonlar yo'q")))
           else ...[
             _buildHeroSection(),
             if (_featuredItems.isNotEmpty) ...[
-                _buildSectionTitle("Eng ko'p ko'rilganlar"),
-                _buildFeaturedHorizontalList(),
+              _buildSectionTitle("Eng ko'p ko'rilganlar"),
+              _buildFeaturedHorizontalList(),
             ],
             _buildSectionTitle("Kategoriyalar"),
             _buildCategoryGrid(),
             if (_newItems.isNotEmpty) ...[
-                _buildSectionTitle("Yangi E'lonlar"),
-                _buildNewItemsGrid(),
+              _buildSectionTitle("Yangi E'lonlar"),
+              _buildNewItemsGrid(),
             ],
             const SliverToBoxAdapter(child: SizedBox(height: 80)), // Bottom padding
           ]
@@ -278,5 +286,7 @@ class _MarketScreenState extends State<MarketScreen> {
         ),
       ),
     );
+  }
+
   }
 }

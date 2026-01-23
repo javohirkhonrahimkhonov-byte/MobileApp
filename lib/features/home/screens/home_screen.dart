@@ -18,6 +18,7 @@ import '../../appeals/screens/appeals_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/services/notification_service.dart';
 import '../../profile/screens/subscription_screen.dart';
+import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _dashboard;
   bool _isLoading = true;
   int _unreadCount = 0;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -43,6 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadData();
       _checkNotifications();
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _checkNotifications() async {
@@ -131,9 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           onTap: (index) {
-            final isPremium = _profile?['is_premium'] ?? false;
-            // Guard Bozor (1), AI (2)
-            if ((index == 1 || index == 2) && !isPremium) {
+            final isPremium = Provider.of<AuthProvider>(context, listen: false).currentUser?.isPremium ?? false;
+            // Guard AI (2)
+            if (index == 2 && !isPremium) {
               _showPremiumDialog();
               return;
             }
@@ -333,7 +340,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.star_rounded,
                 color: Colors.orange,
                 onTap: () {
-                  if (!(_profile?['is_premium'] ?? false)) {
+                  final isPremium = Provider.of<AuthProvider>(context, listen: false).currentUser?.isPremium ?? false;
+                  if (!isPremium) {
                      _showPremiumDialog();
                      return;
                   }

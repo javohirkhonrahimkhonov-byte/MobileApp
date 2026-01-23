@@ -38,6 +38,9 @@ class DataService {
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
       return body['data'] ?? body;
+    } else if (response.statusCode == 403) {
+      // Premium revoked/expired
+      throw Exception("PREMIUM_REQUIRED");
     }
     throw Exception('Failed to load profile');
   }
@@ -499,9 +502,12 @@ class DataService {
         if (body['success'] == true) {
            return body['data'];
         }
+      } else if (response.statusCode == 403) {
+        throw Exception("PREMIUM_REQUIRED");
       }
       return null;
     } catch (e) {
+      if (e.toString().contains("PREMIUM_REQUIRED")) rethrow;
       print("DataService: Error sending AI message: $e");
       return null;
     }

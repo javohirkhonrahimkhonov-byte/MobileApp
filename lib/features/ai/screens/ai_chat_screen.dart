@@ -79,18 +79,31 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _scrollToBottom();
     
     // Call API (Backend now saves history automatically)
-    final response = await _dataService.sendAiMessage(text);
-    
-    if (mounted) {
-      setState(() {
-        _isTyping = false;
-        if (response != null) {
-          _messages.add({"role": "assistant", "content": response});
-        } else {
-           _messages.add({"role": "assistant", "content": "⚠️ Kechirasiz, xatolik yuz berdi."});
+    try {
+      final response = await _dataService.sendAiMessage(text);
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          if (response != null) {
+            _messages.add({"role": "assistant", "content": response});
+          } else {
+             _messages.add({"role": "assistant", "content": "⚠️ Kechirasiz, xatolik yuz berdi."});
+          }
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (e.toString().contains("PREMIUM_REQUIRED")) {
+        if (mounted) {
+          // Force refresh profile status
+          await Provider.of<AuthProvider>(context, listen: false).loadUser();
+          // The parent screen (AiScreen) will lock once it rebuilds.
+          // We should pop back to the dashboard/AIScreen
+          Navigator.pop(context);
         }
-      });
-      _scrollToBottom();
+      } else {
+        if (mounted) setState(() => _isTyping = false);
+      }
     }
   }
 

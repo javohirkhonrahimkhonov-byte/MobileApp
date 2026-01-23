@@ -85,7 +85,7 @@ class CommentItem extends StatelessWidget {
     // "Indented to the right" for replies
     // User Requirement: "Replies must be visually indented to the right (one tab / padding-left)"
     // Increased indentation to 48.0 for better visibility.
-    return Container(
+    final content = Container(
       // Switch to Padding for robust indentation inside Dismissible
       // Margin was not rendering correctly in some layouts.
       // Padding ensures the content (avatar+text) is shifted, while the container fills width.
@@ -197,5 +197,64 @@ class CommentItem extends StatelessWidget {
         ],
       ),
     );
+
+    if (isReply) {
+      return Stack(
+        children: [
+          content,
+          // Custom Painter for Connector Line
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 56, // Padding area
+            child: CustomPaint(
+              painter: ConnectorLinePainter(),
+            ),
+          )
+        ],
+      );
+    }
+
+    return content;
   }
+}
+
+class ConnectorLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = Colors.grey[300]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    // Logic: Draw line from top to center-left
+    // Start X: Center of Parent Avatar (visually around 16 + 18 = 34px) 
+    // But since we are inside the item, 'top' starts from this item's top.
+    // We assume the line comes from above.
+    
+    // Path:
+    // 1. Vertical Line from top (0) to (Center Y - radius)
+    // 2. Curve to Right
+    // 3. Horizontal Line to (Right Edge)
+    
+    // Avatar Center Y in this item:
+    // Padding Top: 8. Radius: 14. Diameter: 28. Center Y = 8 + 14 = 22.
+    
+    final double startX = 34.0; // Approx center of parent avatar column
+    final double endX = 50.0; // Near the reply avatar
+    final double centerY = 22.0; 
+    final double cornerRadius = 12.0;
+
+    final Path path = Path();
+    path.moveTo(startX, -10); // Start from above (connecting to previous)
+    path.lineTo(startX, centerY - cornerRadius);
+    path.quadraticBezierTo(startX, centerY, startX + cornerRadius, centerY);
+    path.lineTo(endX, centerY); // Horizontal line
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
