@@ -176,11 +176,40 @@ class _CommentSheetState extends State<CommentSheet> {
   // --- Nesting Logic Helpers ---
   Map<String, List<Comment>> _getRepliesMap() {
     final Map<String, List<Comment>> map = {};
+    
+    // Helper to find root ID
+    // Since we don't have the full tree structure in memory explicitly linked,
+    // we iterate up using replyToCommentId.
+    // Optimization: Create a Id -> Comment lookup first.
+    final Map<String, Comment> lookup = { for (var c in _comments) c.id : c };
+
+    String? findRootId(String startId) {
+      String currentId = startId;
+      int depth = 0;
+      while (depth < 10) { // Safety break
+        final current = lookup[currentId];
+        if (current == null) return null; // Parent not found in list (maybe deleted or pagination)
+        
+        if (current.replyToCommentId == null || current.replyToCommentId == "0" || current.replyToCommentId == "null") {
+          return current.id; // Found root
+        }
+        currentId = current.replyToCommentId!;
+        depth++;
+      }
+      return null;
+    }
+
     for (var c in _comments) {
       if (c.replyToCommentId != null && c.replyToCommentId != "0" && c.replyToCommentId != "null") {
-         map.putIfAbsent(c.replyToCommentId!, () => []).add(c);
+         // This is a reply (either level 1 or level 2+)
+         // Find its ultimate root to group under
+         final rootId = findRootId(c.id);
+         if (rootId != null && rootId != c.id) {
+           map.putIfAbsent(rootId, () => []).add(c);
+         }
       }
     }
+    
     // Sort Oldest -> Newest
     for (var list in map.values) list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return map;
