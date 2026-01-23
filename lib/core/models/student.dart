@@ -12,6 +12,8 @@ class Student {
   final int missedHours;
   final String? role;
   final bool isPremium;
+  final int balance;
+  final bool trialUsed;
 
   Student({
     required this.id,
@@ -27,6 +29,8 @@ class Student {
     this.missedHours = 0,
     this.role,
     this.isPremium = false,
+    this.balance = 0,
+    this.trialUsed = false,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -81,6 +85,8 @@ class Student {
       missedHours: json['missed_hours'] ?? 0,
       role: json['role'] ?? json['user_role'],
       isPremium: json['is_premium'] ?? false,
+      balance: json['balance'] ?? 0,
+      trialUsed: json['trial_used'] ?? false,
     );
   }
 
@@ -99,6 +105,8 @@ class Student {
       'missed_hours': missedHours,
       'role': role,
       'is_premium': isPremium,
+      'balance': balance,
+      'trial_used': trialUsed,
     };
   }
 
@@ -116,6 +124,8 @@ class Student {
     int? missedHours,
     String? role,
     bool? isPremium,
+    int? balance,
+    bool? trialUsed,
   }) {
     return Student(
       id: id ?? this.id,
@@ -131,6 +141,8 @@ class Student {
       missedHours: missedHours ?? this.missedHours,
       role: role ?? this.role,
       isPremium: isPremium ?? this.isPremium,
+      balance: balance ?? this.balance,
+      trialUsed: trialUsed ?? this.trialUsed,
     );
   }
 }

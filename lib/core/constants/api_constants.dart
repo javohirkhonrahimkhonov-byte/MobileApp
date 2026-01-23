@@ -41,4 +41,7 @@ class ApiConstants {
   
   // Community
   static const String communityPosts = '$backendUrl/community/posts';
+
+  // Subscription
+  static const String subscription = '$backendUrl/subscription';
 }

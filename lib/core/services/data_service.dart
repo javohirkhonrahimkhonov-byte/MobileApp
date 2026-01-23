@@ -689,5 +689,52 @@ class DataService {
       return null;
     }
   }
+
+  // 27. Get Subscription Plans
+  Future<List<Map<String, dynamic>>> getSubscriptionPlans() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/subscription/plans'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> body = json.decode(response.body);
+        return body.cast<Map<String, dynamic>>();
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching subscription plans: $e");
+      return [];
+    }
+  }
+
+  // 28. Purchase Subscription Plan
+  Future<Map<String, dynamic>> purchasePlan(int planId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.backendUrl}/subscription/purchase'),
+        headers: await _getHeaders(),
+        body: json.encode({'plan_id': planId}),
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      print("Error purchasing plan: $e");
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
+  // 29. Activate Trial
+  Future<Map<String, dynamic>> activateTrial() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.backendUrl}/subscription/trial'),
+        headers: await _getHeaders(),
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      print("Error activating trial: $e");
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
 }
 
