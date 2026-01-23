@@ -143,14 +143,29 @@ class CommentItem extends StatelessWidget {
                 
                  if (comment.replyToUserName != null && !isParent) 
                    Container(
-                     margin: const EdgeInsets.only(top: 4, bottom: 4),
+                     margin: const EdgeInsets.only(top: 4, bottom: 6),
                      padding: const EdgeInsets.only(left: 8),
                      decoration: const BoxDecoration(
                        border: Border(left: BorderSide(color: AppTheme.primaryBlue, width: 2))
                      ),
-                     child: Text(
-                       "Javob: ${comment.replyToUserName}", 
-                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Text(
+                           "@${comment.replyToUserName}", 
+                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryBlue)
+                         ),
+                         if (comment.replyToContent != null && comment.replyToContent!.isNotEmpty)
+                           Padding(
+                             padding: const EdgeInsets.only(top: 2),
+                             child: Text(
+                               comment.replyToContent!,
+                               maxLines: 1,
+                               overflow: TextOverflow.ellipsis,
+                               style: const TextStyle(fontSize: 12, color: AppTheme.primaryBlue)
+                             ),
+                           ),
+                       ],
                      ),
                    ),
 

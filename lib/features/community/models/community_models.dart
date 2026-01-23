@@ -205,6 +205,7 @@ class Comment {
       isMine: json['is_mine'] ?? false,
       isLikedByAuthor: json['is_liked_by_author'] ?? false,
       replyToUserName: json['reply_to_username'], 
+      replyToContent: json['reply_to_content'], // Assumed this was missing
       replyToCommentId: json['reply_to_comment_id']?.toString(), // NEW
     );
   }
