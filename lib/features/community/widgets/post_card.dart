@@ -39,6 +39,7 @@ class _PostCardState extends State<PostCard> {
   
   List<int>? _pollVotes;
   int? _userVote; 
+  bool _isExpanded = false;
   
   late int _commentCount;
   late String _currentContent;
