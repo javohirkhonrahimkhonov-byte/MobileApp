@@ -17,6 +17,7 @@ import '../../clubs/screens/clubs_screen.dart';
 import '../../appeals/screens/appeals_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/services/notification_service.dart';
+import '../../profile/screens/subscription_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -129,7 +130,15 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           elevation: 0,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: (index) {
+            final isPremium = _profile?['is_premium'] ?? false;
+            // Guard Bozor (1), AI (2), Choyxona (3)
+            if ((index == 1 || index == 2 || index == 3) && !isPremium) {
+              _showPremiumDialog();
+              return;
+            }
+            setState(() => _currentIndex = index);
+          },
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "Asosiy"),
             BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_rounded), label: "Bozor"),
@@ -323,7 +332,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: "Ijtimoiy Faollik",
                 icon: Icons.star_rounded,
                 color: Colors.orange,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialActivityScreen())),
+                onTap: () {
+                  if (!(_profile?['is_premium'] ?? false)) {
+                     _showPremiumDialog();
+                     return;
+                  }
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialActivityScreen()));
+                },
               ),
               DashboardCard(
                 title: "Hujjatlar",
@@ -350,6 +365,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPremiumDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber),
+            SizedBox(width: 10),
+            Text("Premium kerak"),
+          ],
+        ),
+        content: const Text(
+          "Bu bo'limdan foydalanish uchun Premium obunangiz bo'lishi lozim. "
+          "Premium orqali barcha cheklovlarni olib tashlang!",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("Keyinroq", style: TextStyle(color: Colors.grey[600])),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Premiumga o'tish", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
