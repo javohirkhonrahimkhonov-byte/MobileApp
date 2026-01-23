@@ -154,12 +154,20 @@ class _HomeScreenState extends State<HomeScreen> {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: Colors.grey[200],
-                backgroundImage: (_profile?['image'] != null && _profile!['image'].toString().isNotEmpty)
-                    ? NetworkImage(_profile!['image'])
-                    : null,
-                child: (_profile?['image'] != null && _profile!['image'].toString().isNotEmpty)
-                    ? null
-                    : const Icon(Icons.person, color: Colors.grey),
+                backgroundImage: () {
+                   final url = _profile?['image_url'] ?? _profile?['image'];
+                   if (url != null && url.toString().isNotEmpty) {
+                     return NetworkImage(url);
+                   }
+                   return null;
+                }(),
+                child: () {
+                   final url = _profile?['image_url'] ?? _profile?['image'];
+                   if (url != null && url.toString().isNotEmpty) {
+                     return null;
+                   }
+                   return const Icon(Icons.person, color: Colors.grey);
+                }(),
               ),
               const SizedBox(width: 12),
               Column(

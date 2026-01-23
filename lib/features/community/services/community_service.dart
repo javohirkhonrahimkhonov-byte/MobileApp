@@ -212,7 +212,7 @@ class CommunityService {
       authorId: json['author_id']?.toString() ?? "0", // NEW
       authorName: json['author_name'] ?? "Noma'lum",
       authorUsername: json['author_username'] ?? "",
-      authorAvatar: "", // Placeholder
+      authorAvatar: json['author_avatar'] ?? json['author_image'] ?? json['image'] ?? "", 
       authorRole: json['author_role'] ?? "Talaba",
       content: json['content'] ?? "",
       timeAgo: _formatDate(json['created_at']),
@@ -273,7 +273,7 @@ class CommunityService {
           postId: postId,
           authorId: json['author_id']?.toString() ?? "0", // NEW
           authorName: json['author_name'] ?? "Talaba",
-          authorAvatar: json['author_avatar'] ?? "",
+          authorAvatar: json['author_avatar'] ?? json['author_image'] ?? json['image'] ?? "",
           content: json['content'] ?? "",
           timeAgo: _formatDate(createdAtStr),
           createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
@@ -321,7 +321,7 @@ class CommunityService {
           postId: postId,
           authorId: jsonMap['author_id']?.toString() ?? "0", // NEW
           authorName: jsonMap['author_name'] ?? "Noma'lum",
-          authorAvatar: jsonMap['author_avatar'] ?? "",
+          authorAvatar: jsonMap['author_avatar'] ?? jsonMap['author_image'] ?? jsonMap['image'] ?? "",
           content: jsonMap['content'] ?? "",
           timeAgo: _formatDate(createdAtStr),
           createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
