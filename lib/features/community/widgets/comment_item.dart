@@ -152,7 +152,9 @@ class CommentItem extends StatelessWidget {
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
                          Text(
-                           "@${comment.replyToUserName}", 
+                           comment.replyToUserName!.startsWith('@') 
+                               ? comment.replyToUserName! 
+                               : "@${comment.replyToUserName}", 
                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryBlue)
                          ),
                          if (comment.replyToContent != null && comment.replyToContent!.isNotEmpty)
