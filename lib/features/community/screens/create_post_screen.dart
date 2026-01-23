@@ -56,6 +56,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     // Mock Current User
     final newPost = Post(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      authorId: "0", // NEW (Optimistic ID)
       authorName: "Men (Talaba)", 
       authorUsername: "@me",
       authorAvatar: "",

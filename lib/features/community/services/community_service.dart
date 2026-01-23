@@ -319,6 +319,7 @@ class CommunityService {
         return Comment(
           id: jsonMap['id'].toString(),
           postId: postId,
+          authorId: jsonMap['author_id']?.toString() ?? "0", // NEW
           authorName: jsonMap['author_name'] ?? "Noma'lum",
           authorAvatar: jsonMap['author_avatar'] ?? "",
           content: jsonMap['content'] ?? "",
