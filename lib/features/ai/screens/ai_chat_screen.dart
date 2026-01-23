@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/data_service.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/auth_provider.dart';
 
 class AiChatScreen extends StatefulWidget {
   final String? initialQuery;

@@ -281,12 +281,10 @@ class _MarketScreenState extends State<MarketScreen> {
           mainAxisSpacing: 12,
         ),
         delegate: SliverChildBuilderDelegate(
-          (context, index) => _buildBookCard(_newItems[index]), // Reusing book card logic, but maybe bigger?
+          (context, index) => _buildBookCard(_newItems[index]), 
           childCount: _newItems.length,
         ),
       ),
     );
-  }
-
   }
 }
