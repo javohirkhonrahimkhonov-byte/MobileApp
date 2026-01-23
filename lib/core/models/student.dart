@@ -77,6 +77,7 @@ class Student {
       imageUrl: json['image'] ?? json['image_url'],
       username: json['username'], // Map username
       missedHours: json['missed_hours'] ?? 0,
+      role: json['role'] ?? json['user_role'],
     );
   }
 
@@ -93,6 +94,7 @@ class Student {
       'image_url': imageUrl,
       'username': username,
       'missed_hours': missedHours,
+      'role': role,
     };
   }
 
@@ -107,7 +109,9 @@ class Student {
     String? semesterName,
     String? imageUrl,
     String? username,
+    String? username,
     int? missedHours,
+    String? role,
   }) {
     return Student(
       id: id ?? this.id,
@@ -121,6 +125,7 @@ class Student {
       imageUrl: imageUrl ?? this.imageUrl,
       username: username ?? this.username,
       missedHours: missedHours ?? this.missedHours,
+      role: role ?? this.role,
     );
   }
 }
