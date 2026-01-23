@@ -268,23 +268,7 @@ class CommunityService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) {
           final createdAtStr = json['created_at'];
-          return Comment(
-          id: json['id'].toString(),
-          postId: postId,
-          authorId: json['author_id']?.toString() ?? "0", // NEW
-          authorName: json['author_name'] ?? "Talaba",
-          authorAvatar: json['author_avatar'] ?? json['author_image'] ?? json['image'] ?? "",
-          content: json['content'] ?? "",
-          timeAgo: _formatDate(createdAtStr),
-          createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
-          likes: json['likes_count'] ?? 0,
-          isLiked: json['is_liked'] ?? false,
-          isLikedByAuthor: json['is_liked_by_author'] ?? false,
-          authorRole: json['author_role'] ?? "Talaba",
-          replyToUserName: json['reply_to_username'],
-          replyToContent: json['reply_to_content'],
-          isMine: json['is_mine'] ?? false,
-        );
+          return Comment.fromJson(json);
         }).toList();
       } else {
         print("CommunityService: Failed to load comments: ${response.statusCode}");
@@ -316,23 +300,7 @@ class CommunityService {
         
         // Map manually because it's a single object, not list
         final createdAtStr = jsonMap['created_at'];
-        return Comment(
-          id: jsonMap['id'].toString(),
-          postId: postId,
-          authorId: jsonMap['author_id']?.toString() ?? "0", // NEW
-          authorName: jsonMap['author_name'] ?? "Noma'lum",
-          authorAvatar: jsonMap['author_avatar'] ?? jsonMap['author_image'] ?? jsonMap['image'] ?? "",
-          content: jsonMap['content'] ?? "",
-          timeAgo: _formatDate(createdAtStr),
-          createdAt: createdAtStr != null ? DateTime.parse(createdAtStr) : DateTime.now(),
-          likes: jsonMap['likes_count'] ?? 0,
-          isLiked: jsonMap['is_liked'] ?? false,
-          isLikedByAuthor: jsonMap['is_liked_by_author'] ?? false,
-          authorRole: jsonMap['author_role'] ?? "Talaba",
-          replyToUserName: jsonMap['reply_to_username'],
-          replyToContent: jsonMap['reply_to_content'],
-          isMine: jsonMap['is_mine'] ?? true, // Created by me, so true
-        );
+        return Comment.fromJson(jsonMap);
       } else {
         throw Exception("Failed to create comment: ${response.statusCode}");
       }
