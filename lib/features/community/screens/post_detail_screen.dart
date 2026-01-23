@@ -135,9 +135,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                comment.authorName,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              Row(
+                                children: [
+                                  Text(
+                                    comment.authorName,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  if (comment.authorIsPremium) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.verified, color: Colors.blue, size: 14),
+                                  ]
+                                ],
                               ),
                               if (comment.authorUsername.isNotEmpty)
                                 Text(

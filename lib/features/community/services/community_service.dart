@@ -270,7 +270,8 @@ class CommunityService {
       repostsCount: json['reposts_count'] ?? 0,
       isRepostedByMe: json['is_reposted_by_me'] ?? false,
       commentsCount: json['comments_count'] ?? 0,
-      isVerified: false,
+      isVerified: json['author_is_premium'] ?? false,
+      authorIsPremium: json['author_is_premium'] ?? false, // NEW
       isMine: json['is_mine'] ?? false,
     );
   }

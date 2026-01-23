@@ -426,7 +426,15 @@ class _CommentSheetState extends State<CommentSheet> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    Row(
+                      children: [
+                        Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        if (post.authorIsPremium) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified, color: Colors.blue, size: 14),
+                        ]
+                      ],
+                    ),
                     if (post.authorUsername.isNotEmpty)
                       Text("@${post.authorUsername}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500, fontSize: 11)),
                   ],

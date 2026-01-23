@@ -147,7 +147,15 @@ class UserSearchDelegate extends SearchDelegate {
                         ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18))
                         : null,
                   ),
-                  title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  title: Row(
+                    children: [
+                      Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      if (student.isPremium) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, color: Colors.blue, size: 16),
+                      ]
+                    ],
+                  ),
                   subtitle: Text("@${student.username ?? 'usernamesiz'}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500)),
                   onTap: () {
                      // Save to history
@@ -159,7 +167,8 @@ class UserSearchDelegate extends SearchDelegate {
                       authorId: student.id.toString(),
                       authorUsername: student.username ?? "",
                       authorAvatar: student.imageUrl ?? "",
-                      authorRole: "Talaba" // Default role
+                      authorRole: "Talaba",
+                      authorIsPremium: student.isPremium, // NEW
                     )));
                   },
                 ),
