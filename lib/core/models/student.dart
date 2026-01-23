@@ -109,7 +109,6 @@ class Student {
     String? semesterName,
     String? imageUrl,
     String? username,
-    String? username,
     int? missedHours,
     String? role,
   }) {
