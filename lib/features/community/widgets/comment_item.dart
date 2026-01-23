@@ -81,6 +81,7 @@ class CommentItem extends StatelessWidget {
     );
   }
 
+  Widget _buildContent(BuildContext context) {
     // "Indented to the right" for replies
     // User Requirement: "Replies must be visually indented to the right (one tab / padding-left)"
     // Increased indentation to 48.0 for better visibility.
@@ -97,8 +98,6 @@ class CommentItem extends StatelessWidget {
       ), // Slightly reduced internal padding for tighter list
       decoration: BoxDecoration(
          color: isParent ? Colors.grey[50] : Colors.white,
-         // Optional: Add left border for replies to make it distinct?
-         // border: isReply ? Border(left: BorderSide(color: Colors.grey[300]!, width: 2)) : null
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,7 +172,7 @@ class CommentItem extends StatelessWidget {
                       const SizedBox(width: 16),
                       GestureDetector(
                         onTap: () => onReply?.call(comment),
-                        child: const Text("Javob berish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                        child: const Text("Javob berish", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
                       ),
                     ],
                     const Spacer(),

@@ -13,7 +13,7 @@ class MarketService {
     if (token == null) return [];
 
     try {
-      var uri = Uri.parse('${ApiConstants.baseUrl}/market');
+      var uri = Uri.parse('${ApiConstants.backendUrl}/market');
       final queryParams = <String, String>{'sort': sort};
       if (category != null && category != 'all') queryParams['cat'] = category;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
@@ -47,7 +47,7 @@ class MarketService {
 
     try {
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/market'),
+        Uri.parse('${ApiConstants.backendUrl}/market'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ class MarketService {
 
     try {
       final response = await http.delete(
-        Uri.parse('${ApiConstants.baseUrl}/market/$id'),
+        Uri.parse('${ApiConstants.backendUrl}/market/$id'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -85,7 +85,7 @@ class MarketService {
     if (token == null) return;
     try {
       await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/market/$id/view'),
+        Uri.parse('${ApiConstants.backendUrl}/market/$id/view'),
         headers: {'Authorization': 'Bearer $token'},
       );
     } catch (e) {

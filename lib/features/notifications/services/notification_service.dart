@@ -16,7 +16,7 @@ class NotificationService {
       if (token == null) throw Exception('No token found');
 
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/student/notifications/list?skip=$skip&limit=$limit'),
+        Uri.parse('${ApiConstants.backendUrl}/student/notifications/list?skip=$skip&limit=$limit'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ class NotificationService {
       if (token == null) return 0;
 
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/student/notifications/unread-count'),
+        Uri.parse('${ApiConstants.backendUrl}/student/notifications/unread-count'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -62,7 +62,7 @@ class NotificationService {
       if (token == null) return;
 
       await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/student/notifications/$id/read'),
+        Uri.parse('${ApiConstants.backendUrl}/student/notifications/$id/read'),
         headers: {
           'Authorization': 'Bearer $token',
         },

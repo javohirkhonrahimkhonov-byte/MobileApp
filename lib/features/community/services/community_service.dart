@@ -31,7 +31,7 @@ class CommunityService {
     try {
       if (query.length < 2) return [];
       
-      final url = Uri.parse('${ApiConstants.baseUrl}/student/search?query=$query');
+      final url = Uri.parse('${ApiConstants.backendUrl}/student/search?query=$query');
       final response = await http.get(url, headers: await _getHeaders());
       
       if (response.statusCode == 200) {
