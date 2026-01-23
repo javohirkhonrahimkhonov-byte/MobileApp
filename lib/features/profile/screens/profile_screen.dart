@@ -313,7 +313,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                          Text(
-                           student.isPremium ? "Premium Faol" : "Premium Obuna", 
+                           student.isPremium ? "Premium foydalanuvchi" : "Premium Obuna", 
                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
                          ),
                          Text(

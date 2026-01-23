@@ -212,7 +212,7 @@ class _CommentSheetState extends State<CommentSheet> {
     String? findRootId(String startId) {
       String currentId = startId;
       int depth = 0;
-      while (depth < 10) { // Safety break
+      while (depth < 100) { // Safety break - increased to support deep threads
         final current = lookup[currentId];
         if (current == null) return null; // Parent not found in list (maybe deleted or pagination)
         
