@@ -252,6 +252,13 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
                 repostsCount: count
               );
             },
+            onContentChanged: (newContent) {
+              _posts[scope]![index] = posts[index].copyWith(
+                content: newContent
+              );
+              // Force rebuild to ensure UI consistency if needed, though PostCard handles its own state
+              // But if we scroll away and back, this updated model will be used.
+            },
           );
         },
       ),

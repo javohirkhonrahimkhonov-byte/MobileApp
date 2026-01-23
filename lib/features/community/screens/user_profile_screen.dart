@@ -367,6 +367,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         itemBuilder: (ctx, i) => PostCard(
                           post: _posts[i], 
                           onDelete: () => _handleDelete(_posts[i].id),
+                          onContentChanged: (newContent) {
+                            setState(() {
+                               _posts[i] = _posts[i].copyWith(content: newContent);
+                            });
+                          },
                         ),
                       ),
                       

@@ -15,6 +15,7 @@ class PostCard extends StatefulWidget {
   final bool isDetail;
   final Function(bool isLiked, int count)? onLikeChanged;
   final Function(bool isReposted, int count)? onRepostChanged;
+  final Function(String newContent)? onContentChanged; // NEW
   final VoidCallback? onDelete; 
 
   const PostCard({
@@ -23,6 +24,7 @@ class PostCard extends StatefulWidget {
     this.isDetail = false,
     this.onLikeChanged,
     this.onRepostChanged,
+    this.onContentChanged,
     this.onDelete,
   });
 
@@ -145,6 +147,8 @@ class _PostCardState extends State<PostCard> {
               // Revert on failure
               setState(() => _currentContent = widget.post.content); 
               // Removed toast as requested
+           } else if (success && widget.onContentChanged != null) {
+              widget.onContentChanged!(updatedContent);
            } 
        }
     });
