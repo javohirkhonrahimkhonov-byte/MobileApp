@@ -324,30 +324,66 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 24),
                   
                   // Actions
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryBlue,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                          elevation: 0,
+                  if (_isMe)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              // Trigger username edit or open settings
+                              setState(() => _isEditingUsername = true);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.grey[100],
+                              side: BorderSide.none,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                            ),
+                            child: const Text("Profilni tahrirlash", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                          ),
                         ),
-                        child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 12),
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          side: const BorderSide(color: Colors.black12),
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        const SizedBox(width: 8),
+                        // Settings / Share Icon
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(10)
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.share, color: Colors.black),
+                            onPressed: () {
+                              // Share profile logic placeholder
+                            },
+                          ),
+                        )
+                      ],
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            elevation: 0,
+                          ),
+                          child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
-                        child: const Text("Xabar yozish", style: TextStyle(color: Colors.black)),
-                      )
-                    ],
+                        const SizedBox(width: 12),
+                        OutlinedButton(
+                          onPressed: () {},
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            side: const BorderSide(color: Colors.black12),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                          child: const Text("Xabar yozish", style: TextStyle(color: Colors.black)),
+                        )
+                      ],
+                    ),
                   ),
                   
                   const SizedBox(height: 20),
