@@ -194,7 +194,7 @@ class Comment {
       isLiked: json['is_liked'] ?? false,
       isMine: json['is_mine'] ?? false,
       isLikedByAuthor: json['is_liked_by_author'] ?? false,
-      replyToUserName: json['reply_user'],
+      replyToUserName: json['reply_to_username'], // Fixed key to match backend
     );
   }
 

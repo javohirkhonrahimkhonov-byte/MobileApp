@@ -626,5 +626,26 @@ class DataService {
       return null;
     }
   }
+
+  // 25. Get Uzum URL
+  Future<String?> getUzumUrl({int amount = 10000}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/payment/uzum-url?amount=$amount'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+          return body['url'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching Uzum URL: $e");
+      return null;
+    }
+  }
 }
 
