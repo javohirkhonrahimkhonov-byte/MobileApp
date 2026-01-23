@@ -163,20 +163,18 @@ class Comment {
   final bool isLiked;
   final bool isLikedByAuthor;
   final String? authorRole;
-  final String? replyToUserName;
-  final String? replyToContent;
-  final bool isMine;
+  final String? replyToCommentId; // NEW
 
   Comment({
     required this.id,
-    required this.postId, // Added
-    required this.authorId, // Added
+    required this.postId,
+    required this.authorId,
     required this.authorName,
-    this.authorUsername = "", // Added
+    this.authorUsername = "", 
     this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
-    required this.createdAt, // Added
+    required this.createdAt,
     this.likes = 0,
     this.isLiked = false,
     this.isLikedByAuthor = false,
@@ -184,6 +182,7 @@ class Comment {
     this.replyToUserName,
     this.replyToContent,
     this.isMine = false,
+    this.replyToCommentId, // NEW
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -191,9 +190,9 @@ class Comment {
       id: json['id'].toString(),
       postId: json['post_id']?.toString() ?? "0",
       content: json['content'],
-      authorId: json['author_id'].toString(), // NEW
+      authorId: json['author_id'].toString(),
       authorName: json['author_name'],
-      authorUsername: json['author_username'] ?? "", // Added
+      authorUsername: json['author_username'] ?? "",
       authorAvatar: json['author_avatar'] ?? "",
       authorRole: "Talaba",
       createdAt: DateTime.parse(json['created_at']),
@@ -202,7 +201,8 @@ class Comment {
       isLiked: json['is_liked'] ?? false,
       isMine: json['is_mine'] ?? false,
       isLikedByAuthor: json['is_liked_by_author'] ?? false,
-      replyToUserName: json['reply_to_username'], // Fixed key to match backend
+      replyToUserName: json['reply_to_username'], 
+      replyToCommentId: json['reply_to_comment_id']?.toString(), // NEW
     );
   }
 
@@ -223,6 +223,7 @@ class Comment {
     String? replyToUserName,
     String? replyToContent,
     bool? isMine,
+    String? replyToCommentId, // NEW
   }) {
     return Comment(
       id: id ?? this.id,
@@ -241,6 +242,7 @@ class Comment {
       replyToUserName: replyToUserName ?? this.replyToUserName,
       replyToContent: replyToContent ?? this.replyToContent,
       isMine: isMine ?? this.isMine,
+      replyToCommentId: replyToCommentId ?? this.replyToCommentId, // NEW
     );
   }
 }

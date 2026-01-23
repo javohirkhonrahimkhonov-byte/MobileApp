@@ -204,8 +204,74 @@ class _CommentSheetState extends State<CommentSheet> {
     }
   }
 
+  Map<String, List<Comment>> _getRepliesMap() {
+    final Map<String, List<Comment>> map = {};
+    for (var c in _comments) {
+      if (c.replyToCommentId != null && c.replyToCommentId != "0" && c.replyToCommentId != "null") {
+         map.putIfAbsent(c.replyToCommentId!, () => []).add(c);
+      }
+    }
+    // Sort replies: Oldest First (Chronological)
+    for (var list in map.values) {
+      list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+    return map;
+  }
+
+  List<Comment> _getRoots() {
+     return _comments.where((c) => c.replyToCommentId == null || c.replyToCommentId == "0" || c.replyToCommentId == "null").toList();
+  }
+
+  Widget _buildThreadRecursively(Comment comment, Map<String, List<Comment>> repliesMap, int depth) {
+    final List<Comment>? directReplies = repliesMap[comment.id];
+    final bool hasReplies = directReplies != null && directReplies.isNotEmpty;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCommentItem(comment, isReply: depth > 0),
+        
+        if (hasReplies)
+          Padding(
+            // Only indent the first level of replies. Deep replies stay flat.
+            padding: EdgeInsets.only(left: depth == 0 ? 16.0 : 0.0), 
+            child: IntrinsicHeight( 
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Connector Line (Only for Root's direct children)
+                  if (depth == 0) 
+                  Container(
+                    width: 20,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: Colors.grey[300]!, width: 2),
+                      )
+                    ),
+                  ),
+
+                  // The Replies Stack
+                  Expanded(
+                    child: Column(
+                      children: directReplies.map((reply) => 
+                        _buildThreadRecursively(reply, repliesMap, depth + 1) 
+                      ).toList(),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          )
+      ],
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    final roots = _getRoots();
+    final repliesMap = _getRepliesMap();
+
     return DraggableScrollableSheet(
       initialChildSize: 0.75, // Open at 75% height
       minChildSize: 0.5,
@@ -258,9 +324,9 @@ class _CommentSheetState extends State<CommentSheet> {
                         ? SingleChildScrollView(child: _buildEmptyState()) // Wrap with ScrollView for pull-to-refresh on empty
                         : ListView.builder(
                             controller: scrollController, // Important for drag behavior
-                            itemCount: _comments.length,
+                            itemCount: roots.length,
                             padding: const EdgeInsets.only(bottom: 20),
-                            itemBuilder: (context, index) => _buildCommentItem(_comments[index]),
+                            itemBuilder: (context, index) => _buildThreadRecursively(roots[index], repliesMap, 0),
                           ),
                     ),
               ),
@@ -472,198 +538,127 @@ class _CommentSheetState extends State<CommentSheet> {
     return parts.isNotEmpty ? parts[0] : "Talaba";
   }
 
-  Widget _buildCommentItem(Comment comment) {
-    // Indentation for replies (Visual Threading)
-    // "t tab surilib"
-    final double indent = comment.replyToUserName != null ? 32.0 : 0.0;
-    
-    final content = _buildCommentContent(comment);
-
-    if (comment.isMine) {
-      return Dismissible(
-        key: Key(comment.id),
-        direction: DismissDirection.startToEnd,
-        background: Container(
-          color: Colors.red[50],
-          margin: EdgeInsets.only(left: indent), // Indent background too
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: const Icon(Icons.delete_outline, color: Colors.red),
+  Widget _buildCommentItem(Comment comment, {bool isReply = false}) {
+    // Only apply Swipe-to-Reply here. Nesting indentation is handled by list builder.
+    return Dismissible(
+      key: ValueKey("reply_${comment.id}"),
+      direction: DismissDirection.endToStart, // Swipe Left to Reply
+      confirmDismiss: (direction) async {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _replyingTo = comment;
+        });
+        return false; // Don't actually dismiss
+      },
+      background: Container(
+        color: Colors.blue[50], // Reply Color
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text("Javob berish", style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
+            SizedBox(width: 8),
+            Icon(Icons.reply, color: AppTheme.primaryBlue),
+          ],
         ),
-        confirmDismiss: (direction) async {
-          return await showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text("O'chirish"),
-              content: const Text("Ushbu sharhni o'chirmoqchimisiz?"),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Yo'q")),
-                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Ha", style: TextStyle(color: Colors.red))),
-              ],
-            ),
-          );
-        },
-        onDismissed: (direction) {
-          _deleteComment(comment.id);
-        },
-        child: Padding(
-          padding: EdgeInsets.only(left: indent),
-          child: content
-        ),
-      );
-    } else {
-      return Padding(
-        padding: EdgeInsets.only(left: indent),
-        child: content
-      );
-    }
-  }
-
-  Widget _buildCommentContent(Comment comment) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[100]!))
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Avatar
-          GestureDetector(
-            onTap: () {
-               Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
-                  authorName: comment.authorName,
-                  authorId: comment.authorId, // NEW
-                  authorUsername: comment.authorUsername, // Should use actual username
-                  authorAvatar: comment.authorAvatar,
-                  authorRole: comment.authorRole ?? "Talaba",
-               )));
-            },
-            child: CircleAvatar(
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-              backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
-              radius: 18,
-              child: comment.authorAvatar.isEmpty 
-                ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
-                : null,
-            ),
-          ),
-          const SizedBox(width: 12),
-          
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Name & Username
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      comment.authorName, // Show Full Name as requested
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    if (comment.authorUsername.isNotEmpty)
-                      Text(
-                        "@${comment.authorUsername}",
-                        style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500, fontSize: 11),
-                      ),
-                  ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: Colors.white, // comment.id == _replyingTo?.id ? Colors.blue[50] : Colors.white, // Highlight if replying
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar
+            GestureDetector(
+                onTap: () {
+                   Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                      authorName: comment.authorName,
+                      authorId: comment.authorId,
+                      authorUsername: comment.authorUsername,
+                      authorAvatar: comment.authorAvatar,
+                      authorRole: comment.authorRole ?? "Talaba",
+                   )));
+                },
+                child: CircleAvatar(
+                  backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                  backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
+                  radius: 18,
+                  child: comment.authorAvatar.isEmpty 
+                    ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                    : null,
                 ),
-                
-                // 2. Reply Context (Telegram Style)
-                if (comment.replyToUserName != null)
-                   Container(
-                     margin: const EdgeInsets.only(top: 4, bottom: 4),
-                     padding: const EdgeInsets.only(left: 8),
-                     decoration: const BoxDecoration(
-                       border: Border(left: BorderSide(color: AppTheme.primaryBlue, width: 2))
-                     ),
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         Text(
-                           comment.replyToUserName!, 
-                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryBlue)
-                         ),
-                         Text(
-                           comment.replyToContent ?? "...",
-                           maxLines: 1,
-                           overflow: TextOverflow.ellipsis,
-                           style: TextStyle(fontSize: 11, color: Colors.grey[600])
-                         ),
-                       ],
-                     )
-                   ),
-
-                const SizedBox(height: 2),
-                
-                // 3. Main Comment Content + Like Button
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        comment.content, 
-                        style: const TextStyle(fontSize: 13, height: 1.3, color: Colors.black87)
-                      ),
-                    ),
-                    
-                    // Like Count & Icon (Moved here)
-                    GestureDetector(
-                      onTap: () => _toggleCommentLike(comment.id),
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
-                        child: Column( // Column for Icon + Count stack or Row? User said "Like button". Usually Icon.
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                             Icon(
-                              comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                              size: 18, // Slightly larger
-                              color: comment.isLiked ? Colors.red : Colors.grey[400],
-                            ),
-                            if (comment.likes > 0)
-                               Text(
-                                 "${comment.likes}",
-                                 style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                               ),
-                          ],
+              ),
+            const SizedBox(width: 10),
+            
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name + Username Row (Blue)
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.black, fontFamily: 'Inter'),
+                      children: [
+                        TextSpan(
+                          text: comment.authorName, 
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)
                         ),
-                      ),
+                        const WidgetSpan(child: SizedBox(width: 4)),
+                        if (comment.authorUsername.isNotEmpty)
+                          TextSpan(
+                            text: "@${comment.authorUsername}",
+                            style: const TextStyle(color: AppTheme.primaryBlue, height:1.2, fontSize: 13, fontWeight: FontWeight.w500)
+                          ),
+                      ]
+                    )
+                  ),
+                  
+                  // Comment Content
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 4),
+                    child: Text(
+                      comment.content,
+                      style: const TextStyle(fontSize: 14, height: 1.3),
                     ),
-                  ],
-                ),
-                
-                const SizedBox(height: 4),
+                  ),
 
-                // 4. Action Row (Time, Reply)
-                Row(
-                  children: [
-                    // Time
-                    Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-                    
-                    const SizedBox(width: 16),
-                    
-                    // Reply Button
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() {
-                          _replyingTo = comment;
-                        });
-                      },
-                      child: Text(
-                        "Javob berish", 
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
+                  // Footer: Time + Reply + Likes
+                   Row(
+                      children: [
+                        Text(comment.timeAgo, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () {
+                             HapticFeedback.lightImpact();
+                             setState(() => _replyingTo = comment);
+                          },
+                          child: const Text("Javob berish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+                        ),
+                        const Spacer(),
+                         GestureDetector(
+                          onTap: () => _toggleCommentLike(comment.id),
+                          child: Row(
+                            children: [
+                               Icon(
+                                 comment.isLiked ? Icons.favorite : Icons.favorite_outline, 
+                                 size: 14, 
+                                 color: comment.isLiked ? Colors.red : Colors.grey 
+                               ),
+                               if (comment.likes > 0) ...[
+                                 const SizedBox(width: 4),
+                                 Text("${comment.likes}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                               ]
+                            ],
+                          ),
+                         )
+                      ],
+                    )
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
