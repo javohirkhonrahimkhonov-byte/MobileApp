@@ -1,9 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/data_service.dart';
 
-class SubscriptionScreen extends StatelessWidget {
+class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
+
+  @override
+  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  bool _isLoading = false;
+
+  Future<void> _payWithPayme() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final url = await DataService().getPaymeUrl(amount: 10000);
+      
+      if (url != null && mounted) {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Linkni ochib bo'lmadi")));
+          }
+        }
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("To'lov havolasini olib bo'lmadi")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,11 +110,30 @@ class SubscriptionScreen extends StatelessWidget {
             ),
             
             const SizedBox(height: 30),
+
+            // 3.5 Payme Automartik
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _payWithPayme,
+                icon: _isLoading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.payment, color: Colors.white), 
+                label: Text(_isLoading ? "Yuklanmoqda..." : "Payme orqali to'lash (Avtomatik)", style: const TextStyle(color: Colors.white, fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00CCCC), // Payme Color roughly
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 30),
             
             // 4. Payment Info (Manual)
             const Text(
-              "To'lov qilish (Qo'lda):",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              "Yoki qo'lda to'lov:",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Container(
@@ -88,7 +145,7 @@ class SubscriptionScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text("Quyidagi kartaga o'tkazma qiling:", style: TextStyle(color: Colors.grey)),
+                  const Text("Karta raqami:", style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -109,17 +166,17 @@ class SubscriptionScreen extends StatelessWidget {
                   const Text("Toshmat Eshmatov", style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
                   const Text(
-                    "To'lov qilgach, chekni (skrinshot) administratorga Telegram orqali yuboring:",
+                    "To'lov qilgach, chekni administratorga yuboring:",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13),
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      // Open telegram bot link? Or just show username
-                      // For now, let's just show a dialog or assume they know the bot.
-                      // Or Launch URL.
-                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tez orada avtomatik Click ulanadi!")));
+                    onPressed: () async {
+                      const url = "https://t.me/javohir_contact"; // Replace with actual support name
+                      if (await canLaunchUrl(Uri.parse(url))) {
+                          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                      }
                     }, 
                     icon: const Icon(Icons.send_rounded),
                     label: const Text("Chekni yuborish (Telegram)"),
@@ -130,13 +187,6 @@ class SubscriptionScreen extends StatelessWidget {
                   )
                 ],
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            const Text(
-              "Tez orada Click va Payme orqali avtomatik to'lov qo'shiladi.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
