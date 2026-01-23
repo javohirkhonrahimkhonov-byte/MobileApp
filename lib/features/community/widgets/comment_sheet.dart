@@ -27,6 +27,7 @@ class _CommentSheetState extends State<CommentSheet> {
   final ScrollController _scrollController = ScrollController();
   
   List<Comment> _comments = [];
+  final Set<String> _expandedCommentIds = {}; // Track expanded threads inline
   bool _isLoading = true;
   bool _isSending = false;
   
@@ -244,6 +245,7 @@ class _CommentSheetState extends State<CommentSheet> {
                             itemBuilder: (context, index) {
                               final root = roots[index];
                               final replies = repliesMap[root.id] ?? [];
+                              final isExpanded = _expandedCommentIds.contains(root.id);
                               
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,65 +257,52 @@ class _CommentSheetState extends State<CommentSheet> {
                                     onDelete: _deleteComment,
                                   ),
                                   
-                                  // "View replies" Button Logic (YouTube Style)
+                                  // Inline "Javoblar (N)" Dropdown Button
                                   if (replies.isNotEmpty)
                                     Padding(
                                       padding: const EdgeInsets.only(left: 60, bottom: 8),
                                       child: GestureDetector(
-                                        onTap: () async {
+                                        onTap: () {
                                           HapticFeedback.lightImpact();
-                                          // Navigate to Reply Thread
-                                          // We pass all comments to thread, but only those belonging to this root will be shown initially.
-                                          // Currently custom ReplyThreadSheet takes `initialReplies`.
-                                          final updatedReplies = await Navigator.push(
-                                            context, 
-                                            MaterialPageRoute(builder: (_) => ReplyThreadSheet(
-                                              parentComment: root,
-                                              initialReplies: replies,
-                                              onReplyCountChanged: (count) {
-                                                 // Optional: Refresh count locally if needed
-                                              },
-                                            ))
-                                          );
-                                          
-                                          // When coming back, we might receive updated list of replies. 
-                                          // We need to merge them back into _comments.
-                                          if (updatedReplies is List<Comment>) {
-                                            // The user might have deleted comments inside the thread, or added new ones.
-                                            // Ideally, we should merge. But simplest robustness is to just reload.
-                                            // User requested "Replies must be fetched and rendered based on parentCommentId".
-                                            // But for the main list, we just need to update the valid comments list.
-                                            
-                                            _loadComments(); // Force reload to sync state (deletions/additions)
-                                            
-                                            // OR: Manually update if we want to avoid network call.
-                                            // To do manual update, we need to know what was deleted.
-                                            // updatedReplies only has the CURRENT list of replies.
-                                            // So we can:
-                                            // 1. Remove all replies to this root from _comments.
-                                            // 2. Add all from updatedReplies.
-                                            
-                                            /*
-                                            setState(() {
-                                              _comments.removeWhere((c) => c.replyToCommentId == root.id);
-                                              _comments.addAll(updatedReplies);
-                                            });
-                                            widget.onCommentCountChanged?.call(_comments.length);
-                                            */
-                                          } else {
-                                             _loadComments();
-                                          }
+                                          setState(() {
+                                            if (isExpanded) {
+                                              _expandedCommentIds.remove(root.id);
+                                            } else {
+                                              _expandedCommentIds.add(root.id);
+                                            }
+                                          });
                                         },
-                                        child: Text(
-                                          "${replies.length} ta javobni ko'rish",
-                                          style: const TextStyle(
-                                            color: AppTheme.primaryBlue, 
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              "${replies.length} ta javoblar",
+                                              style: const TextStyle(
+                                                color: AppTheme.primaryBlue, 
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                              size: 16,
+                                              color: AppTheme.primaryBlue,
+                                            )
+                                          ],
                                         ),
                                       ),
-                                    )
+                                    ),
+                                    
+                                  // Expanded Replies List
+                                  if (isExpanded)
+                                    ...replies.map((reply) => CommentItem(
+                                      comment: reply,
+                                      onLike: _toggleCommentLike,
+                                      isReply: true, // Use the visual Reply connector
+                                      onReply: (c) => setState(() => _replyingTo = c), 
+                                      onDelete: _deleteComment,
+                                    )).toList(),
                                 ],
                               );
                             },

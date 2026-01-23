@@ -15,6 +15,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         Provider(create: (_) => DataService()),
       ],
       child: const TalabaHamkorApp(),
