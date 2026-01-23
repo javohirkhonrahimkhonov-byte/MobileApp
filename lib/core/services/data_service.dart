@@ -61,13 +61,14 @@ class DataService {
         final body = json.decode(response.body);
         if (body['success'] == true) {
           return body['data']['image_url'];
+        } else {
+             throw Exception(body['message'] ?? "Server xatosi");
         }
       }
-      print("Upload failed: ${response.statusCode} ${response.body}");
-      return null;
+      throw Exception("Server xatosi: ${response.statusCode}");
     } catch (e) {
       print("Error uploading avatar: $e");
-      return null;
+      rethrow; // Pass error to UI
     }
   }
 
