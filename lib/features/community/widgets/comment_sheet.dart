@@ -174,6 +174,31 @@ class _CommentSheetState extends State<CommentSheet> {
     }
   }
 
+  void _handleEditComment(Comment comment, String newContent) async {
+    // Optimistic Update
+    final index = _comments.indexWhere((c) => c.id == comment.id);
+    if (index == -1) return;
+
+    final oldContent = comment.content;
+    setState(() {
+      _comments[index] = comment.copyWith(content: newContent);
+    });
+
+    final updatedComment = await _service.editComment(comment.id, newContent);
+    if (updatedComment == null && mounted) {
+       // Revert
+       setState(() {
+         _comments[index] = comment.copyWith(content: oldContent);
+       });
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tahrirlashda xatolik bo'ldi")));
+    } else if (updatedComment != null && mounted) {
+       // Update with server response (optional, but good for sync)
+       setState(() {
+         _comments[index] = updatedComment;
+       });
+    }
+  }
+
   // --- Nesting Logic Helpers ---
   Map<String, List<Comment>> _getRepliesMap() {
     final Map<String, List<Comment>> map = {};
@@ -285,6 +310,7 @@ class _CommentSheetState extends State<CommentSheet> {
                                     onLike: _toggleCommentLike,
                                     onReply: (c) => setState(() => _replyingTo = c),
                                     onDelete: _deleteComment,
+                                    onEdit: _handleEditComment, // Pass Edit Handler
                                   ),
                                   
                                   // Inline "Javoblar (N)" Dropdown Button
@@ -332,6 +358,7 @@ class _CommentSheetState extends State<CommentSheet> {
                                       isReply: true, // Use the visual Reply connector
                                       onReply: (c) => setState(() => _replyingTo = c), 
                                       onDelete: _deleteComment,
+                                      onEdit: _handleEditComment, // Pass Edit Handler
                                     )).toList(),
                                 ],
                               );

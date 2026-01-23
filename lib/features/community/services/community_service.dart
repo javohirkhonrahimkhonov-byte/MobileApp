@@ -341,6 +341,26 @@ class CommunityService {
     }
   }
 
+  Future<Comment?> editComment(String commentId, String newContent) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.backendUrl}/community/comments/$commentId'),
+        headers: await _getHeaders(),
+        body: json.encode({'content': newContent}),
+      );
+
+      if (response.statusCode == 200) {
+        return Comment.fromJson(json.decode(response.body));
+      } else {
+        print("CommunityService: Failed to edit comment: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("CommunityService: Error editing comment: $e");
+      return null;
+    }
+  }
+
   Future<List<Chat>> getChats() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return [

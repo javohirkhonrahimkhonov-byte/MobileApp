@@ -7,7 +7,9 @@ class CommentItem extends StatelessWidget {
   final Comment comment;
   final Function(String commentId) onLike;
   final Function(Comment comment)? onReply;
+  final Function(Comment comment)? onReply;
   final Function(String commentId)? onDelete;
+  final Function(Comment comment, String newContent)? onEdit; // New Callback
   final bool isReply;
   final bool isParent; // For showing centered/highlighted in thread view
 
@@ -100,6 +102,34 @@ class CommentItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
+            onLongPress: () {
+              if (comment.isMine) {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (ctx) => Wrap(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.edit, color: Colors.blue),
+                        title: const Text("Tahrirlash"),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showEditDialog(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete, color: Colors.red),
+                        title: const Text("O'chirish"),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          // Trigger existing delete logic
+                          onDelete?.call(comment.id);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
             onTap: () {
                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: comment.authorName,
@@ -234,6 +264,33 @@ class CommentItem extends StatelessWidget {
     }
 
     return content;
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final controller = TextEditingController(text: comment.content);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Sharhni tahrirlash"),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish")),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                 onEdit?.call(comment, controller.text.trim());
+                 Navigator.pop(ctx);
+              }
+            }, 
+            child: const Text("Saqlash")
+          ),
+        ],
+      ),
+    );
   }
 }
 
