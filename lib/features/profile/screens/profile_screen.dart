@@ -6,6 +6,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
 import '../../../../core/services/data_service.dart'; // Ensure DataService is imported
 import '../../../../core/utils/role_mapper.dart'; // Import Mapper
+import 'subscription_screen.dart'; // NEW
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -269,7 +271,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 32),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // --- PREMIUM BANNER ---
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF6A11CB), Color(0xFF2575FC)]),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFF2575FC).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))
+                ]
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+                    child: const Icon(Icons.workspace_premium, color: Colors.amber, size: 24),
+                  ),
+                  const SizedBox(width: 15),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                         Text("Premium Obuna", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                         Text("Barcha imkoniyatlarni oching", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16)
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
 
           // 2. Info Cards (Bot Style List)
           Container(

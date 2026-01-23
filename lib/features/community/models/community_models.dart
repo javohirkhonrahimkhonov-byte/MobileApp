@@ -148,6 +148,7 @@ class Comment {
   final String id;
   final String postId; // Added
   final String authorName;
+  final String authorUsername; // Added
   final String authorAvatar;
   final String content;
   final String timeAgo;
@@ -164,6 +165,7 @@ class Comment {
     required this.id,
     required this.postId, // Added
     required this.authorName,
+    this.authorUsername = "", // Added
     this.authorAvatar = "",
     required this.content,
     required this.timeAgo,
@@ -183,6 +185,7 @@ class Comment {
       postId: json['post_id']?.toString() ?? "0",
       content: json['content'],
       authorName: json['author_name'],
+      authorUsername: json['author_username'] ?? "", // Added
       authorAvatar: json['author_avatar'] ?? "",
       authorRole: "Talaba",
       createdAt: DateTime.parse(json['created_at']),
@@ -199,6 +202,7 @@ class Comment {
     String? id,
     String? postId,
     String? authorName,
+    String? authorUsername,
     String? authorAvatar,
     String? content,
     String? timeAgo,
@@ -215,6 +219,7 @@ class Comment {
       id: id ?? this.id,
       postId: postId ?? this.postId,
       authorName: authorName ?? this.authorName,
+      authorUsername: authorUsername ?? this.authorUsername,
       authorAvatar: authorAvatar ?? this.authorAvatar,
       content: content ?? this.content,
       timeAgo: timeAgo ?? this.timeAgo,

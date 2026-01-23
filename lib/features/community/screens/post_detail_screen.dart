@@ -131,9 +131,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          comment.authorName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                comment.authorName,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              if (comment.authorUsername.isNotEmpty)
+                                Text(
+                                  "@${comment.authorUsername}",
+                                  style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500, fontSize: 12),
+                                ),
+                            ],
+                          ),
                         ),
                         // Like Button for Comment
                          GestureDetector(
