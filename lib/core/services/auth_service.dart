@@ -31,20 +31,8 @@ class AuthService {
 
   // Using PROXY (Our Server) for Login now as updated in api_constants
   Future<Student?> login(String login, String password) async {
-    // 0. DEMO MODE
-    if (login == 'demo' && password == '123') {
-       return Student(
-        id: 0,
-        fullName: 'Talaba Testov',
-        hemisLogin: 'demo.student',
-        groupNumber: '912-21',
-        facultyName: 'Kompyuter injiniringi',
-        specialtyName: 'Dasturiy injiniring',
-        semesterName: '3-kurs',
-        universityName: 'Jizzax davlat pedagogika universiteti',
-        imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-      );
-    }
+    // 0. DEMO MODE - Disabled strict local logic to allow Backend Real Demo Login
+    // if (login == 'demo' && password == '123') { ... }
 
     final url = Uri.parse(ApiConstants.authLogin);
     try {
