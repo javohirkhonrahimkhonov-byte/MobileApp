@@ -94,6 +94,7 @@ class UserSearchDelegate extends SearchDelegate {
                 // Navigate to Profile
                 Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: student.fullName,
+                  authorId: student.id.toString(), // NEW
                   authorUsername: student.username ?? "",
                   authorAvatar: student.imageUrl ?? "",
                   authorRole: "Talaba" // Default role

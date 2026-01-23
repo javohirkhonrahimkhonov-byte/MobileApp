@@ -298,13 +298,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildStat("Postlar", "$_postCount"), 
-                      _buildStat("Repostlar", "$_repostCount"), // NEW 
-                      _buildStat("Kuzatuvchilar", "0"), 
-                      _buildStat("Obuna", "0"),
+                       _buildStat("Postlar", "$_postCount"), 
+                       _buildStat("Repostlar", "$_repostCount"), 
+                       _buildStat("Kuzatuvchilar", "0"), 
+                       _buildStat("Obuna", "0"),
                     ],
                   ),
                   

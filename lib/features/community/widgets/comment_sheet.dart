@@ -31,7 +31,9 @@ class _CommentSheetState extends State<CommentSheet> {
   // State for Optimistic Updates
   // We need current user info (Avatar/Name) to make it look REAL
   String _currentUserName = "Men"; 
+  String _currentUserName = "Men"; 
   String _currentUserAvatar = "";
+  String _currentUserId = ""; // NEW
   
   // Variables needed for logic
   Comment? _replyingTo;
@@ -51,6 +53,7 @@ class _CommentSheetState extends State<CommentSheet> {
       setState(() {
         _currentUserName = user.fullName;
         _currentUserAvatar = user.imageUrl ?? "";
+        _currentUserId = user.id; // NEW
       });
     }
   }
@@ -108,6 +111,7 @@ class _CommentSheetState extends State<CommentSheet> {
     final tempComment = Comment(
       id: "temp_$tempId",
       postId: widget.post.id,
+      authorId: _currentUserId.isNotEmpty ? _currentUserId : "0", // NEW
       authorName: _currentUserName, 
       authorAvatar: _currentUserAvatar, 
       content: content,
@@ -531,7 +535,8 @@ class _CommentSheetState extends State<CommentSheet> {
             onTap: () {
                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: comment.authorName,
-                  authorUsername: "@student",
+                  authorId: comment.authorId, // NEW
+                  authorUsername: comment.authorUsername, // Should use actual username
                   authorAvatar: comment.authorAvatar,
                   authorRole: comment.authorRole ?? "Talaba",
                )));

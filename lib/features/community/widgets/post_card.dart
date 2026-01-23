@@ -136,9 +136,18 @@ class _PostCardState extends State<PostCard> {
         postId: widget.post.id, 
         initialContent: _currentContent, 
       )
-    ).then((updatedContent) {
+    ).then((updatedContent) async {
        if (updatedContent != null && updatedContent is String) {
-           setState(() => _currentContent = updatedContent);
+           setState(() => _currentContent = updatedContent); // Optimistic Update
+           
+           final success = await CommunityService().editPost(widget.post.id, updatedContent);
+           if (!success && mounted) {
+              // Revert on failure
+              setState(() => _currentContent = widget.post.content); 
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tahrirlashda xatolik!")));
+           } else if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post yangilandi!")));
+           }
        }
     });
   }
@@ -268,6 +277,7 @@ class _PostCardState extends State<PostCard> {
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: widget.post.authorName,
+                  authorId: widget.post.authorId, // NEW
                   authorUsername: widget.post.authorUsername,
                   authorAvatar: widget.post.authorAvatar,
                   authorRole: widget.post.authorRole,
