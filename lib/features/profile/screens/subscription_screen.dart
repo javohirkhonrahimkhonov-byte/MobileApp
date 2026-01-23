@@ -130,64 +130,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             
             const SizedBox(height: 30),
             
-            // 4. Payment Info (Manual)
-            const Text(
-              "Yoki qo'lda to'lov:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Column(
-                children: [
-                  const Text("Karta raqami:", style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "8600 1234 5678 9012",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 1),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 20, color: AppTheme.primaryBlue),
-                        onPressed: () {
-                          Clipboard.setData(const ClipboardData(text: "8600123456789012"));
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Buferga nusxalandi")));
-                        },
-                      )
-                    ],
-                  ),
-                  const Text("Toshmat Eshmatov", style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
-                  const Text(
-                    "To'lov qilgach, chekni administratorga yuboring:",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      const url = "https://t.me/javohir_contact"; // Replace with actual support name
-                      if (await canLaunchUrl(Uri.parse(url))) {
-                          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                      }
-                    }, 
-                    icon: const Icon(Icons.send_rounded),
-                    label: const Text("Chekni yuborish (Telegram)"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0088CC),
-                      foregroundColor: Colors.white,
-                    )
-                  )
-                ],
-              ),
-            ),
+
           ],
         ),
       ),
