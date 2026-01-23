@@ -1,4 +1,7 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/role_mapper.dart';
 import '../models/community_models.dart';
@@ -11,7 +14,7 @@ class PostCard extends StatefulWidget {
   final Post post;
   final bool isDetail;
   final Function(bool isLiked, int count)? onLikeChanged;
-  final Function(bool isReposted, int count)? onRepostChanged; // Added this back
+  final Function(bool isReposted, int count)? onRepostChanged;
   final VoidCallback? onDelete; 
 
   const PostCard({
@@ -19,7 +22,7 @@ class PostCard extends StatefulWidget {
     required this.post, 
     this.isDetail = false,
     this.onLikeChanged,
-    this.onRepostChanged, // Added this back
+    this.onRepostChanged,
     this.onDelete,
   });
 
@@ -93,209 +96,212 @@ class _PostCardState extends State<PostCard> {
       _repostCount += _isReposted ? 1 : -1;
     });
 
-    widget.onRepostChanged?.call(_isReposted, _repostCount); // Notify Parent
+    widget.onRepostChanged?.call(_isReposted, _repostCount); 
 
     final result = await CommunityService().repostPost(widget.post.id);
 
     if (result == null && mounted) {
-        setState(() {
-          _isReposted = !_isReposted;
-          _repostCount += _isReposted ? 1 : -1;
-        });
-        widget.onRepostChanged?.call(_isReposted, _repostCount);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Repost amalga oshmadi")));
-    } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isReposted ? "Repost qilindi 🔄" : "Repost qaytarib olindi"))
-        );
+       setState(() {
+         _isReposted = !_isReposted;
+         _repostCount += _isReposted ? 1 : -1;
+       });
+       widget.onRepostChanged?.call(_isReposted, _repostCount);
     }
   }
 
   void _votePoll(int optionIndex) async {
-    if (_userVote != null || _isVoting) return; 
+    if (_userVote != null || _isVoting) return;
 
     setState(() => _isVoting = true);
 
-    setState(() {
-      _userVote = optionIndex;
-      _pollVotes![optionIndex]++;
-    });
+    final success = await CommunityService().votePoll(widget.post.id, optionIndex);
+    
+    if (success && mounted) {
+       setState(() {
+         _userVote = optionIndex;
+         _pollVotes![optionIndex]++;
+         _isVoting = false;
+       });
+    } else {
+      if (mounted) setState(() => _isVoting = false);
+    }
+  }
 
-    await Future.delayed(const Duration(milliseconds: 500)); 
-
-    if (mounted) setState(() => _isVoting = false);
+  void _showEditDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+      ),
+      builder: (context) => EditPostSheet(
+        post: widget.post, 
+        onPostUpdated: (updatedPost) {
+           setState(() => _currentContent = updatedPost.content);
+        }
+      )
+    );
   }
 
   void _showDeleteDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Postni o'chirish"),
-        content: const Text("Haqiqatan ham ushbu postni o'chirmoqchimisiz?"),
+        title: const Text("O'chirish"),
+        content: const Text("Haqiqatan ham bu postni o'chirmoqchimisiz?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Bekor qilish", style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Yo'q")),
           TextButton(
+            child: const Text("Ha, o'chirish", style: TextStyle(color: Colors.red)),
             onPressed: () async {
-               Navigator.pop(ctx);
-               final success = await CommunityService().deletePost(widget.post.id);
-               if (success && mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post o'chirildi!")));
-                 widget.onDelete?.call();
-               } else if (mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xatolik yuz berdi")));
-               }
-            }, 
-            child: const Text("O'chirish", style: TextStyle(color: Colors.red))
-          ),
+              Navigator.pop(ctx);
+              final success = await CommunityService().deletePost(widget.post.id);
+              if (success && widget.onDelete != null) {
+                 widget.onDelete!();
+              }
+            },
+          )
         ],
       )
     );
   }
 
+  // --- SHARE FUNCTIONALITY ---
+  void _showShareOptions() {
+    final link = "https://talabahamkor.uz/posts/${widget.post.id}";
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Text("Ulashish", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 20),
+              
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
+                  child: const Icon(Icons.copy, color: Colors.blueAccent),
+                ),
+                title: const Text("Linkdan nusxa olish", style: TextStyle(fontWeight: FontWeight.w500)),
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: link));
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Link buferga nusxalandi!", style: TextStyle(color: Colors.white)), 
+                        backgroundColor: Colors.black87, 
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 1)
+                      )
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
+                  child: const Icon(Icons.share, color: Colors.green),
+                ),
+                title: const Text("Boshqa ilovalar orqali...", style: TextStyle(fontWeight: FontWeight.w500)),
+                subtitle: const Text("Telegram, Instagram, SMS va boshqalar"),
+                onTap: () {
+                   Navigator.pop(context);
+                   Share.share("Talaba Hamkor ilovasidagi qiziqarli postni ko'ring:\n\n$link");
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
   Color _getCategoryColor(String type) {
-    if (type == 'university') return Colors.blue;
-    if (type == 'faculty') return Colors.orange;
-    if (type == 'specialty') return Colors.green;
-    return Colors.grey;
+    switch (type) {
+      case 'university': return Colors.blue;
+      case 'faculty': return Colors.orange;
+      case 'specialty': return Colors.purple; 
+      default: return Colors.blue;
+    }
   }
 
   String _getCategoryLabel(String type) {
-    if (type == 'university') return "Universitet";
-    if (type == 'faculty') return "Fakultet";
-    if (type == 'specialty') return "Yo'nalish";
-    return "";
-  }
-
-
-
-  void _showEditDialog() async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      enableDrag: true,
-      builder: (ctx) => EditPostSheet(
-        postId: widget.post.id,
-        initialContent: _currentContent, 
-      ),
-    );
-
-    if (result != null && result is String) {
-       // 1. Optimistic Update (Immediate)
-       final previousContent = _currentContent;
-       setState(() {
-         _currentContent = result;
-       });
-
-       // 2. Background API Call (Fire & Forget logic moved to here)
-       try {
-         final success = await CommunityService().editPost(widget.post.id, result);
-         if (!success && mounted) {
-           // Revert on failure
-           setState(() => _currentContent = previousContent);
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text("Xatolik: O'zgarishlar saqlanmadi ❌")),
-           );
-         } else if (success && mounted) {
-            // Optional: Silent success or small indicator
-         }
-       } catch (e) {
-         if (mounted) {
-           setState(() => _currentContent = previousContent);
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text("Xatolik: $e")),
-           );
-         }
-       }
+    switch (type) {
+      case 'university': return "Universitet";
+      case 'faculty': return "Fakultet";
+      case 'specialty': return "Yo'nalish";
+      default: return "Umumiy";
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 1)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (Avatar + Names)
-          GestureDetector(
-            onTap: () {
-               Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
-                 authorName: widget.post.authorName,
-                 authorUsername: widget.post.authorUsername,
-                 authorAvatar: widget.post.authorAvatar,
-                 authorRole: widget.post.authorRole,
-               )));
-            },
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Hero(
-                tag: "avatar_${widget.post.id}",
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                  backgroundImage: widget.post.authorAvatar.isNotEmpty 
-                    ? NetworkImage(widget.post.authorAvatar) 
-                    : null,
-                  child: widget.post.authorAvatar.isEmpty 
-                    ? Text(widget.post.authorName[0], style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
-                    : null,
-                ),
-              ),
-              const SizedBox(width: 12),
+    // Only show content if not folded basically
+    return _buildCardContent();
+  }
+
+  Widget _buildCardContent() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(userId: widget.post.studentId)));
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: widget.post.authorAvatar.isNotEmpty
+                        ? NetworkImage(widget.post.authorAvatar)
+                        : null,
+                    child: widget.post.authorAvatar.isEmpty
+                        ? Text(widget.post.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                        : null,
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                widget.post.authorName, 
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (widget.post.isVerified)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 4),
-                                child: Icon(Icons.verified, color: Colors.blue, size: 16),
-                              ),
-                            if (widget.post.isTyutor)
-                               Container(
-                                 margin: const EdgeInsets.only(left: 4),
-                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                 decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
-                                 child: const Text("Tyutor", style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
-                               ),
-                          ],
+                        Text(
+                          widget.post.authorName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                         ),
-                        // Username or Role Line
-                        const SizedBox(height: 2),
-                        // Username or Role Line
                         const SizedBox(height: 2),
                         Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 6,
-                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            // If username exists AND is not just 'student' (default), show it
-                            if (widget.post.authorUsername.isNotEmpty 
-                                && widget.post.authorUsername.toLowerCase().replaceAll('@', '') != 'student') ...[
-                               Text(
-                                 widget.post.authorUsername.startsWith('@') 
-                                     ? widget.post.authorUsername 
-                                     : "@${widget.post.authorUsername}",
-                                 style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
-                               ),
-                               const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                            ],
-                            
+                             Text(
+                              "@${widget.post.authorUsername}",
+                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            ),
+                             const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
                             Text(
                               RoleMapper.getLabel(widget.post.authorRole),
                               style: TextStyle(color: Colors.grey[600], fontSize: 13),
@@ -366,7 +372,7 @@ class _PostCardState extends State<PostCard> {
                  onTap: () {
                    showModalBottomSheet(
                      context: context,
-                     isScrollControlled: true,
+                     isScrollControlled: true, 
                      backgroundColor: Colors.transparent,
                      builder: (context) => CommentSheet(
                        post: widget.post,
@@ -391,17 +397,15 @@ class _PostCardState extends State<PostCard> {
                ),
                IconButton(
                  icon: const Icon(Icons.share_outlined, color: Colors.grey, size: 20),
-                 onPressed: () {},
+                 onPressed: _showShareOptions, 
                )
             ],
           )
         ],
       ),
     );
-
-    return content;
   }
-  
+
   Widget _buildActionButton({required IconData icon, required String label, Color? color, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
@@ -439,7 +443,6 @@ class _PostCardState extends State<PostCard> {
     );
   }
   
-  // Keep original _buildPoll same as removed for brevity in overwrite but implied presence
   Widget _buildPoll() {
      if (widget.post.pollOptions == null) return const SizedBox.shrink();
      
@@ -475,7 +478,7 @@ class _PostCardState extends State<PostCard> {
                   if (showResults)
                     Container(
                       height: 36,
-                      width: MediaQuery.of(context).size.width * percent * 0.7, // 70% width max inside layout
+                      width: MediaQuery.of(context).size.width * percent * 0.7, 
                       decoration: BoxDecoration(
                          color: isSelected ? AppTheme.primaryBlue.withOpacity(0.2) : Colors.grey[200],
                          borderRadius: BorderRadius.circular(8),
