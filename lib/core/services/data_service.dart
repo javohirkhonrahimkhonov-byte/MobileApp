@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart'; // Add MediaType
 import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 import 'auth_service.dart';
@@ -52,7 +53,13 @@ class DataService {
       request.headers['Authorization'] = 'Bearer $token';
 
       // File
-      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file', 
+          imageFile.path,
+          contentType: MediaType('image', 'jpeg')
+        )
+      );
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
