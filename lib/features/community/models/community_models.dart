@@ -1,5 +1,6 @@
 class Post {
   final String id;
+  final String authorId; // NEW
   final String authorName;
   final String authorUsername; // @handle
   final String authorAvatar; // Url or Initials
@@ -62,6 +63,7 @@ class Post {
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['id'].toString(),
+      authorId: json['author_id'].toString(), // NEW
       content: json['content'],
       scope: json['category_type'],
       authorName: json['author_name'],
@@ -147,6 +149,7 @@ class Post {
 class Comment {
   final String id;
   final String postId; // Added
+  final String authorId; // NEW
   final String authorName;
   final String authorUsername; // Added
   final String authorAvatar;
@@ -184,6 +187,7 @@ class Comment {
       id: json['id'].toString(),
       postId: json['post_id']?.toString() ?? "0",
       content: json['content'],
+      authorId: json['author_id'].toString(), // NEW
       authorName: json['author_name'],
       authorUsername: json['author_username'] ?? "", // Added
       authorAvatar: json['author_avatar'] ?? "",
