@@ -13,6 +13,7 @@ import 'package:talabahamkor_mobile/features/student_module/screens/academic_scr
 import 'package:talabahamkor_mobile/features/social/screens/social_activity_screen.dart';
 import 'package:talabahamkor_mobile/features/documents/screens/documents_screen.dart';
 import '../../certificates/screens/certificates_screen.dart';
+import 'package:talabahamkor_mobile/features/profile/screens/subscription_screen.dart';
 import '../../clubs/screens/clubs_screen.dart';
 import '../../appeals/screens/appeals_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
