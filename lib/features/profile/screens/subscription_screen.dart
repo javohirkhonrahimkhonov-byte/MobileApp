@@ -43,6 +43,35 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  Future<void> _payWithClick() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final url = await DataService().getClickUrl(amount: 10000);
+      
+      if (url != null && mounted) {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Linkni ochib bo'lmadi")));
+          }
+        }
+      } else {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("To'lov havolasini olib bo'lmadi")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,11 +148,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 icon: _isLoading 
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.payment, color: Colors.white), 
-                label: Text(_isLoading ? "Yuklanmoqda..." : "Payme orqali to'lash (Avtomatik)", style: const TextStyle(color: Colors.white, fontSize: 16)),
+                label: const Text("Payme orqali to'lash", style: TextStyle(color: Colors.white, fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00CCCC), // Payme Color roughly
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF00CCCC), // Payme Color
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 15),
+
+            // 3.6 Click Automartik
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _payWithClick,
+                icon: _isLoading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.touch_app, color: Colors.white), 
+                label: const Text("Click orqali to'lash", style: TextStyle(color: Colors.white, fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0047BA), // Click Blue
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
                 ),
               ),
             ),
