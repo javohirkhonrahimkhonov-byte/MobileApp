@@ -34,9 +34,7 @@ class _PostCardState extends State<PostCard> {
   bool _isLiked = false;
   int _likeCount = 0;
   int _repostCount = 0;
-  bool _isReplying = false; 
   bool _isReposted = false;
-  bool _isExpanded = false; 
   bool _isVoting = false;
   
   List<int>? _pollVotes;
@@ -79,14 +77,12 @@ class _PostCardState extends State<PostCard> {
     widget.onLikeChanged?.call(_isLiked, _likeCount); 
 
     final result = await CommunityService().likePost(widget.post.id);
-    if (result == null) {
-       if (mounted) {
-         setState(() {
-            _isLiked = !_isLiked;
-            _likeCount += _isLiked ? 1 : -1;
-         });
-         widget.onLikeChanged?.call(_isLiked, _likeCount);
-       }
+    if (result == null && mounted) {
+       setState(() {
+          _isLiked = !_isLiked;
+          _likeCount += _isLiked ? 1 : -1;
+       });
+       widget.onLikeChanged?.call(_isLiked, _likeCount);
     }
   }
 
@@ -135,14 +131,12 @@ class _PostCardState extends State<PostCard> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20))
       ),
-      // FIX: Use named parameters matching EditPostSheet definitions
       builder: (context) => EditPostSheet(
         postId: widget.post.id, 
-        initialContent: _currentContent, // Pass current content
+        initialContent: _currentContent, 
       )
     ).then((updatedContent) {
-       if (updatedContent != null) {
-           // If update returned, reflect locally
+       if (updatedContent != null && updatedContent is String) {
            setState(() => _currentContent = updatedContent);
        }
     });
@@ -171,7 +165,6 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  // --- SHARE FUNCTIONALITY ---
   void _showShareOptions() {
     final link = "https://talabahamkor.uz/posts/${widget.post.id}";
     showModalBottomSheet(
@@ -180,7 +173,7 @@ class _PostCardState extends State<PostCard> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20))
       ),
-      builder: (context) {
+      builder: (context) { // Opening builder
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
@@ -233,8 +226,8 @@ class _PostCardState extends State<PostCard> {
             ],
           ),
         );
-      }
-    );
+      } // Closing builder
+    ); // Closing showModalBottomSheet
   }
 
   Color _getCategoryColor(String type) {
@@ -257,7 +250,6 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Only show content if not folded basically
     return _buildCardContent();
   }
 
@@ -273,7 +265,6 @@ class _PostCardState extends State<PostCard> {
             // Header
             InkWell(
               onTap: () {
-                // FIX: Navigate to UserProfileScreen with full details
                 Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: widget.post.authorName,
                   authorUsername: widget.post.authorUsername,
@@ -316,9 +307,7 @@ class _PostCardState extends State<PostCard> {
                               RoleMapper.getLabel(widget.post.authorRole),
                               style: TextStyle(color: Colors.grey[600], fontSize: 13),
                             ),
-                            
                              const Text("•", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                            
                           Container(
                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                            decoration: BoxDecoration(
@@ -331,7 +320,6 @@ class _PostCardState extends State<PostCard> {
                              style: TextStyle(color: _getCategoryColor(widget.post.scope ?? 'university'), fontSize: 10, fontWeight: FontWeight.bold),
                            ),
                          ),
-                        
                         Text(
                           "• ${widget.post.timeAgo}",
                           style: TextStyle(color: Colors.grey[400], fontSize: 13),
@@ -359,7 +347,6 @@ class _PostCardState extends State<PostCard> {
           
           const SizedBox(height: 12),
           
-          // Content 
           _buildFoldableContent(),
           
           const SizedBox(height: 12),
