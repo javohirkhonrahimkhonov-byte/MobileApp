@@ -16,8 +16,7 @@ import '../../certificates/screens/certificates_screen.dart';
 import '../../clubs/screens/clubs_screen.dart';
 import '../../appeals/screens/appeals_screen.dart';
 import 'package:talabahamkor_mobile/features/notifications/screens/notifications_screen.dart';
-import 'package:talabahamkor_mobile/features/notifications/services/notification_service.dart';
-import '../../profile/screens/subscription_screen.dart';
+import 'package:talabahamkor_mobile/core/providers/notification_provider.dart';
 import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
@@ -30,11 +29,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final DataService _dataService = DataService();
-  final NotificationService _notificationService = NotificationService();
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _dashboard;
   bool _isLoading = true;
-  int _unreadCount = 0;
   Timer? _refreshTimer;
 
   @override
@@ -43,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // Use WidgetsBinding to avoid blocking the initial build frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
-      _checkNotifications();
     });
   }
 
@@ -52,10 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _checkNotifications() async {
-    final count = await _notificationService.getUnreadCount();
-    if (mounted) setState(() => _unreadCount = count);
-  }
 
   Future<void> _loadData() async {
     try {
@@ -221,28 +213,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const Spacer(),
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none_rounded, size: 28),
-                    onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
-                      _checkNotifications(); // Refresh count on return
-                    },
-                  ),
-                  if (_unreadCount > 0)
-                    Positioned(
-                      right: 12,
-                      top: 12,
-                      child: IgnorePointer(
-                        child: Container(
-                          width: 8, 
-                          height: 8, 
-                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)
-                        ),
-                      )
+              Consumer<NotificationProvider>(
+                builder: (context, notificationProvider, _) => Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded, size: 28),
+                      onPressed: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                        // No need to manually refresh here, polling will handle it or screen can sync
+                        notificationProvider.refreshUnreadCount();
+                      },
                     ),
-                ],
+                    if (notificationProvider.unreadCount > 0)
+                      Positioned(
+                        right: 12,
+                        top: 12,
+                        child: IgnorePointer(
+                          child: Container(
+                            width: 8, 
+                            height: 8, 
+                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)
+                          ),
+                        )
+                      ),
+                  ],
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),

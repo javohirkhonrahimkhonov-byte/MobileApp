@@ -4,6 +4,7 @@ import '../services/notification_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/notification_provider.dart';
 import '../../../../core/services/data_service.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -35,7 +36,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _notifications = list;
         _isLoading = false;
       });
-      // Optionally mark visible ones as read? Or leave valid unread state.
+      // Sync global count
+      if (mounted) {
+        Provider.of<NotificationProvider>(context, listen: false).refreshUnreadCount();
+      }
     } catch (e) {
       setState(() => _isLoading = false);
       // Handle error
@@ -58,6 +62,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         );
       }
     });
+    // Sync global count
+    if (mounted) {
+      Provider.of<NotificationProvider>(context, listen: false).refreshUnreadCount();
+    }
   }
 
   Future<void> _refreshProfile() async {
