@@ -163,6 +163,9 @@ class Comment {
   final bool isLiked;
   final bool isLikedByAuthor;
   final String? authorRole;
+  final String? replyToUserName; // Restored
+  final String? replyToContent;  // Restored
+  final bool isMine;             // Restored
   final String? replyToCommentId; // NEW
 
   Comment({
