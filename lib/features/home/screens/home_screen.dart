@@ -132,8 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
           elevation: 0,
           onTap: (index) {
             final isPremium = _profile?['is_premium'] ?? false;
-            // Guard Bozor (1), AI (2), Choyxona (3)
-            if ((index == 1 || index == 2 || index == 3) && !isPremium) {
+            // Guard Bozor (1), AI (2)
+            if ((index == 1 || index == 2) && !isPremium) {
               _showPremiumDialog();
               return;
             }
