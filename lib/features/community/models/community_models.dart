@@ -64,6 +64,7 @@ class Post {
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
+    // print("DEBUG POST JSON: $json"); // Just for build tracking, can remove later
     return Post(
       id: json['id'].toString(),
       authorId: json['author_id'].toString(), // NEW

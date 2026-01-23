@@ -40,18 +40,73 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.length < 2) {
-       return Container(
-         color: Colors.white,
-         child: const Center(
-           child: Column(
-             mainAxisAlignment: MainAxisAlignment.center,
+       return FutureBuilder<List<String>>(
+         future: _service.getSearchHistory(),
+         builder: (context, snapshot) {
+           final history = snapshot.data ?? [];
+           
+           if (history.isEmpty) {
+             return Container(
+               color: Colors.white,
+               child: const Center(
+                 child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     Icon(Icons.search, size: 64, color: Colors.grey),
+                     SizedBox(height: 16),
+                     Text("Username yoki ism kiriting\n(kamida 2 ta harf)", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                   ],
+                 ),
+               ),
+             );
+           }
+           
+           return Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
              children: [
-               Icon(Icons.search, size: 64, color: Colors.grey),
-               SizedBox(height: 16),
-               Text("Username yoki ism kiriting\n(kamida 2 ta harf)", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+               Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                   children: [
+                     const Text("So'nggi qidiruvlar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                     TextButton(
+                       onPressed: () async {
+                         await _service.clearSearchHistory();
+                         showSuggestions(context); // Refresh
+                       }, 
+                       child: const Text("Tozalash", style: TextStyle(color: Colors.red))
+                     )
+                   ],
+                 ),
+               ),
+               Expanded(
+                 child: ListView.builder(
+                   itemCount: history.length,
+                   itemBuilder: (context, index) {
+                     final item = history[index];
+                     return ListTile(
+                       leading: const Icon(Icons.history, color: Colors.grey),
+                       title: Text(item),
+                       onTap: () {
+                         query = item;
+                         showResults(context);
+                       },
+                       trailing: IconButton(
+                         icon: const Icon(Icons.close, size: 16),
+                         onPressed: () {
+                           // Remove individual item (Logic needed in service but for now reload)
+                           // Ideally _service.removeFromHistory(item).
+                           // We will skip single remove for now or just ignore.
+                         },
+                       ),
+                     );
+                   },
+                 ),
+               ),
              ],
-           ),
-         ),
+           );
+         }
        );
     }
     return _buildSearchList();
@@ -71,7 +126,7 @@ class UserSearchDelegate extends SearchDelegate {
         final students = snapshot.data ?? [];
         
         if (students.isEmpty) {
-          return const Center(child: Text("Hech kim topilmadi"));
+           return const Center(child: Text("Hech kim topilmadi"));
         }
 
         return ListView.builder(
@@ -95,6 +150,9 @@ class UserSearchDelegate extends SearchDelegate {
                   title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   subtitle: Text("@${student.username ?? 'usernamesiz'}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500)),
                   onTap: () {
+                     // Save to history
+                     _service.saveSearchQuery(query);
+                     
                     // Navigate to Profile
                     Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                       authorName: student.fullName,

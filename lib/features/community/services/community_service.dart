@@ -27,6 +27,49 @@ class CommunityService {
     };
   }
 
+  // --- Search History ---
+  Future<void> saveSearchQuery(String query) async {
+    if (query.trim().isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> history = prefs.getStringList('search_history') ?? [];
+      
+      // Remove if exists to move to top
+      history.removeWhere((item) => item.toLowerCase() == query.toLowerCase());
+      
+      // Add to start
+      history.insert(0, query.trim());
+      
+      // Limit to 10
+      if (history.length > 10) {
+        history = history.sublist(0, 10);
+      }
+      
+      await prefs.setStringList('search_history', history);
+    } catch (e) {
+      print("Error saving search history: $e");
+    }
+  }
+
+  Future<List<String>> getSearchHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getStringList('search_history') ?? [];
+    } catch (e) {
+      print("Error getting search history: $e");
+      return [];
+    }
+  }
+
+  Future<void> clearSearchHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('search_history');
+    } catch (e) {
+      print("Error clearing search history: $e");
+    }
+  }
+
   Future<List<Student>> searchStudents(String query) async {
     try {
       if (query.length < 2) return [];
