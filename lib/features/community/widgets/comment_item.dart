@@ -86,19 +86,16 @@ class CommentItem extends StatelessWidget {
     // User Requirement: "Replies must be visually indented to the right (one tab / padding-left)"
     // Increased indentation to 48.0 for better visibility.
     return Container(
-      margin: EdgeInsets.only(
-        left: isReply ? 56.0 : 0.0, // Increased to 56.0 for distinct YouTube-style indentation
-        top: 4, bottom: 4
-      ),
+      // Switch to Padding for robust indentation inside Dismissible
+      // Margin was not rendering correctly in some layouts.
+      // Padding ensures the content (avatar+text) is shifted, while the container fills width.
       padding: EdgeInsets.only(
-        left: isReply ? 0.0 : 16.0, // Root items get padding, replies handled by margin
+        left: isReply ? 56.0 : 16.0, // 56px indent for replies, 16px default
         right: 16,
         top: 8,
         bottom: 8
-      ), // Slightly reduced internal padding for tighter list
-      decoration: BoxDecoration(
-         color: isParent ? Colors.grey[50] : Colors.white,
       ),
+      color: isParent ? Colors.grey[50] : Colors.white,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

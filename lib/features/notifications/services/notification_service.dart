@@ -7,7 +7,7 @@ import '../models/notification.dart';
 class NotificationService {
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+    return prefs.getString('auth_token');
   }
 
   Future<List<StudentNotification>> getNotifications({int skip = 0, int limit = 20}) async {

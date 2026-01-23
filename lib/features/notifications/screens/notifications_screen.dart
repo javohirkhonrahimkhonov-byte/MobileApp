@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../models/notification.dart';
 import '../services/notification_service.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/services/data_service.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -12,8 +16,10 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final NotificationService _service = NotificationService();
+  final DataService _dataService = DataService();
   List<StudentNotification> _notifications = [];
   bool _isLoading = true;
+  bool _isRefreshingProfile = false;
 
   @override
   void initState() {
@@ -42,7 +48,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() {
       final index = _notifications.indexWhere((n) => n.id == notif.id);
       if (index != -1) {
-        // Create new object with isRead=true
         _notifications[index] = StudentNotification(
           id: notif.id,
           title: notif.title,
@@ -55,12 +60,50 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
   }
 
+  Future<void> _refreshProfile() async {
+    setState(() => _isRefreshingProfile = true);
+    try {
+      final profileData = await _dataService.getProfile();
+      if (mounted) {
+        await Provider.of<AuthProvider>(context, listen: false).updateUser(profileData);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Ma'lumotlar yangilandi! ✨"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Xatolik: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshingProfile = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Xabarnomalar"),
         centerTitle: true,
+        actions: [
+          if (_isRefreshingProfile)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _refreshProfile,
+              tooltip: "Ma'lumotlarni yangilash",
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -194,6 +237,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       fontSize: 12,
                     ),
                   ),
+                  if (notif.title.contains("Premium") || notif.body.contains("Premium")) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _isRefreshingProfile ? null : _refreshProfile,
+                        icon: const Icon(Icons.sync_rounded, size: 18),
+                        label: const Text("Premium-ni faollashtirish", style: TextStyle(fontSize: 13)),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
