@@ -123,7 +123,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       final all = [...univPosts, ...facPosts, ...specPosts];
       final uniqueMap = { for (var p in all) p.id : p }; // Dedup by ID
       
-      final userPosts = uniqueMap.values.where((p) => p.authorName == widget.authorName).toList();
+      final userPosts = uniqueMap.values.where((p) {
+        // Fallback: If ID is "0" or invalid, try name match. 
+        // But Search passes specific ID, so ID match is primary.
+        if (p.authorId != "0" && p.authorId == widget.authorId) return true;
+        return p.authorName == widget.authorName;
+      }).toList();
       
       // Sort newest first
       userPosts.sort((a, b) => b.id.compareTo(a.id));
