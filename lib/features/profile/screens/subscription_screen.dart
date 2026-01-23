@@ -12,94 +12,26 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  bool _isLoading = false;
+  // State for specific button loading
+  String? _loadingProvider;
 
-  Future<void> _payWithPayme() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      final url = await DataService().getPaymeUrl(amount: 10000);
-      
-      if (url != null && mounted) {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Linkni ochib bo'lmadi")));
-          }
-        }
-      } else {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("To'lov havolasini olib bo'lmadi")));
-        }
-      }
-    } catch (e) {
+  void _showComingSoon(String provider) async {
+      setState(() => _loadingProvider = provider);
+      await Future.delayed(const Duration(milliseconds: 500)); // Simulate check
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
+        setState(() => _loadingProvider = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$provider orqali to'lov tez orada qo'shiladi"))
+        );
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
-  Future<void> _payWithClick() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      final url = await DataService().getClickUrl(amount: 10000);
-      
-      if (url != null && mounted) {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Linkni ochib bo'lmadi")));
-          }
-        }
-      } else {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("To'lov havolasini olib bo'lmadi")));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  /* Real Payment Logic (Temporarily Disabled)
+  Future<void> _payWithPayme() async { ... }
+  Future<void> _payWithClick() async { ... }
+  Future<void> _payWithUzum() async { ... }
+  */
 
-  Future<void> _payWithUzum() async {
-    setState(() => _isLoading = true);
-    
-    try {
-      final url = await DataService().getUzumUrl(amount: 10000);
-      
-      if (url != null && mounted) {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Linkni ochib bo'lmadi")));
-          }
-        }
-      } else {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("To'lov havolasini olib bo'lmadi")));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Xatolik: $e")));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
