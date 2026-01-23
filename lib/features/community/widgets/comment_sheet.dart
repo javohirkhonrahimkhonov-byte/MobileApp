@@ -31,7 +31,6 @@ class _CommentSheetState extends State<CommentSheet> {
   // State for Optimistic Updates
   // We need current user info (Avatar/Name) to make it look REAL
   String _currentUserName = "Men"; 
-  String _currentUserName = "Men"; 
   String _currentUserAvatar = "";
   String _currentUserId = ""; // NEW
   
@@ -53,7 +52,7 @@ class _CommentSheetState extends State<CommentSheet> {
       setState(() {
         _currentUserName = user.fullName;
         _currentUserAvatar = user.imageUrl ?? "";
-        _currentUserId = user.id; // NEW
+        _currentUserId = user.id.toString(); // NEW
       });
     }
   }
