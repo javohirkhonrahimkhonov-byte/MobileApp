@@ -7,7 +7,6 @@ class CommentItem extends StatelessWidget {
   final Comment comment;
   final Function(String commentId) onLike;
   final Function(Comment comment)? onReply;
-  final Function(Comment comment)? onReply;
   final Function(String commentId)? onDelete;
   final Function(Comment comment, String newContent)? onEdit; // New Callback
   final bool isReply;
@@ -19,6 +18,7 @@ class CommentItem extends StatelessWidget {
     required this.onLike,
     this.onReply,
     this.onDelete,
+    this.onEdit, // Initialize onEdit
     this.isReply = false,
     this.isParent = false,
   });
