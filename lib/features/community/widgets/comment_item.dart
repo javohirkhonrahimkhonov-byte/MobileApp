@@ -82,8 +82,19 @@ class CommentItem extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    // "Indented to the right" for replies
+    // YouTube style on mobile: Replies in the main list are HIDDEN behind a button.
+    // In the ThreadSheet, they are listed flat under parent, but user asked for indent.
+    // "Replies must be visually indented to the right (one tab / padding-left) so it’s clear which comment they belong to."
+    // "This indentation should ONLY apply to replies, not to top-level comments."
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.only(
+        left: isReply ? 32.0 : 16.0, // Indent 32 for replies, 16 for normal
+        right: 16,
+        top: 12,
+        bottom: 12
+      ),
       color: isParent ? Colors.grey[50] : Colors.white,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,9 +112,9 @@ class CommentItem extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
               backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
-              radius: 18,
+              radius: isReply ? 14 : 18, // Smaller avatar for replies (YouTube style)
               child: comment.authorAvatar.isEmpty 
-                ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: isReply ? 12 : 14))
                 : null,
             ),
           ),
@@ -130,7 +141,7 @@ class CommentItem extends StatelessWidget {
                   )
                 ),
                 
-                 if (comment.replyToUserName != null && !isParent) // Hide reply context if it is the parent being viewed
+                 if (comment.replyToUserName != null && !isParent) 
                    Container(
                      margin: const EdgeInsets.only(top: 4, bottom: 4),
                      padding: const EdgeInsets.only(left: 8),

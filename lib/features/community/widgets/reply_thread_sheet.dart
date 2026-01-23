@@ -181,7 +181,7 @@ class _ReplyThreadSheetState extends State<ReplyThreadSheet> {
                     ..._replies.map((reply) => CommentItem(
                       comment: reply,
                       onLike: _handleLike,
-                      isReply: true,
+                      isReply: true, // This triggers visual indentation and small avatar
                       onReply: (target) {
                         setState(() => _replyingTo = target);
                         _focusNode.requestFocus();

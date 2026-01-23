@@ -279,28 +279,27 @@ class _CommentSheetState extends State<CommentSheet> {
                                           // When coming back, we might receive updated list of replies. 
                                           // We need to merge them back into _comments.
                                           if (updatedReplies is List<Comment>) {
-                                            bool changed = false;
+                                            // The user might have deleted comments inside the thread, or added new ones.
+                                            // Ideally, we should merge. But simplest robustness is to just reload.
+                                            // User requested "Replies must be fetched and rendered based on parentCommentId".
+                                            // But for the main list, we just need to update the valid comments list.
+                                            
+                                            _loadComments(); // Force reload to sync state (deletions/additions)
+                                            
+                                            // OR: Manually update if we want to avoid network call.
+                                            // To do manual update, we need to know what was deleted.
+                                            // updatedReplies only has the CURRENT list of replies.
+                                            // So we can:
+                                            // 1. Remove all replies to this root from _comments.
+                                            // 2. Add all from updatedReplies.
+                                            
+                                            /*
                                             setState(() {
-                                              for (var r in updatedReplies) {
-                                                final idx = _comments.indexWhere((c) => c.id == r.id);
-                                                if (idx == -1) {
-                                                   _comments.add(r); // Add new
-                                                   changed = true;
-                                                } else {
-                                                   if (_comments[idx].likes != r.likes || _comments[idx].isLiked != r.isLiked) {
-                                                      _comments[idx] = r; // Update existing
-                                                      changed = true;
-                                                   }
-                                                }
-                                              }
-                                              // Loop to find deleted ones?
-                                              // Simple way: _loadComments(). Optimistic merging is complex if deletes happened.
-                                              // Let's just create a Set of IDs from updatedReplies and remove those from _comments that are in this thread but not in update?
-                                              // No, updatedReplies only contains REPLIES to this thread.
-                                              // So we should remove all replies to this thread from _comments, then add all from updatedReplies.
+                                              _comments.removeWhere((c) => c.replyToCommentId == root.id);
+                                              _comments.addAll(updatedReplies);
                                             });
-                                            // Ideally we should reload to get deletions correctly synced if logic is complex.
-                                            _loadComments(); 
+                                            widget.onCommentCountChanged?.call(_comments.length);
+                                            */
                                           } else {
                                              _loadComments();
                                           }
