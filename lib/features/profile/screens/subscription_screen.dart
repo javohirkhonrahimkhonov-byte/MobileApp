@@ -26,13 +26,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       }
   }
 
-  /* Real Payment Logic (Temporarily Disabled)
-  Future<void> _payWithPayme() async { ... }
-  Future<void> _payWithClick() async { ... }
-  Future<void> _payWithUzum() async { ... }
-  */
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,10 +98,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _buildPaymentButton(
               title: "Payme orqali to'lash",
               color: const Color(0xFF00CCCC), // Payme Brand Color
-              logoUrl: "https://logobank.uz:8005/media/logos_png/Payme-01.png",
+              logoUrl: "assets/images/payme.png",
               fallbackIcon: Icons.payment,
-              onTap: _payWithPayme,
-              isLoading: _isLoading && !_isLoading, // Hack to not show loading if other is loading? Actually just use _isLoading
+              onTap: () => _showComingSoon("Payme"),
+              isLoading: _loadingProvider == "Payme",
             ),
             
             const SizedBox(height: 15),
@@ -117,15 +110,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _buildPaymentButton(
               title: "Click orqali to'lash",
               color: const Color(0xFF0047BA), // Click Brand Color
-              logoUrl: "https://logobank.uz:8005/media/logos_png/Click-01.png", 
+              logoUrl: "assets/images/click.png", 
               fallbackIcon: Icons.touch_app,
-              onTap: _payWithClick,
-              isLoading: _isLoading, // We might want separate loading states, but single is fine
+              onTap: () => _showComingSoon("Click"),
+              isLoading: _loadingProvider == "Click",
+            ),
+
+            const SizedBox(height: 15),
+
+            // 3.7 Uzum Bank (Branded)
+            _buildPaymentButton(
+              title: "Uzum Bank orqali to'lash",
+              color: const Color(0xFF7000FF), // Uzum Brand Color
+              logoUrl: "assets/images/uzum.png", 
+              fallbackIcon: Icons.account_balance_wallet,
+              onTap: () => _showComingSoon("Uzum Bank"),
+              isLoading: _loadingProvider == "Uzum Bank",
             ),
             
             const SizedBox(height: 30),
-            
-
           ],
         ),
       ),
@@ -143,7 +146,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : onTap,
+        // Disable if THIS button is loading OR any other button is loading (to prevent multi-tap glitches)
+        onPressed: (_loadingProvider != null) ? null : onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -151,7 +155,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           elevation: 4,
           shadowColor: color.withOpacity(0.4),
         ),
-        child: _isLoading 
+        child: isLoading 
           ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -161,14 +165,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white, // Solid white background
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.all(4),
-                  child: Image.network(
-                    logoUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(fallbackIcon, color: Colors.white, size: 24),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Image.asset( // Use Asset
+                      logoUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(fallbackIcon, color: color, size: 24),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 15),
