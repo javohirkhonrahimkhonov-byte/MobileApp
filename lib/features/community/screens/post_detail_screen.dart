@@ -88,8 +88,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         _comments.add(newComment);
       });
 
-      // 2. Silent Background Sync: Ensure consistency without hiding list
-      _loadComments(quiet: true); 
+      // 2. Silent Background Sync -- REMOVED to prevent race condition (stale read overwriting local).
+      // _loadComments(quiet: true);  
       
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
