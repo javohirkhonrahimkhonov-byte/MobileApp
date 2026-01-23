@@ -241,7 +241,20 @@ class _CommentSheetState extends State<CommentSheet> {
     return map;
   }
 
-  List<Comment> _getRoots() => _comments.where((c) => c.replyToCommentId == null || c.replyToCommentId == "0" || c.replyToCommentId == "null").toList();
+  List<Comment> _getRoots() {
+    final Map<String, Comment> lookup = { for (var c in _comments) c.id : c };
+    return _comments.where((c) {
+      final isExplicitRoot = c.replyToCommentId == null || c.replyToCommentId == "0" || c.replyToCommentId == "null";
+      if (isExplicitRoot) return true;
+      
+      // Safety: If parent is missing from the list, treat as root (Orphan)
+      // This prevents "invisible comments" bug.
+      if (c.replyToCommentId != null && !lookup.containsKey(c.replyToCommentId)) {
+        return true;
+      }
+      return false;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {

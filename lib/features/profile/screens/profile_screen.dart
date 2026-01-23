@@ -151,14 +151,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  student.fullName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textBlack,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      student.fullName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textBlack,
+                      ),
+                    ),
+                    if (student.isPremium) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.verified, color: Colors.blue, size: 24),
+                    ]
+                  ],
                 ),
                 Text(
                   "ID: ${student.hemisLogin}",

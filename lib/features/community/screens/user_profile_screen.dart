@@ -11,7 +11,10 @@ class UserProfileScreen extends StatefulWidget {
   final String authorId; // NEW
   final String authorUsername;
   final String authorAvatar;
+  final String authorUsername;
+  final String authorAvatar;
   final String authorRole;
+  final bool authorIsPremium; // NEW
 
   const UserProfileScreen({
     super.key,
@@ -19,7 +22,9 @@ class UserProfileScreen extends StatefulWidget {
     required this.authorId, // NEW
     required this.authorUsername,
     required this.authorAvatar,
+    required this.authorAvatar,
     required this.authorRole,
+    this.authorIsPremium = false, // NEW
   });
 
   @override
@@ -196,7 +201,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 16),
                    
                   // Name
-                  Text(line1, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(line1, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      if (widget.authorIsPremium) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.verified, color: Colors.blue, size: 20),
+                      ]
+                    ],
+                  ),
                   if (line2.isNotEmpty)
                     Text(line2, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                    

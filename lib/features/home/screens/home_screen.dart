@@ -182,27 +182,29 @@ class _HomeScreenState extends State<HomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Salom, ${() {
-                      final firstName = _profile?['first_name'] ?? _profile?['short_name'];
-                      if (firstName != null && firstName.toString().isNotEmpty) {
-                        return firstName.toString();
-                      }
-                      
-                      // Fallback logic
-                      final name = _profile?['full_name'] ?? 'Talaba';
-                      
-                      // Logic: If ALL CAPS "SURNAME FIRSTNAME FATHERNAME"
-                      final parts = name.split(' ');
-                      if (parts.length >= 2) {
-                         // Standard Uzbek: Last First Father (e.g. Akramjonov Muxammadali Ulug'bek)
-                         // Return 2nd word
-                         final first = parts[1];
-                         return first[0].toUpperCase() + first.substring(1).toLowerCase();
-                      }
-                      return name;
-                    }()}!",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Text(
+                        "Salom, ${() {
+                          final firstName = _profile?['first_name'] ?? _profile?['short_name'];
+                          if (firstName != null && firstName.toString().isNotEmpty) {
+                            return firstName.toString();
+                          }
+                          final name = _profile?['full_name'] ?? 'Talaba';
+                          final parts = name.split(' ');
+                          if (parts.length >= 2) {
+                            final first = parts[1];
+                            return first[0].toUpperCase() + first.substring(1).toLowerCase();
+                          }
+                          return name;
+                        }()}!",
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      if (_profile?['is_premium'] == true) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.verified, color: Colors.blue, size: 20),
+                      ]
+                    ],
                   ),
                   Row(
                     children: [

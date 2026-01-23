@@ -28,6 +28,7 @@ class Post {
   final bool isMine;
   final bool isRepostedByMe;
   final DateTime createdAt; // Added
+  final bool authorIsPremium; // NEW
 
   Post({
     required this.id,
@@ -59,6 +60,7 @@ class Post {
     this.targetSpecialtyId,
     this.isMine = false,
     this.isRepostedByMe = false,
+    this.authorIsPremium = false, // NEW
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -81,6 +83,7 @@ class Post {
       targetUniversityId: json['target_university_id']?.toString(),
       targetFacultyId: json['target_faculty_id']?.toString(),
       targetSpecialtyId: json['target_specialty_name'],
+      authorIsPremium: json['author_is_premium'] ?? false, // NEW
     );
   }
 
@@ -113,7 +116,10 @@ class Post {
     String? targetSpecialtyId,
     bool? isMine,
     bool? isRepostedByMe,
+    bool? isMine,
+    bool? isRepostedByMe,
     DateTime? createdAt,
+    bool? authorIsPremium, // NEW
   }) {
     return Post(
       id: id ?? this.id,
@@ -145,6 +151,7 @@ class Post {
       targetSpecialtyId: targetSpecialtyId ?? this.targetSpecialtyId,
       isMine: isMine ?? this.isMine,
       isRepostedByMe: isRepostedByMe ?? this.isRepostedByMe,
+      authorIsPremium: authorIsPremium ?? this.authorIsPremium, // NEW
     );
   }
 }
@@ -167,6 +174,7 @@ class Comment {
   final String? replyToContent;  // Restored
   final bool isMine;             // Restored
   final String? replyToCommentId; // NEW
+  final bool authorIsPremium; // NEW
 
   Comment({
     required this.id,
@@ -186,6 +194,7 @@ class Comment {
     this.replyToContent,
     this.isMine = false,
     this.replyToCommentId, // NEW
+    this.authorIsPremium = false, // NEW
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -207,6 +216,7 @@ class Comment {
       replyToUserName: json['reply_to_username'], 
       replyToContent: json['reply_to_content'], // Assumed this was missing
       replyToCommentId: json['reply_to_comment_id']?.toString(), // NEW
+      authorIsPremium: json['author_is_premium'] ?? false, // NEW
     );
   }
 
@@ -228,6 +238,7 @@ class Comment {
     String? replyToContent,
     bool? isMine,
     String? replyToCommentId, // NEW
+    bool? authorIsPremium, // NEW
   }) {
     return Comment(
       id: id ?? this.id,
@@ -247,6 +258,7 @@ class Comment {
       replyToContent: replyToContent ?? this.replyToContent,
       isMine: isMine ?? this.isMine,
       replyToCommentId: replyToCommentId ?? this.replyToCommentId, // NEW
+      authorIsPremium: authorIsPremium ?? this.authorIsPremium, // NEW
     );
   }
 }

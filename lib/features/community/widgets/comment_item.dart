@@ -137,6 +137,7 @@ class CommentItem extends StatelessWidget {
                   authorUsername: comment.authorUsername,
                   authorAvatar: comment.authorAvatar,
                   authorRole: comment.authorRole ?? "Talaba",
+                  authorIsPremium: comment.authorIsPremium, // NEW
                )));
             },
             child: CircleAvatar(
@@ -161,6 +162,10 @@ class CommentItem extends StatelessWidget {
                         text: comment.authorName, 
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)
                       ),
+                      if (comment.authorIsPremium) ...[
+                        const WidgetSpan(child: SizedBox(width: 4)),
+                        const WidgetSpan(child: Icon(Icons.verified, color: Colors.blue, size: 14)),
+                      ],
                       const WidgetSpan(child: SizedBox(width: 4)),
                       if (comment.authorUsername.isNotEmpty)
                         TextSpan(

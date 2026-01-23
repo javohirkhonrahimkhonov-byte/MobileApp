@@ -279,10 +279,11 @@ class _PostCardState extends State<PostCard> {
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                   authorName: widget.post.authorName,
-                  authorId: widget.post.authorId, // NEW
+                  authorId: widget.post.authorId,
                   authorUsername: widget.post.authorUsername,
                   authorAvatar: widget.post.authorAvatar,
                   authorRole: widget.post.authorRole,
+                  authorIsPremium: widget.post.authorIsPremium, // NEW
                 )));
               },
               child: Row(
@@ -302,9 +303,17 @@ class _PostCardState extends State<PostCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.post.authorName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        Row(
+                          children: [
+                            Text(
+                              widget.post.authorName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            if (widget.post.authorIsPremium) ...[
+                              const SizedBox(width: 4),
+                              const Icon(Icons.verified, color: Colors.blue, size: 16),
+                            ]
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Wrap(
