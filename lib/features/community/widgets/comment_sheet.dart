@@ -541,10 +541,20 @@ class _CommentSheetState extends State<CommentSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Name (Shortened)
-                Text(
-                  _getShortName(comment.authorName),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                // 1. Name & Username
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comment.authorName, // Show Full Name as requested
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    if (comment.authorUsername.isNotEmpty)
+                      Text(
+                        "@${comment.authorUsername}",
+                        style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500, fontSize: 11),
+                      ),
+                  ],
                 ),
                 
                 // 2. Reply Context (Telegram Style)

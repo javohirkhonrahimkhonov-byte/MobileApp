@@ -47,7 +47,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Premium Obuna", style: TextStyle(color: Colors.black)),
+        title: const Text("Premium obuna", style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -85,10 +85,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             const SizedBox(height: 25),
             
             // 2. Features List
-            _buildFeatureItem(Icons.movie_filter_rounded, "AI Konspekt (Video/Audio)"),
-            _buildFeatureItem(Icons.analytics_rounded, "Kengaytirilgan Statistika"),
-            _buildFeatureItem(Icons.block_flipped, "Reklamasiz rejim"),
-            _buildFeatureItem(Icons.support_agent_rounded, "Tezkor qo'llab-quvvatlash"),
+            _buildFeatureItem(Icons.psychology, "AI moduli"),
+            _buildFeatureItem(Icons.store, "Bozor"),
+            _buildFeatureItem(Icons.verified, "Premium belgisi"),
+            _buildFeatureItem(Icons.public, "Ijtimoiy faollik tizimi"),
             
             const SizedBox(height: 30),
             
