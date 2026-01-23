@@ -11,8 +11,6 @@ class UserProfileScreen extends StatefulWidget {
   final String authorId; // NEW
   final String authorUsername;
   final String authorAvatar;
-  final String authorUsername;
-  final String authorAvatar;
   final String authorRole;
   final bool authorIsPremium; // NEW
 
@@ -21,7 +19,6 @@ class UserProfileScreen extends StatefulWidget {
     required this.authorName,
     required this.authorId, // NEW
     required this.authorUsername,
-    required this.authorAvatar,
     required this.authorAvatar,
     required this.authorRole,
     this.authorIsPremium = false, // NEW

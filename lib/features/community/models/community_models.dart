@@ -116,8 +116,6 @@ class Post {
     String? targetSpecialtyId,
     bool? isMine,
     bool? isRepostedByMe,
-    bool? isMine,
-    bool? isRepostedByMe,
     DateTime? createdAt,
     bool? authorIsPremium, // NEW
   }) {
