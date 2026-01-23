@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart'; // NEW
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
-import '../../../../core/services/data_service.dart'; // Ensure DataService is imported
-import '../../../../core/utils/role_mapper.dart'; // Import Mapper
-import 'subscription_screen.dart'; // NEW
-
+import '../../../../core/services/data_service.dart';
+import '../../../../core/utils/role_mapper.dart';
+import 'subscription_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,30 +25,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _onUsernameChanged(String value) async {
     setState(() => _usernameError = null);
-    
+
     if (value.length < 2) return;
-    
+
     // Don't check if it's my own current username
     final current = Provider.of<AuthProvider>(context, listen: false).currentUser?.username;
     if (value == current) return;
-    
+
     setState(() => _isCheckingUsername = true);
-    
+
     try {
       final available = await Provider.of<AuthProvider>(context, listen: false).checkUsernameAvailability(value);
-      
+
       if (mounted) {
         setState(() {
           if (!available) {
-             _usernameError = "Bu username allaqachon olingan";
+            _usernameError = "Bu username allaqachon olingan";
           }
         });
       }
     } catch (e) {
       if (mounted) {
-         setState(() {
-           _usernameError = "Tekshirishda xatolik";
-         });
+        setState(() {
+          _usernameError = "Tekshirishda xatolik";
+        });
       }
     } finally {
       if (mounted) {
@@ -58,30 +57,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ... (build methods)
-
-
-
   Future<void> _saveUsername() async {
-     final value = _usernameController.text.trim();
-     if (value.length < 2 || value.length > 25) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username 2-25 belgi bo'lishi kerak")));
-       return;
-     }
-     if (_usernameError != null) return;
-     
-     setState(() => _isSavingUsername = true);
-     final result = await Provider.of<AuthProvider>(context, listen: false).updateUsername(value);
-     setState(() => _isSavingUsername = false);
-     
-     if (result['success'] == true) {
-       setState(() {
-         _isEditingUsername = false;
-       });
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username saqlandi!")));
-     } else {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? "Xatolik")));
-     }
+    final value = _usernameController.text.trim();
+    if (value.length < 2 || value.length > 25) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username 2-25 belgi bo'lishi kerak")));
+      return;
+    }
+    if (_usernameError != null) return;
+
+    setState(() => _isSavingUsername = true);
+    final result = await Provider.of<AuthProvider>(context, listen: false).updateUsername(value);
+    setState(() => _isSavingUsername = false);
+
+    if (result['success'] == true) {
+      setState(() {
+        _isEditingUsername = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Username saqlandi!")));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? "Xatolik")));
+    }
   }
 
   @override
@@ -92,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (student == null) {
       return const Center(child: Text("Ma'lumot topilmadi"));
     }
-    
+
     // Initialize controller only once if not editing or empty
     if (!_isEditingUsername && _usernameController.text.isEmpty && student.username != null) {
       _usernameController.text = student.username!;
@@ -129,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: ClipOval(
                           child: student.imageUrl != null && student.imageUrl!.isNotEmpty
                               ? Image.network(
-                                  student.imageUrl!, 
+                                  student.imageUrl!,
                                   fit: BoxFit.cover,
                                   headers: const {'User-Agent': 'Mozilla/5.0'},
                                   errorBuilder: (ctx, err, stack) => _buildInitials(student.fullName),
@@ -157,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   student.fullName,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 22, 
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textBlack,
                   ),
@@ -179,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.bold),
                   ),
                 ),
-                
+
                 // --- USERNAME SECTION ---
                 const SizedBox(height: 12),
                 if (_isEditingUsername)
@@ -201,13 +196,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             border: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue)),
                             enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                             focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue, width: 2)),
-                            // Hide default error to show custom one centered
-                            errorStyle: const TextStyle(height: 0, fontSize: 0), 
+                            errorStyle: const TextStyle(height: 0, fontSize: 0),
                           ),
                           onChanged: _onUsernameChanged,
                         ),
                       ),
-                      
+
                       if (_usernameError != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -216,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ),
-                        
+
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -256,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Text(
                             student.username != null ? "@${student.username}" : "Username o'rnatish",
                             style: TextStyle(
-                              color: student.username != null ? Colors.grey[800] : AppTheme.primaryBlue, 
+                              color: student.username != null ? Colors.grey[800] : AppTheme.primaryBlue,
                               fontWeight: student.username != null ? FontWeight.w500 : FontWeight.bold,
                               fontSize: 15
                             ),
@@ -272,9 +266,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          
+
           const SizedBox(height: 20),
-          
+
           // --- PREMIUM BANNER ---
           GestureDetector(
             onTap: () {
@@ -287,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(color: const Color(0xFF2575FC).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))
-                ]
+                ],
               ),
               child: Row(
                 children: [
@@ -311,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
 
           // 2. Info Cards (Bot Style List)
@@ -379,8 +373,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Text(
         initials,
         style: const TextStyle(
-          fontSize: 32, 
-          fontWeight: FontWeight.bold, 
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
           color: AppTheme.primaryBlue
         ),
       ),
@@ -444,20 +438,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _pickAndUploadImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    
+
     if (image != null) {
       // Show loading snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Rasm yuklanmoqda...")),
       );
-      
+
       final DataService dataService = DataService();
       final newUrl = await dataService.uploadProfileImage(image.path);
-      
+
       if (newUrl != null && context.mounted) {
          // Update Provider
          Provider.of<AuthProvider>(context, listen: false).updateProfileImage(newUrl);
-         
+
          ScaffoldMessenger.of(context).showSnackBar(
            const SnackBar(content: Text("Rasm muvaffaqiyatli o'zgartirildi!")),
          );
@@ -471,7 +465,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showImageOptions(BuildContext context) {
     showModalBottomSheet(
-      context: context, 
+      context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: const BoxDecoration(
@@ -496,5 +490,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-// End of file
