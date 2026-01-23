@@ -11,6 +11,7 @@ class Student {
   final String? username; // New field
   final int missedHours;
   final String? role;
+  final bool isPremium;
 
   Student({
     required this.id,
@@ -25,6 +26,7 @@ class Student {
     this.username,
     this.missedHours = 0,
     this.role,
+    this.isPremium = false,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -78,6 +80,7 @@ class Student {
       username: json['username'], // Map username
       missedHours: json['missed_hours'] ?? 0,
       role: json['role'] ?? json['user_role'],
+      isPremium: json['is_premium'] ?? false,
     );
   }
 
@@ -95,6 +98,7 @@ class Student {
       'username': username,
       'missed_hours': missedHours,
       'role': role,
+      'is_premium': isPremium,
     };
   }
 
@@ -111,6 +115,7 @@ class Student {
     String? username,
     int? missedHours,
     String? role,
+    bool? isPremium,
   }) {
     return Student(
       id: id ?? this.id,
@@ -125,6 +130,7 @@ class Student {
       username: username ?? this.username,
       missedHours: missedHours ?? this.missedHours,
       role: role ?? this.role,
+      isPremium: isPremium ?? this.isPremium,
     );
   }
 }

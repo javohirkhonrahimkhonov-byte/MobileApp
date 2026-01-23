@@ -178,24 +178,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
-                // --- USERNAME SECTION ---
+                  // --- USERNAME SECTION ---
                 const SizedBox(height: 12),
                 if (_isEditingUsername)
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 180,
+                        width: 220, // Increased width slightly
                         child: TextField(
                           controller: _usernameController,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textBlack),
+                          textAlign: TextAlign.start, // Changed from center to start
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: AppTheme.textBlack), // Reduced bold
                           decoration: InputDecoration(
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 8),
                             hintText: "Foydalanuvchi nomi",
-                            prefixText: "@",
-                            prefixStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6), fontWeight: FontWeight.normal), // Lighter hint
+                            prefixIcon: const Padding(
+                              padding: EdgeInsets.only(left: 0, top: 10, bottom: 10, right: 4), // Align better
+                              child: Text("@", style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)), // Suffix-like prefix
+                            ),
+                            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                             border: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue)),
                             enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                             focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryBlue, width: 2)),
@@ -280,10 +284,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF6A11CB), Color(0xFF2575FC)]),
+                gradient: student.isPremium 
+                    ? const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]) // Gold Gradient
+                    : const LinearGradient(colors: [Color(0xFF6A11CB), Color(0xFF2575FC)]), // Blue Gradient
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: const Color(0xFF2575FC).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))
+                  BoxShadow(
+                    color: (student.isPremium ? Colors.orange : const Color(0xFF2575FC)).withOpacity(0.3), 
+                    blurRadius: 10, 
+                    offset: const Offset(0, 5)
+                  )
                 ],
               ),
               child: Row(
@@ -291,15 +301,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-                    child: const Icon(Icons.workspace_premium, color: Colors.amber, size: 24),
+                    child: Icon(
+                      student.isPremium ? Icons.verified_rounded : Icons.workspace_premium, 
+                      color: student.isPremium ? Colors.white : Colors.amber, 
+                      size: 24
+                    ),
                   ),
                   const SizedBox(width: 15),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                         Text("Premium Obuna", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                         Text("Barcha imkoniyatlarni oching", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                         Text(
+                           student.isPremium ? "Premium Faol" : "Premium Obuna", 
+                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                         ),
+                         Text(
+                           student.isPremium ? "Sizda barcha imkoniyatlar ochiq" : "Barcha imkoniyatlarni oching", 
+                           style: const TextStyle(color: Colors.white70, fontSize: 12)
+                         ),
                       ],
                     ),
                   ),
