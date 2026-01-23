@@ -56,13 +56,35 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _checkIfMe() async {
     final me = await AuthService().getSavedUser();
     if (me != null && mounted) {
-      if (me.fullName == widget.authorName) { // Fallback check by name as we don't pass ID to widget
-        setState(() {
-          _isMe = true;
-          _currentUsername = me.username;
-          _usernameController.text = me.username ?? "";
-        });
+      // Priority: Check by ID
+      if (widget.authorId != "0" && widget.authorId.isNotEmpty) {
+        if (me.id.toString() == widget.authorId) {
+          _setMe(me);
+          return;
+        }
       }
+      
+      // Fallback: Check by username if ID failed or missing
+      if (me.username != null && widget.authorUsername.isNotEmpty) {
+         if (me.username == widget.authorUsername) {
+           _setMe(me);
+           return;
+         }
+      }
+
+      // Last Resort: Check by Name
+      if (me.fullName == widget.authorName) { 
+        _setMe(me);
+      }
+    }
+  }
+
+  void _setMe(Student me) {
+    setState(() {
+      _isMe = true;
+      _currentUsername = me.username;
+      _usernameController.text = me.username ?? "";
+    });
     }
   }
   
