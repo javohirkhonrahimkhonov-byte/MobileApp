@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/models/student.dart';
@@ -434,19 +437,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 4. Image Picker
+  // 4. Image Picker and Compression
   void _pickAndUploadImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      // Show loading snackbar
+      // Show loading
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Rasm yuklanmoqda...")),
+        const SnackBar(content: Text("Rasm tayyorlanmoqda...")),
       );
 
+      File originalFile = File(image.path);
+      File? compressedFile;
+
+      try {
+        // Compress to < 50KB
+        compressedFile = await _compressImage(originalFile);
+      } catch (e) {
+        print("Compression error: $e");
+        compressedFile = originalFile; // Fallback
+      }
+
+      if (compressedFile == null) {
+         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Rasmni qayta ishlashda xatolik")));
+         return;
+      }
+
+      // Upload
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Rasm yuklanmoqda...")));
+      
       final DataService dataService = DataService();
-      final newUrl = await dataService.uploadProfileImage(image.path);
+      final newUrl = await dataService.uploadAvatar(compressedFile);
 
       if (newUrl != null && context.mounted) {
          // Update Provider
@@ -460,7 +482,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
            const SnackBar(content: Text("Rasm yuklashda xatolik!")),
          );
       }
+      
+      // Cleanup temp
+      /* 
+      if (compressedFile.path != originalFile.path) {
+        try { await compressedFile.delete(); } catch (_) {}
+      }
+      */
     }
+  }
+
+  Future<File?> _compressImage(File file) async {
+    final dir = await getTemporaryDirectory();
+    final targetPath = "${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+    var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 80,
+      minWidth: 800,
+      minHeight: 800,
+    );
+
+    if (result == null) return null;
+    
+    // Check size (target 50KB = 51200 bytes)
+    int size = await result.length();
+    int loops = 0;
+    int quality = 80;
+
+    File finalFile = File(result.path);
+
+    while (size > 51200 && loops < 5) {
+      loops++;
+      quality -= 15;
+      if (quality < 5) quality = 5;
+
+      final newTargetPath = "${dir.path}/${DateTime.now().millisecondsSinceEpoch}_$loops.jpg";
+      
+      var newResult = await FlutterImageCompress.compressAndGetFile(
+        file.absolute.path, // Always compress source to avoid artifacts accumulation? Or re-compress? Better source.
+        newTargetPath,
+        quality: quality,
+        minWidth: 600, // Reduce resolution too
+        minHeight: 600,
+      );
+
+      if (newResult != null) {
+        finalFile = File(newResult.path);
+        size = await finalFile.length();
+      } else {
+        break; 
+      }
+      
+      if (quality <= 5) break; 
+    }
+    
+    print("Final Image Size: ${(size / 1024).toStringAsFixed(2)} KB");
+    return finalFile;
   }
 
   void _showImageOptions(BuildContext context) {

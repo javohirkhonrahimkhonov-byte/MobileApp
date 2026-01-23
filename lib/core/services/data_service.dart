@@ -20,6 +20,8 @@ class DataService {
     };
   }
 
+import 'dart:io';
+
   // 1. Get Profile
   Future<Map<String, dynamic>> getProfile() async {
     // Note: Most profile data comes from AuthService on login.
@@ -38,8 +40,39 @@ class DataService {
     throw Exception('Failed to load profile');
   }
 
+  // 26. Upload Avatar
+  Future<String?> uploadAvatar(File imageFile) async {
+    try {
+      final uri = Uri.parse('${ApiConstants.baseUrl}/student/image');
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Auth Header
+      final token = await _authService.getToken();
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // File
+      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+          return body['data']['image_url'];
+        }
+      }
+      print("Upload failed: ${response.statusCode} ${response.body}");
+      return null;
+    } catch (e) {
+      print("Error uploading avatar: $e");
+      return null;
+    }
+  }
+
   // Cache for Dashboard
   Map<String, dynamic>? _dashboardCache;
+
   DateTime? _lastDashboardFetch;
 
   // 2. Get Dashboard Stats (Via Backend Proxy for Real Data)

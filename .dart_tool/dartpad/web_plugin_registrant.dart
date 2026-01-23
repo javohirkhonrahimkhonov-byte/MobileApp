@@ -8,6 +8,7 @@
 
 import 'package:app_links_web/app_links_web.dart';
 import 'package:file_picker/_internal/file_picker_web.dart';
+import 'package:flutter_image_compress_web/flutter_image_compress_web.dart';
 import 'package:flutter_secure_storage_web/flutter_secure_storage_web.dart';
 import 'package:image_picker_for_web/image_picker_for_web.dart';
 import 'package:share_plus/src/share_plus_web.dart';
@@ -19,6 +20,7 @@ void registerPlugins([final Registrar? pluginRegistrar]) {
   final Registrar registrar = pluginRegistrar ?? webPluginRegistrar;
   AppLinksPluginWeb.registerWith(registrar);
   FilePickerWeb.registerWith(registrar);
+  FlutterImageCompressWeb.registerWith(registrar);
   FlutterSecureStorageWeb.registerWith(registrar);
   ImagePickerPlugin.registerWith(registrar);
   SharePlusWebPlugin.registerWith(registrar);

@@ -98,8 +98,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _buildPaymentButton(
               title: "Payme orqali to'lash",
               color: const Color(0xFF00CCCC), // Payme Brand Color
-              logoUrl: "assets/images/payme.png",
-              fallbackIcon: Icons.payment,
+              icon: Icons.payment,
               onTap: () => _showComingSoon("Payme"),
               isLoading: _loadingProvider == "Payme",
             ),
@@ -110,8 +109,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _buildPaymentButton(
               title: "Click orqali to'lash",
               color: const Color(0xFF0047BA), // Click Brand Color
-              logoUrl: "assets/images/click.png", 
-              fallbackIcon: Icons.touch_app,
+              icon: Icons.touch_app,
               onTap: () => _showComingSoon("Click"),
               isLoading: _loadingProvider == "Click",
             ),
@@ -122,8 +120,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _buildPaymentButton(
               title: "Uzum Bank orqali to'lash",
               color: const Color(0xFF7000FF), // Uzum Brand Color
-              logoUrl: "assets/images/uzum.png", 
-              fallbackIcon: Icons.account_balance_wallet,
+              icon: Icons.account_balance_wallet,
               onTap: () => _showComingSoon("Uzum Bank"),
               isLoading: _loadingProvider == "Uzum Bank",
             ),
@@ -138,8 +135,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget _buildPaymentButton({
     required String title,
     required Color color,
-    required String logoUrl,
-    required IconData fallbackIcon,
+    required IconData icon,
     required VoidCallback onTap,
     required bool isLoading,
   }) {
@@ -160,24 +156,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo or Icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white, // Solid white background
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.asset( // Use Asset
-                      logoUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Icon(fallbackIcon, color: color, size: 24),
-                    ),
-                  ),
-                ),
+                Icon(icon, color: Colors.white, size: 28),
                 const SizedBox(width: 15),
                 Text(
                   title,
