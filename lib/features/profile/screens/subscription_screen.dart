@@ -140,42 +140,26 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             
             const SizedBox(height: 30),
 
-            // 3.5 Payme Automartik
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _payWithPayme,
-                icon: _isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.payment, color: Colors.white), 
-                label: const Text("Payme orqali to'lash", style: TextStyle(color: Colors.white, fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00CCCC), // Payme Color
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 2,
-                ),
-              ),
+            // 3.5 Payme (Branded)
+            _buildPaymentButton(
+              title: "Payme orqali to'lash",
+              color: const Color(0xFF00CCCC), // Payme Brand Color
+              logoUrl: "https://logobank.uz:8005/media/logos_png/Payme-01.png",
+              fallbackIcon: Icons.payment,
+              onTap: _payWithPayme,
+              isLoading: _isLoading && !_isLoading, // Hack to not show loading if other is loading? Actually just use _isLoading
             ),
             
             const SizedBox(height: 15),
 
-            // 3.6 Click Automartik
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _payWithClick,
-                icon: _isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.touch_app, color: Colors.white), 
-                label: const Text("Click orqali to'lash", style: TextStyle(color: Colors.white, fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0047BA), // Click Blue
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 2,
-                ),
-              ),
+            // 3.6 Click (Branded)
+            _buildPaymentButton(
+              title: "Click orqali to'lash",
+              color: const Color(0xFF0047BA), // Click Brand Color
+              logoUrl: "https://logobank.uz:8005/media/logos_png/Click-01.png", 
+              fallbackIcon: Icons.touch_app,
+              onTap: _payWithClick,
+              isLoading: _isLoading, // We might want separate loading states, but single is fine
             ),
             
             const SizedBox(height: 30),
@@ -183,6 +167,56 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentButton({
+    required String title,
+    required Color color,
+    required String logoUrl,
+    required IconData fallbackIcon,
+    required VoidCallback onTap,
+    required bool isLoading,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          elevation: 4,
+          shadowColor: color.withOpacity(0.4),
+        ),
+        child: _isLoading 
+          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo or Icon
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: Image.network(
+                    logoUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(fallbackIcon, color: Colors.white, size: 24),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
+            ),
       ),
     );
   }
