@@ -44,7 +44,7 @@ class DataService {
   // 26. Upload Avatar
   Future<String?> uploadAvatar(File imageFile) async {
     try {
-      final uri = Uri.parse('${ApiConstants.baseUrl}/student/image');
+      final uri = Uri.parse('${ApiConstants.backendUrl}/student/image');
       final request = http.MultipartRequest('POST', uri);
       
       // Auth Header
