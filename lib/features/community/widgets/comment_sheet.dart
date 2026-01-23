@@ -321,10 +321,19 @@ class _CommentSheetState extends State<CommentSheet> {
                     ),
               ),
 
+              // 3. Reply Preview logic is now handled INSIDE CommentInput via replyToName param
+              // if (_replyingTo != null) _buildReplyPreview(), // REMOVED to avoid duplication
+
+              // 4. Input Area
               CommentInput(
                 onSend: _sendComment,
                 isSending: _isSending,
-                replyToName: _replyingTo?.authorName,
+                // Logic: Show Username if available, else Author Name (YouTube Style)
+                replyToName: _replyingTo != null 
+                    ? (_replyingTo!.authorUsername.isNotEmpty 
+                        ? "@${_replyingTo!.authorUsername}" // Just "@username"
+                        : _replyingTo!.authorName)
+                    : null,
                 onCancelReply: () => setState(() => _replyingTo = null),
               )
             ],

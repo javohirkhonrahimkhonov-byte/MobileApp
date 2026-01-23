@@ -81,21 +81,25 @@ class CommentItem extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
     // "Indented to the right" for replies
-    // YouTube style on mobile: Replies in the main list are HIDDEN behind a button.
-    // In the ThreadSheet, they are listed flat under parent, but user asked for indent.
-    // "Replies must be visually indented to the right (one tab / padding-left) so it’s clear which comment they belong to."
-    // "This indentation should ONLY apply to replies, not to top-level comments."
-    
+    // User Requirement: "Replies must be visually indented to the right (one tab / padding-left)"
+    // Increased indentation to 48.0 for better visibility.
     return Container(
-      padding: EdgeInsets.only(
-        left: isReply ? 32.0 : 16.0, // Indent 32 for replies, 16 for normal
-        right: 16,
-        top: 12,
-        bottom: 12
+      margin: EdgeInsets.only(
+        left: isReply ? 48.0 : 0.0, // Significant margin for replies
+        top: 4, bottom: 4
       ),
-      color: isParent ? Colors.grey[50] : Colors.white,
+      padding: EdgeInsets.only(
+        left: isReply ? 0.0 : 16.0, // Root items get padding, replies handled by margin
+        right: 16,
+        top: 8,
+        bottom: 8
+      ), // Slightly reduced internal padding for tighter list
+      decoration: BoxDecoration(
+         color: isParent ? Colors.grey[50] : Colors.white,
+         // Optional: Add left border for replies to make it distinct?
+         // border: isReply ? Border(left: BorderSide(color: Colors.grey[300]!, width: 2)) : null
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -112,7 +116,7 @@ class CommentItem extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
               backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
-              radius: isReply ? 14 : 18, // Smaller avatar for replies (YouTube style)
+              radius: isReply ? 14 : 18, 
               child: comment.authorAvatar.isEmpty 
                 ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: isReply ? 12 : 14))
                 : null,

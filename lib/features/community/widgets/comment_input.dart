@@ -37,7 +37,7 @@ class _CommentInputState extends State<CommentInput> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.replyToName != null)
+        if (widget.replyToName != null) // This now acts as the full label e.g. "Javob berilmoqda: @username"
            Container(
             color: const Color(0xFFF5F7FA),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -47,7 +47,7 @@ class _CommentInputState extends State<CommentInput> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    "Javob: ${widget.replyToName}",
+                    widget.replyToName!, // Display exactly what is passed
                     style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 12),
                   ),
                 ),

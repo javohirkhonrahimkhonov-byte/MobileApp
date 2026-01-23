@@ -204,7 +204,12 @@ class _ReplyThreadSheetState extends State<ReplyThreadSheet> {
               CommentInput(
                 onSend: _sendReply,
                 isSending: _isSending,
-                replyToName: _replyingTo?.authorName, // ?? widget.parentComment.authorName // Don't enforce parent name constant
+                // Logic: Show Username if available, else Author Name (YouTube Style)
+                replyToName: _replyingTo != null 
+                    ? (_replyingTo!.authorUsername.isNotEmpty 
+                        ? "@${_replyingTo!.authorUsername}" 
+                        : _replyingTo!.authorName)
+                    : null,
                 onCancelReply: () => setState(() => _replyingTo = null),
                 focusNode: _focusNode,
               )
