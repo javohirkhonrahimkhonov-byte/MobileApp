@@ -87,7 +87,7 @@ class CommentItem extends StatelessWidget {
     // Increased indentation to 48.0 for better visibility.
     return Container(
       margin: EdgeInsets.only(
-        left: isReply ? 48.0 : 0.0, // Significant margin for replies
+        left: isReply ? 56.0 : 0.0, // Increased to 56.0 for distinct YouTube-style indentation
         top: 4, bottom: 4
       ),
       padding: EdgeInsets.only(

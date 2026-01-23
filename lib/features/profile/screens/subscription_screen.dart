@@ -365,7 +365,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
-                  "1 haftalik bepul sinov davri!",
+                  "bir haftalik bepul sinov davri!",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.amber),
                 ),
               ),
