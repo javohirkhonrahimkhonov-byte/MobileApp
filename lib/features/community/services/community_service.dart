@@ -149,6 +149,12 @@ class CommunityService {
     }
   }
 
+  Future<bool> votePoll(String postId, int optionIndex) async {
+    // Stub functionality to fix compilation. Implement backend later.
+    await Future.delayed(const Duration(milliseconds: 500));
+    return true; 
+  }
+
   Future<bool> deletePost(String postId) async {
     try {
       final response = await http.delete(

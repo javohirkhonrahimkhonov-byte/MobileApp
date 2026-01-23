@@ -135,13 +135,17 @@ class _PostCardState extends State<PostCard> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20))
       ),
+      // FIX: Use named parameters matching EditPostSheet definitions
       builder: (context) => EditPostSheet(
-        post: widget.post, 
-        onPostUpdated: (updatedPost) {
-           setState(() => _currentContent = updatedPost.content);
-        }
+        postId: widget.post.id, 
+        initialContent: _currentContent, // Pass current content
       )
-    );
+    ).then((updatedContent) {
+       if (updatedContent != null) {
+           // If update returned, reflect locally
+           setState(() => _currentContent = updatedContent);
+       }
+    });
   }
 
   void _showDeleteDialog() {
@@ -269,7 +273,13 @@ class _PostCardState extends State<PostCard> {
             // Header
             InkWell(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(userId: widget.post.studentId)));
+                // FIX: Navigate to UserProfileScreen with full details
+                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                  authorName: widget.post.authorName,
+                  authorUsername: widget.post.authorUsername,
+                  authorAvatar: widget.post.authorAvatar,
+                  authorRole: widget.post.authorRole,
+                )));
               },
               child: Row(
                 children: [
@@ -280,7 +290,7 @@ class _PostCardState extends State<PostCard> {
                         ? NetworkImage(widget.post.authorAvatar)
                         : null,
                     child: widget.post.authorAvatar.isEmpty
-                        ? Text(widget.post.authorName[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
+                        ? Text(widget.post.authorName.isNotEmpty ? widget.post.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
                         : null,
                   ),
                   const SizedBox(width: 10),
