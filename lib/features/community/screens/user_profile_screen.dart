@@ -8,6 +8,7 @@ import '../../../../core/utils/role_mapper.dart'; // Import Mapper
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
+  final String authorId; // NEW
   final String authorUsername;
   final String authorAvatar;
   final String authorRole;
@@ -15,6 +16,7 @@ class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({
     super.key,
     required this.authorName,
+    required this.authorId, // NEW
     required this.authorUsername,
     required this.authorAvatar,
     required this.authorRole,
@@ -28,8 +30,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final CommunityService _service = CommunityService();
 
   int _postCount = 0;
+  int _repostCount = 0; // NEW
   bool _isLoading = true;
   List<Post> _posts = [];
+  List<Post> _reposts = []; // NEW
 
   bool _isMe = false;
   
@@ -121,11 +125,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       
       // Sort newest first
       userPosts.sort((a, b) => b.id.compareTo(a.id));
+      
+      // NEW: Load Reposts
+      final reposts = await _service.getRepostedPosts(widget.authorId);
 
       if (mounted) {
         setState(() {
           _posts = userPosts;
+          _reposts = reposts; // NEW
           _postCount = userPosts.length;
+          _repostCount = reposts.length; // NEW
           _isLoading = false;
         });
       }
@@ -289,7 +298,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStat("Postlar", "$_postCount"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStat("Postlar", "$_postCount"), 
+                      _buildStat("Repostlar", "$_repostCount"), // NEW 
                       _buildStat("Kuzatuvchilar", "0"), 
                       _buildStat("Obuna", "0"),
                     ],
@@ -361,16 +374,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                       
               // 2. Reposts (Placeholder)
-              const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.repeat, size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text("Repostlar yo'q", style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ),
+              // 2. Reposts
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _reposts.isEmpty
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.repeat, size: 48, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text("Repostlar yo'q", style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: _reposts.length,
+                          itemBuilder: (ctx, i) => PostCard(
+                            post: _reposts[i],
+                            // onDelete: _handleDeleteRepost... logic if needed
+                          ),
+                        ),
             ],
           ),
         ),

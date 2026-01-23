@@ -85,6 +85,24 @@ class CommunityService {
     }
   }
 
+  Future<List<Post>> getRepostedPosts(String studentId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.communityPosts}/reposted?target_student_id=$studentId'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => _mapJsonToPost(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Error loading reposts: $e");
+      return [];
+    }
+  }
+
   Future<Post?> getPost(String postId) async {
     try {
       final response = await http.get(
@@ -191,6 +209,7 @@ class CommunityService {
   Post _mapJsonToPost(Map<String, dynamic> json) {
     return Post(
       id: json['id'].toString(),
+      authorId: json['author_id']?.toString() ?? "0", // NEW
       authorName: json['author_name'] ?? "Noma'lum",
       authorUsername: json['author_username'] ?? "",
       authorAvatar: "", // Placeholder
@@ -252,6 +271,7 @@ class CommunityService {
           return Comment(
           id: json['id'].toString(),
           postId: postId,
+          authorId: json['author_id']?.toString() ?? "0", // NEW
           authorName: json['author_name'] ?? "Talaba",
           authorAvatar: json['author_avatar'] ?? "",
           content: json['content'] ?? "",

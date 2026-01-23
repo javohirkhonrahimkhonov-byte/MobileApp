@@ -31,6 +31,7 @@ class Post {
 
   Post({
     required this.id,
+    required this.authorId, // Added
     required this.authorName,
     this.authorUsername = "",
     required this.authorAvatar,
@@ -85,6 +86,7 @@ class Post {
 
   Post copyWith({
     String? id,
+    String? authorId,
     String? authorName,
     String? authorUsername,
     String? authorAvatar,
@@ -115,6 +117,7 @@ class Post {
   }) {
     return Post(
       id: id ?? this.id,
+      authorId: authorId ?? this.authorId,
       authorName: authorName ?? this.authorName,
       authorUsername: authorUsername ?? this.authorUsername,
       authorAvatar: authorAvatar ?? this.authorAvatar,
@@ -167,6 +170,7 @@ class Comment {
   Comment({
     required this.id,
     required this.postId, // Added
+    required this.authorId, // Added
     required this.authorName,
     this.authorUsername = "", // Added
     this.authorAvatar = "",
@@ -205,6 +209,7 @@ class Comment {
   Comment copyWith({
     String? id,
     String? postId,
+    String? authorId,
     String? authorName,
     String? authorUsername,
     String? authorAvatar,
@@ -222,6 +227,7 @@ class Comment {
     return Comment(
       id: id ?? this.id,
       postId: postId ?? this.postId,
+      authorId: authorId ?? this.authorId,
       authorName: authorName ?? this.authorName,
       authorUsername: authorUsername ?? this.authorUsername,
       authorAvatar: authorAvatar ?? this.authorAvatar,
