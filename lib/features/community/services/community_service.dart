@@ -260,7 +260,7 @@ class CommunityService {
   Future<List<Comment>> getComments(String postId) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConstants.communityPosts}/$postId/comments'),
+        Uri.parse('${ApiConstants.communityPosts}/$postId/comments?t=${DateTime.now().millisecondsSinceEpoch}'),
         headers: await _getHeaders(),
       );
 
