@@ -102,6 +102,7 @@ class _CommentSheetState extends State<CommentSheet> {
       // Unless _replyingTo is set (which is only for swipes).
       replyToCommentId: _replyingTo?.id, 
       replyToUserName: _replyingTo?.authorName, 
+      replyToContent: _replyingTo?.content, // Fix: Show quoted content immediately
       isMine: true,
     );
 
