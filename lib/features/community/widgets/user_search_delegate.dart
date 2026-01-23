@@ -78,28 +78,35 @@ class UserSearchDelegate extends SearchDelegate {
           itemCount: students.length,
           itemBuilder: (context, index) {
             final student = students[index];
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                backgroundImage: student.imageUrl != null && student.imageUrl!.isNotEmpty
-                    ? NetworkImage(student.imageUrl!)
-                    : null,
-                child: (student.imageUrl == null || student.imageUrl!.isEmpty)
-                    ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
-                    : null,
-              ),
-              title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("@${student.username ?? 'usernamesiz'}", style: TextStyle(color: Colors.grey[600])),
-              onTap: () {
-                // Navigate to Profile
-                Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
-                  authorName: student.fullName,
-                  authorId: student.id.toString(), // NEW
-                  authorUsername: student.username ?? "",
-                  authorAvatar: student.imageUrl ?? "",
-                  authorRole: "Talaba" // Default role
-                )));
-              },
+            return Column(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                    backgroundImage: student.imageUrl != null && student.imageUrl!.isNotEmpty
+                        ? NetworkImage(student.imageUrl!)
+                        : null,
+                    child: (student.imageUrl == null || student.imageUrl!.isEmpty)
+                        ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18))
+                        : null,
+                  ),
+                  title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  subtitle: Text("@${student.username ?? 'usernamesiz'}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    // Navigate to Profile
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+                      authorName: student.fullName,
+                      authorId: student.id.toString(),
+                      authorUsername: student.username ?? "",
+                      authorAvatar: student.imageUrl ?? "",
+                      authorRole: "Talaba" // Default role
+                    )));
+                  },
+                ),
+                const Divider(height: 1, thickness: 1, indent: 72), // Divider with indentation
+              ],
             );
           },
         );
