@@ -19,6 +19,93 @@ class CommunityService {
 
   final AuthService _authService = AuthService();
 
+   // --- Subscription / Social ---
+
+  Future<Map<String, dynamic>> toggleSubscription(String targetId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.backendUrl}/community/subscribe/$targetId'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {};
+    } catch (e) {
+      print("Error toggling subscription: $e");
+      return {};
+    }
+  }
+
+  Future<bool> checkSubscription(String targetId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/check-subscription/$targetId'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['subscribed'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<Map<String, int>> getProfileStats(String targetId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/subscribers/count?target_id=$targetId'),
+         headers: await _getHeaders(), // Ideally authentication not required? But safer.
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'followers': data['followers'] ?? 0,
+          'following': data['following'] ?? 0,
+        };
+      }
+      return {'followers': 0, 'following': 0};
+    } catch (e) {
+      return {'followers': 0, 'following': 0};
+    }
+  }
+  
+  Future<List<Student>> getFollowers(String targetId) async {
+    try {
+       final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/followers-list/$targetId'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Student.fromJson(e)).toList();
+      }
+      return [];
+    } catch(e) {
+      print("Error getting followers: $e");
+      return [];
+    }
+  }
+
+  Future<List<Student>> getFollowing(String targetId) async {
+    try {
+       final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/following-list/$targetId'),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Student.fromJson(e)).toList();
+      }
+      return [];
+    } catch(e) {
+      print("Error getting following: $e");
+      return [];
+    }
+  }
+
   Future<Map<String, String>> _getHeaders() async {
     final token = await _authService.getToken();
     return {

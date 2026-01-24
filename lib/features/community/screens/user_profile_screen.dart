@@ -7,8 +7,10 @@ import '../services/chat_service.dart'; // NEW
 import '../widgets/post_card.dart';
 import '../../../../core/utils/role_mapper.dart';
 import '../../../../core/models/student.dart'; 
+import 'chat_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'chat_detail_screen.dart'; // NEW
+import 'dart:async'; // NEW
+import 'user_list_screen.dart'; // NEW
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
@@ -44,6 +46,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   bool _isMe = false;
   
+  // Follow System
+  bool _isFollowing = false;
+  int _followersCount = 0;
+  int _followingCount = 0;
+  Timer? _refreshTimer;
+
   // Username Editing State
   bool _isEditingUsername = false;
   TextEditingController _usernameController = TextEditingController();
@@ -56,6 +64,67 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     super.initState();
     _loadUserPosts();
     _checkIfMe();
+    _initFollowSystem();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _initFollowSystem() {
+    // Initial Load
+    _checkFollowStatus();
+    _loadStats();
+    
+    // Periodic Refresh (30s)
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) _loadStats();
+    });
+  }
+
+  Future<void> _checkFollowStatus() async {
+    if (widget.authorId == "0") return;
+    final status = await _service.checkSubscription(widget.authorId);
+    if (mounted) setState(() => _isFollowing = status);
+  }
+  
+  Future<void> _loadStats() async {
+     if (widget.authorId == "0") return;
+     final stats = await _service.getProfileStats(widget.authorId);
+     if (mounted) {
+       setState(() {
+         _followersCount = stats['followers'] ?? 0;
+         _followingCount = stats['following'] ?? 0;
+       });
+     }
+  }
+
+  Future<void> _toggleFollow() async {
+    // Optimistic Update
+    setState(() {
+      _isFollowing = !_isFollowing;
+      if (_isFollowing) {
+        _followersCount++;
+      } else {
+        _followersCount--;
+      }
+    });
+
+    final output = await _service.toggleSubscription(widget.authorId);
+    if (output.containsKey('subscribed')) {
+      if (mounted) {
+        setState(() {
+          _isFollowing = output['subscribed'];
+          _followersCount = output['followers_count']; 
+        });
+      }
+    } else {
+      // Revert if failed
+       _checkFollowStatus();
+       _loadStats();
+    }
   }
   
   Future<void> _checkIfMe() async {
@@ -350,8 +419,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     children: [
                        _buildStat("Postlar", "$_postCount"), 
                        _buildStat("Repostlar", "$_repostCount"), 
-                       _buildStat("Kuzatuvchilar", "0"), 
-                       _buildStat("Obuna", "0"),
+                       GestureDetector(
+                         onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => UserListScreen(
+                              userId: widget.authorId, 
+                              type: UserListType.followers
+                            )));
+                         },
+                         child: _buildStat("Kuzatuvchilar", "$_followersCount")
+                       ), 
+                       GestureDetector(
+                         onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => UserListScreen(
+                              userId: widget.authorId, 
+                              type: UserListType.following
+                            )));
+                         },
+                         child: _buildStat("Obuna", "$_followingCount")
+                       ),
                     ],
                   ),
                   
@@ -397,14 +482,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: _toggleFollow,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryBlue,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            backgroundColor: _isFollowing ? Colors.red[50] : AppTheme.primaryBlue,
+                            foregroundColor: _isFollowing ? Colors.red : Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: _isFollowing ? BorderSide(color: Colors.red) : BorderSide.none
+                            ),
                             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                             elevation: 0,
                           ),
-                          child: const Text("Kuzatish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text(_isFollowing ? "Obunani o'chirish" : "Kuzatish", style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(width: 12),
                         OutlinedButton(
