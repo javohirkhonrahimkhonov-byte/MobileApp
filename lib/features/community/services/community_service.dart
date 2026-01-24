@@ -27,36 +27,43 @@ class CommunityService {
     };
   }
 
-  // --- Search History ---
-  Future<void> saveSearchQuery(String query) async {
-    if (query.trim().isEmpty) return;
+  // --- Search History (Recent Users) ---
+  Future<void> saveRecentUser(Student student) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      List<String> history = prefs.getStringList('search_history') ?? [];
+      List<String> history = prefs.getStringList('recent_users') ?? [];
       
-      // Remove if exists to move to top
-      history.removeWhere((item) => item.toLowerCase() == query.toLowerCase());
+      // Remove if exists (by ID check)
+      history.removeWhere((item) {
+        try {
+          final map = json.decode(item);
+          return map['id'].toString() == student.id.toString();
+        } catch (e) {
+          return false;
+        }
+      });
       
-      // Add to start
-      history.insert(0, query.trim());
+      // Add to start (Convert to JSON string)
+      history.insert(0, json.encode(student.toJson()));
       
       // Limit to 10
       if (history.length > 10) {
         history = history.sublist(0, 10);
       }
       
-      await prefs.setStringList('search_history', history);
+      await prefs.setStringList('recent_users', history);
     } catch (e) {
-      print("Error saving search history: $e");
+      print("Error saving recent user: $e");
     }
   }
 
-  Future<List<String>> getSearchHistory() async {
+  Future<List<Student>> getRecentUsers() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getStringList('search_history') ?? [];
+      final list = prefs.getStringList('recent_users') ?? [];
+      return list.map((item) => Student.fromJson(json.decode(item))).toList();
     } catch (e) {
-      print("Error getting search history: $e");
+      print("Error getting recent users: $e");
       return [];
     }
   }
@@ -64,7 +71,7 @@ class CommunityService {
   Future<void> clearSearchHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('search_history');
+      await prefs.remove('recent_users');
     } catch (e) {
       print("Error clearing search history: $e");
     }

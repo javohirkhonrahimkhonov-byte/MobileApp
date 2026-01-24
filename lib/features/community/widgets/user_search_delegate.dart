@@ -43,8 +43,8 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.length < 2) {
-       return FutureBuilder<List<String>>(
-         future: _service.getSearchHistory(),
+       return FutureBuilder<List<Student>>(
+         future: _service.getRecentUsers(),
          builder: (context, snapshot) {
            final history = snapshot.data ?? [];
            
@@ -84,26 +84,11 @@ class UserSearchDelegate extends SearchDelegate {
                  ),
                ),
                Expanded(
-                 child: ListView.builder(
+                 child: ListView.separated(
                    itemCount: history.length,
+                   separatorBuilder: (ctx, i) => const Divider(height: 1, indent: 72),
                    itemBuilder: (context, index) {
-                     final item = history[index];
-                     return ListTile(
-                       leading: const Icon(Icons.history, color: Colors.grey),
-                       title: Text(item),
-                       onTap: () {
-                         query = item;
-                         showResults(context);
-                       },
-                       trailing: IconButton(
-                         icon: const Icon(Icons.close, size: 16),
-                         onPressed: () {
-                           // Remove individual item (Logic needed in service but for now reload)
-                           // Ideally _service.removeFromHistory(item).
-                           // We will skip single remove for now or just ignore.
-                         },
-                       ),
-                     );
+                     return _buildUserTile(context, history[index], isHistory: true);
                    },
                  ),
                ),
@@ -132,60 +117,60 @@ class UserSearchDelegate extends SearchDelegate {
            return const Center(child: Text("Hech kim topilmadi"));
         }
 
-        return ListView.builder(
+        return ListView.separated(
           itemCount: students.length,
+          separatorBuilder: (ctx, i) => const Divider(height: 1, indent: 72),
           itemBuilder: (context, index) {
-            final student = students[index];
-            return Column(
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                    backgroundImage: student.imageUrl != null && student.imageUrl!.isNotEmpty
-                        ? NetworkImage(student.imageUrl!)
-                        : null,
-                    child: (student.imageUrl == null || student.imageUrl!.isEmpty)
-                        ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18))
-                        : null,
-                  ),
-                  title: Row(
-                    children: [
-                      Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      if (student.isPremium) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.verified, color: Colors.blue, size: 16),
-                      ]
-                    ],
-                  ),
-                  subtitle: Text("@${student.username ?? 'usernamesiz'}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500)),
-                  onTap: () {
-                     // Save to history
-                     _service.saveSearchQuery(query);
-                     
-                     if (onUserSelected != null) {
-                       onUserSelected!(student);
-                       close(context, null);
-                       return; 
-                     }
-
-                    // Navigate to Profile
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
-                      authorName: student.fullName,
-                      authorId: student.id.toString(),
-                      authorUsername: student.username ?? "",
-                      authorAvatar: student.imageUrl ?? "",
-                      authorRole: student.role ?? "student", 
-                      authorIsPremium: student.isPremium,
-                    )));
-                  },
-                ),
-                const Divider(height: 1, thickness: 1, indent: 72), // Divider with indentation
-              ],
-            );
+            return _buildUserTile(context, students[index]);
           },
         );
+      },
+    );
+  }
+
+  Widget _buildUserTile(BuildContext context, Student student, {bool isHistory = false}) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+        backgroundImage: student.imageUrl != null && student.imageUrl!.isNotEmpty
+            ? NetworkImage(student.imageUrl!)
+            : null,
+        child: (student.imageUrl == null || student.imageUrl!.isEmpty)
+            ? Text(student.fullName.isNotEmpty ? student.fullName[0] : "?", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold, fontSize: 18))
+            : null,
+      ),
+      title: Row(
+       children: [
+         Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+         if (student.isPremium) ...[
+           const SizedBox(width: 4),
+           const Icon(Icons.verified, color: Colors.blue, size: 16),
+         ]
+       ],
+      ),
+      subtitle: Text("@${student.username ?? 'usernamesiz'}", style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w500)),
+      trailing: isHistory ? const Icon(Icons.history, color: Colors.grey, size: 20) : null,
+      onTap: () {
+         // Save to history (Move to top)
+         _service.saveRecentUser(student);
+         
+         if (onUserSelected != null) {
+           onUserSelected!(student);
+           close(context, null);
+           return; 
+         }
+
+        // Navigate to Profile
+        Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
+          authorName: student.fullName,
+          authorId: student.id.toString(),
+          authorUsername: student.username ?? "",
+          authorAvatar: student.imageUrl ?? "",
+          authorRole: student.role ?? "student", 
+          authorIsPremium: student.isPremium,
+        )));
       },
     );
   }
