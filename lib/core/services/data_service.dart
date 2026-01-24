@@ -105,15 +105,20 @@ class DataService {
     }
 
     // 2. Fetch from API
-    return await _backgroundRefreshDashboard(studentId);
+    return await _backgroundRefreshDashboard(studentId, refresh: forceRefresh);
   }
 
-  Future<Map<String, dynamic>> _backgroundRefreshDashboard(int studentId) async {
+  Future<Map<String, dynamic>> _backgroundRefreshDashboard(int studentId, {bool refresh = false}) async {
     try {
+      String url = ApiConstants.dashboard;
+      if (refresh) {
+        url += (url.contains('?') ? '&' : '?') + 'refresh=true';
+      }
+      
       final response = await http.get(
-        Uri.parse(ApiConstants.dashboard),
+        Uri.parse(url),
         headers: await _getHeaders(),
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 15)); // Increased timeout for sync
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

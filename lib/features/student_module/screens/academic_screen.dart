@@ -27,9 +27,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool forceRefresh = false}) async {
+    if (!forceRefresh) setState(() => _isLoading = true);
+    
     try {
-      final data = await _dataService.getDashboardStats();
+      final data = await _dataService.getDashboardStats(forceRefresh: forceRefresh);
       if (mounted) {
         setState(() {
           _gpa = (data['gpa'] ?? 0.0).toDouble();
@@ -54,10 +56,13 @@ class _AcademicScreenState extends State<AcademicScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+      body: RefreshIndicator(
+        onRefresh: () => _loadData(forceRefresh: true),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
             // Stats Box
             Container(
               padding: const EdgeInsets.all(24),
