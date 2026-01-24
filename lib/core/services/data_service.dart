@@ -712,7 +712,51 @@ class DataService {
       return null;
     }
   }
-  // 21. Summarize Content (Konspekt)
+  // 21. Certificate Management
+  Future<List<dynamic>> getCertificates() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiConstants.backendUrl}/student/certificates"),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['data'] ?? [];
+      }
+    } catch (e) {
+      print("DataService: Error getting certificates: $e");
+    }
+    return [];
+  }
+
+  Future<String?> initiateCertificateUpload() async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConstants.backendUrl}/student/certificates/init-upload"),
+        headers: await _getHeaders(),
+      );
+      final data = json.decode(response.body);
+      return data['message'];
+    } catch (e) {
+      print("DataService: Error initiating cert upload: $e");
+      return "Tarmoq xatosi";
+    }
+  }
+
+  Future<String?> sendCertificateToBot(int certId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConstants.backendUrl}/student/certificates/$certId/send-to-bot"),
+        headers: await _getHeaders(),
+      );
+      final data = json.decode(response.body);
+      return data['message'];
+    } catch (e) {
+      print("DataService: Error sending cert to bot: $e");
+      return "Tarmoq xatosi";
+    }
+  }
+
   Future<String?> summarizeContent({String? text, String? filePath}) async {
     try {
       final token = await _authService.getToken();
