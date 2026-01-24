@@ -28,10 +28,10 @@ class CommunityService {
   }
 
   // --- Search History (Recent Users) ---
-  Future<void> saveRecentUser(Student student) async {
+  Future<void> saveRecentUser(Student student, {String key = 'recent_users'}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      List<String> history = prefs.getStringList('recent_users') ?? [];
+      List<String> history = prefs.getStringList(key) ?? [];
       
       // Remove if exists (by ID check)
       history.removeWhere((item) {
@@ -51,16 +51,16 @@ class CommunityService {
         history = history.sublist(0, 10);
       }
       
-      await prefs.setStringList('recent_users', history);
+      await prefs.setStringList(key, history);
     } catch (e) {
       print("Error saving recent user: $e");
     }
   }
 
-  Future<List<Student>> getRecentUsers() async {
+  Future<List<Student>> getRecentUsers({String key = 'recent_users'}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final list = prefs.getStringList('recent_users') ?? [];
+      final list = prefs.getStringList(key) ?? [];
       return list.map((item) => Student.fromJson(json.decode(item))).toList();
     } catch (e) {
       print("Error getting recent users: $e");
@@ -68,10 +68,10 @@ class CommunityService {
     }
   }
 
-  Future<void> clearSearchHistory() async {
+  Future<void> clearSearchHistory({String key = 'recent_users'}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('recent_users');
+      await prefs.remove(key);
     } catch (e) {
       print("Error clearing search history: $e");
     }

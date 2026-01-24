@@ -125,37 +125,18 @@ class _ChatListScreenState extends State<ChatListScreen> {
           showSearch(
             context: context,
             delegate: UserSearchDelegate(
+              historyKey: 'chat_users', // Distinct history
               onUserSelected: (student) async {
-                // Show loading handled by async gap or we can show dialog
+                // print("User selected: ${student.fullName}");
                 final chat = await _service.startChat(student.id.toString());
                 if (chat != null && mounted) {
-                  // In delegate we did: `if (onUserSelected != null) { onUserSelected!(); return; }`
-                  // We didn't close it there!
-                  // Let's modify delegate to close itself OR we close it here.
-                  // showSearch usage:
-                  // The callback executes inside the `buildResults` or `buildSuggestions` context of SearchDelegate?
-                  // No, `onTap` executes.
-                  // If we want to replace the Search Screen with Chat Screen, we should `Navigator.pop` (close search) then `push`.
-                  // But `context` in callback might be SearchDelegate's context?
-                  // Actually, `onUserSelected` is called with `student`.
-                  // Inside delegate: `onUserSelected!(student);`
-                  // If we want to close search, we should do it here if possible, but we don't have search context easily.
-                  // BETTER: delegate handles closing if `onUserSelected` returns? 
-                  // OR `onUserSelected` logic:
-                  // 1. `Navigator.pop(context)` (closes search? No, context is ChatListScreen context due to closure?)
-                  // No, the closure is defined in ChatListScreen, so `context` refers to ChatListScreen context.
-                  // But to close search, we need to pop the Top Route.
-                  // So `Navigator.of(context).pop()` might work if the Search is on top.
-                  // BUT `showSearch` pushes a route.
-                  
-                  // Let's rely on `Navigator.pop(context)` inside the callback? 
-                  // Wait, context in `onUserSelected`? No, we use `context` from `build`.
-                  // `Navigator.of(context).pop()` (pops search) -> `Navigator.push`...
-                  
-                  // Actually, safer pattern:
-                  // In Delegate:
-                  // `onUserSelected!(student); close(context, null);`
-                  // Let's Check Delegate again.
+                   // print("Chat created: ${chat.id}, Navigating...");
+                   Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ChatDetailScreen(chat: chat))
+                  );
+                } else {
+                  // print("Chat creation failed or unmounted");
                 }
               }
             ),
