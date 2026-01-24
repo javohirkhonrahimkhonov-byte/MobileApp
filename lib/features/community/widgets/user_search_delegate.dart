@@ -6,6 +6,9 @@ import '../screens/user_profile_screen.dart';
 
 class UserSearchDelegate extends SearchDelegate {
   final CommunityService _service = CommunityService();
+  final Function(Student)? onUserSelected; // NEW
+
+  UserSearchDelegate({this.onUserSelected}); // NEW
 
   @override
   String get searchFieldLabel => "Talabalarni qidirish...";
@@ -161,13 +164,19 @@ class UserSearchDelegate extends SearchDelegate {
                      // Save to history
                      _service.saveSearchQuery(query);
                      
+                     if (onUserSelected != null) {
+                       onUserSelected!(student);
+                       close(context, null);
+                       return; 
+                     }
+
                     // Navigate to Profile
                     Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(
                       authorName: student.fullName,
                       authorId: student.id.toString(),
                       authorUsername: student.username ?? "",
                       authorAvatar: student.imageUrl ?? "",
-                      authorRole: student.role ?? "student", // Pass code, not label
+                      authorRole: student.role ?? "student", 
                       authorIsPremium: student.isPremium,
                     )));
                   },
