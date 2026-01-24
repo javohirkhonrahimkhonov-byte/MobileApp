@@ -459,16 +459,30 @@ class DataService {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        if (body['success'] == true) {
-           final items = body['data'];
-           // Update Local Cache (Merge or separate key)
-           final existing = await _dbService.getCache('subjects', studentId) ?? {};
-           existing['grades'] = items;
-           await _dbService.saveCache('subjects', studentId, existing);
-           return items;
+        final dynamic body = json.decode(response.body);
+        List<dynamic> items = [];
+        
+        if (body is Map && body['success'] == true) {
+           items = body['data'] ?? [];
+        } else if (body is List) {
+           items = body;
         }
-      } 
+
+        if (items.isNotEmpty) {
+          // Update Local Cache (Non-blocking)
+          try {
+            final dynamic cached = await _dbService.getCache('subjects', studentId);
+            final Map<String, dynamic> existing = (cached is Map) ? Map<String, dynamic>.from(cached) : {};
+            existing['grades'] = items;
+            await _dbService.saveCache('subjects', studentId, existing);
+          } catch (e) {
+            print("Warning: Failed to cache grades: $e");
+          }
+          return items;
+        }
+      } else {
+        print("Grades API Error: ${response.statusCode} - ${response.body}");
+      }
     } catch (e) {
       print("Grades Sync Error: $e");
     }
