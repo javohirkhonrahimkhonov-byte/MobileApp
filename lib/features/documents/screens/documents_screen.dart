@@ -9,19 +9,16 @@ class DocumentsScreen extends StatefulWidget {
   State<DocumentsScreen> createState() => _DocumentsScreenState();
 }
 
-class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _DocumentsScreenState extends State<DocumentsScreen> {
+  final DataService _dataService = DataService();
+  bool _isLoading = false;
+  List<dynamic> _documents = []; // Placeholder for real docs if implemented
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+    // In a real app, we'd fetch actual documents here
+    // _loadDocuments();
   }
 
   @override
@@ -33,167 +30,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primaryBlue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppTheme.primaryBlue,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          tabs: const [
-            Tab(text: "HEMIS Hujjatlari"),
-            Tab(text: "Qo'shimcha hujjatlar"),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildHemisDocsTab(),
-          _buildPersonalDocsTab(),
-        ],
-      ),
+      body: _buildBody(),
     );
   }
 
-  // =========================================================================
-  // 1. HEMIS TAB
-  // =========================================================================
-
-  Widget _buildHemisDocsTab() {
-    final hemisDocs = [
-      // Temporarily Hidden
-      // {
-      //   "title": "O'qish joyidan ma'lumotnoma", 
-      //   "subtitle": "Talabalikni tasdiqlovchi hujjat",
-      //   "icon": Icons.assignment_ind_rounded,
-      //   "color": Colors.blue
-      // },
-      // ...
-    ];
-    
-    if (hemisDocs.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.lock_clock_outlined, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              "Hozircha faol emas",
-              style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-             const SizedBox(height: 8),
-             Text(
-              "HEMIS tizimi bilan bog'liq texnik ishlar ketmoqda",
-              style: TextStyle(color: Colors.grey[400], fontSize: 13),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
-      itemCount: hemisDocs.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final doc = hemisDocs[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: (doc['color'] as Color).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(doc['icon'] as IconData, color: doc['color'] as Color),
-            ),
-            title: Text(
-              doc['title'] as String,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            subtitle: Text(
-              doc['subtitle'] as String,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.download_rounded, color: AppTheme.primaryBlue),
-              onPressed: () async {
-                final typeMap = {
-                  "O'qish joyidan ma'lumotnoma": "reference",
-                  "Reyting daftarchasi (Transkript)": "transcript",
-                  "O'quv varaqa (Shaxsiy reja)": "study_sheet",
-                  "Buyruqlar ko'chirmasi": "orders",
-                  "To'lov kontrakt shartnomasi": "contract"
-                };
-                
-                final type = typeMap[doc['title']] ?? "reference";
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("So'rov yuborilmoqda..."))
-                );
-                
-                final DataService ds = DataService();
-                final msg = await ds.requestDocument(type);
-                
-                if (context.mounted && msg != null) {
-                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(
-                        content: Text(msg), 
-                        backgroundColor: msg.contains("Xatolik") ? Colors.red : Colors.green
-                     )
-                   );
-                }
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // =========================================================================
-  // 2. PERSONAL DOCS TAB
-  // =========================================================================
-
-  Widget _buildPersonalDocsTab() {
-    // Mock User Documents
-    final personalDocs = [
-      {
-        "title": "Passport nusxasi",
-        "category": "Passport",
-        "date": "12.03.2024",
-        "type": "pdf"
-      },
-      {
-        "title": "Rezyume (CV)",
-        "category": "Rezyume",
-        "date": "15.01.2024",
-        "type": "doc"
-      },
-      {
-        "title": "Obyektivka (Ma'lumotnoma)",
-        "category": "Obyektivka",
-        "date": "10.09.2023",
-        "type": "pdf"
-      },
-    ];
-
-    if (personalDocs.isEmpty) {
+  Widget _buildBody() {
+    // For now, always empty as requested (demo docs removed)
+    if (_documents.isEmpty) {
       return Column(
         children: [
           Expanded(
@@ -201,11 +45,16 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.folder_open_rounded, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.folder_copy_outlined, size: 80, color: Colors.grey[200]),
                   const SizedBox(height: 16),
                   Text(
                     "Hujjatlar yo'q",
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.grey[400], fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Hali hech qanday hujjat yuklanmagan",
+                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
                   ),
                 ],
               ),
@@ -220,63 +69,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
       children: [
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            itemCount: personalDocs.length,
+            padding: const EdgeInsets.all(20),
+            itemCount: _documents.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
-              final doc = personalDocs[index];
-              final isPdf = doc['type'] == 'pdf';
-              
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  leading: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isPdf ? Colors.red[50] : Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-                      color: isPdf ? Colors.red : Colors.blue,
-                    ),
-                  ),
-                  title: Text(
-                    doc['title'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today_rounded, size: 12, color: Colors.grey[500]),
-                        const SizedBox(width: 4),
-                        Text(
-                          doc['date'] as String,
-                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          doc['category'] as String,
-                          style: TextStyle(color: AppTheme.primaryBlue.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  trailing: const Icon(Icons.more_vert_rounded, color: Colors.grey),
-                ),
-              );
+               // ... Future real item implementation
+               return const SizedBox();
             },
           ),
         ),
@@ -334,15 +132,15 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
             const SizedBox(height: 8),
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(24),
               child: Text("Hujjat turini tanlang", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            Divider(height: 1, color: Colors.grey[200]),
+            Divider(height: 1, color: Colors.grey[100]),
             _buildActionItem(Icons.credit_card_rounded, "Passport nusxasi"),
             _buildActionItem(Icons.work_outline_rounded, "Rezyume (CV)"),
             _buildActionItem(Icons.assignment_ind_rounded, "Obyektivka"),
             _buildActionItem(Icons.folder_shared_rounded, "Boshqa hujjat"),
-            const SizedBox(height: 30),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -351,12 +149,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> with SingleTickerProv
 
   Widget _buildActionItem(IconData icon, String title) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
       leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
-        child: Icon(icon, color: Colors.black87),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: Colors.black87, size: 22),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
       onTap: () {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fayl tanlash oynasi ochilmoqda...")));
