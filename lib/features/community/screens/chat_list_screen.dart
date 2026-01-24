@@ -82,12 +82,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  chat.lastMessage,
+                  chat.isLastMessageMine ? "Siz: ${chat.lastMessage}" : chat.lastMessage,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: chat.unreadCount > 0 ? Colors.black87 : Colors.grey,
-                    fontWeight: chat.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                    color: (chat.unreadCount > 0 && !chat.isLastMessageMine) ? Colors.black87 : Colors.grey,
+                    fontWeight: (chat.unreadCount > 0 && !chat.isLastMessageMine) ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 trailing: Column(
@@ -98,7 +98,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       chat.timeAgo,
                       style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
-                    if (chat.unreadCount > 0) ...[
+                    if (chat.unreadCount > 0 && !chat.isLastMessageMine) ...[
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.all(6),

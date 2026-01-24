@@ -41,8 +41,9 @@ class ChatService {
            id: data['chat_id'].toString(),
            partnerName: data['target_user']['full_name'],
            partnerAvatar: data['target_user']['image_url'] ?? "",
-           lastMessage: "Suhbat boshlandi", // Initial
-           timeAgo: "Hozirgina"
+           lastMessage: "Suhbat boshlandi", 
+           timeAgo: "Hozirgina",
+           isLastMessageMine: true // Default to true so it looks cleaner
          );
       } else {
         print("Chat Start Error: ${response.statusCode} - ${response.body}");

@@ -270,6 +270,7 @@ class Chat {
   final String timeAgo;
   final int unreadCount;
   final bool isOnline;
+  final bool isLastMessageMine; // NEW
 
   Chat({
     required this.id,
@@ -279,6 +280,7 @@ class Chat {
     required this.timeAgo,
     this.unreadCount = 0,
     this.isOnline = false,
+    this.isLastMessageMine = false, // NEW
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
@@ -290,7 +292,8 @@ class Chat {
       lastMessage: json['last_message'] ?? "",
       timeAgo: _formatDate(json['last_message_time']), 
       unreadCount: json['unread_count'] ?? 0,
-      isOnline: false, // Not implemented yet
+      isOnline: false, 
+      isLastMessageMine: json['is_last_message_mine'] ?? false, // NEW
     );
   }
 }
