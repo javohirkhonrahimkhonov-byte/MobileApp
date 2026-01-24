@@ -461,25 +461,7 @@ class CommunityService {
     }
   }
 
-  Future<List<Chat>> getChats() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return [
-      Chat(
-        id: '1',
-        partnerName: 'Akramjonov Muhammadali',
-        partnerAvatar: '',
-        lastMessage: 'Ertaga darsga borasanmi?',
-        timeAgo: '5 daqiqa',
-        unreadCount: 2,
-        isOnline: true,
-      ),
-    ];
-  }
 
-  Future<List<Message>> getMessages(String chatId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return [];
-  }
   Future<Student?> getCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -293,8 +293,30 @@ class Chat {
       timeAgo: _formatDate(json['last_message_time']), 
       unreadCount: json['unread_count'] ?? 0,
       isOnline: false, 
-      isLastMessageMine: json['is_last_message_mine'] ?? false, // NEW
+      isLastMessageMine: json['is_last_message_mine'] ?? false, 
     );
+  }
+
+  String get formattedName {
+    if (partnerName.isEmpty) return "Noma'lum";
+
+    final parts = partnerName.trim().split(RegExp(r'\s+'));
+    
+    String capitalize(String s) {
+      if (s.isEmpty) return "";
+      if (s.length == 1) return s.toUpperCase();
+      return s[0].toUpperCase() + s.substring(1).toLowerCase();
+    }
+
+    if (parts.length >= 2) {
+      // Assuming format: "SURNAME NAME ..."
+      // We want: "Name Surname"
+      final surname = capitalize(parts[0]);
+      final name = capitalize(parts[1]);
+      return "$name $surname";
+    } else {
+      return capitalize(parts[0]);
+    }
   }
 }
 

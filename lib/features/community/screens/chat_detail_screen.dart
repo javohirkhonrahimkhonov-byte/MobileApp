@@ -102,8 +102,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(widget.chat.partnerName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                   const Text("Online", style: TextStyle(color: Colors.grey, fontSize: 12)) // Static for now as per plan
+                   Text(widget.chat.formattedName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                   const Text("Online", style: TextStyle(color: Colors.grey, fontSize: 12)) 
                 ],
               ),
             )

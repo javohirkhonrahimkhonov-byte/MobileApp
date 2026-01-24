@@ -78,7 +78,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ],
                 ),
                 title: Text(
-                  chat.partnerName,
+                  chat.formattedName,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
