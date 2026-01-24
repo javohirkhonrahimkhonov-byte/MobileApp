@@ -4,7 +4,8 @@ import '../../../../core/services/auth_service.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../widgets/post_card.dart';
-import '../../../../core/utils/role_mapper.dart'; // Import Mapper
+import '../../../../core/utils/role_mapper.dart';
+import '../../../../core/models/student.dart'; // NEW
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
@@ -85,7 +86,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       _currentUsername = me.username;
       _usernameController.text = me.username ?? "";
     });
-    }
   }
   
   void _onUsernameChanged(String value) async {
