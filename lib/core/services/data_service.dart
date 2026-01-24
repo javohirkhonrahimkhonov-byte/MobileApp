@@ -8,9 +8,11 @@ import 'auth_service.dart';
 import '../models/attendance.dart';
 import '../models/lesson.dart';
 import 'package:talabahamkor_mobile/features/social/models/social_activity.dart';
+import 'local_database_service.dart';
 
 class DataService {
   final AuthService _authService = AuthService();
+  final LocalDatabaseService _dbService = LocalDatabaseService();
   static const bool useMock = false; // Disable Mock Data
 
   Future<Map<String, String>> _getHeaders() async {
@@ -89,22 +91,32 @@ class DataService {
 
   // 2. Get Dashboard Stats (Via Backend Proxy for Real Data)
   Future<Map<String, dynamic>> getDashboardStats({bool forceRefresh = false}) async {
-    // Check Cache (valid for 5 mins)
-    if (!forceRefresh && _dashboardCache != null && _lastDashboardFetch != null) {
-      if (DateTime.now().difference(_lastDashboardFetch!).inMinutes < 5) {
-        return _dashboardCache!;
+    final student = await _authService.getSavedUser();
+    final studentId = student?.id ?? 0;
+
+    // 1. Try Local Database Cache First (Instant Speed)
+    if (!forceRefresh) {
+      final cached = await _dbService.getCache('dashboard', studentId);
+      if (cached != null) {
+        // Return cached immediately, trigger background refresh if needed
+        _backgroundRefreshDashboard(studentId);
+        return cached;
       }
     }
 
+    // 2. Fetch from API
+    return await _backgroundRefreshDashboard(studentId);
+  }
+
+  Future<Map<String, dynamic>> _backgroundRefreshDashboard(int studentId) async {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.dashboard),
         headers: await _getHeaders(),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        // Backend returns top-level fields directly in current Schema
         final result = {
           "gpa": double.tryParse(data['gpa']?.toString() ?? "0") ?? 0.0,
           "missed_hours": data['missed_hours'] ?? 0,
@@ -115,16 +127,14 @@ class DataService {
           "activities_approved_count": data['activities_approved_count'] ?? 0
         };
 
-        // Update Cache
-        _dashboardCache = result;
-        _lastDashboardFetch = DateTime.now();
+        // Update Local DB
+        await _dbService.saveCache('dashboard', studentId, result);
         return result;
       }
     } catch (e) {
-      print("Dashboard Error: $e");
+      print("Dashboard Sync Error: $e");
     }
 
-    // Fallback: Real 0s (Clean Data Policy)
     return {
       "gpa": 0.0,
       "missed_hours": 0,
@@ -333,62 +343,105 @@ class DataService {
 
   // 9. Get Detailed Attendance List
   Future<List<Attendance>> getAttendanceList({String? semester}) async {
+    final student = await _authService.getSavedUser();
+    final studentId = student?.id ?? 0;
+    final semCode = semester ?? 'all';
+
+    // 1. Try Local cache
+    final cached = await _dbService.getCache('attendance', studentId, semesterCode: semCode);
+    if (cached != null && cached.containsKey('items')) {
+      final List<dynamic> items = cached['items'];
+       _backgroundRefreshAttendance(studentId, semCode);
+      return items.map((json) => Attendance.fromJson(json)).toList();
+    }
+
+    return await _backgroundRefreshAttendance(studentId, semCode);
+  }
+
+  Future<List<Attendance>> _backgroundRefreshAttendance(int studentId, String semCode) async {
     try {
       String url = ApiConstants.attendanceList;
-      if (semester != null && semester.isNotEmpty) {
-        url += "?semester=$semester";
+      if (semCode != 'all') {
+        url += "?semester=$semCode";
       }
 
       final response = await http.get(
         Uri.parse(url),
         headers: await _getHeaders(),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        // Robust parsing: 'data' can be a List OR a Map with 'items'
         final data = body is Map && body.containsKey('data') ? body['data'] : body;
         final List<dynamic> items = (data is List) ? data : (data['items'] ?? []);
         
+        // Update Local DB
+        await _dbService.saveCache('attendance', studentId, {'items': items}, semesterCode: semCode);
+        
         return items.map((json) => Attendance.fromJson(json)).toList();
-      } else {
-        throw Exception("Failed to load attendance: ${response.statusCode}");
       }
     } catch (e) {
-       print("DataService: Error fetching attendance: $e");
-       return [];
+       print("Attendance Sync Error: $e");
     }
+    return [];
   }
 
   // 11. Get Weekly Schedule
   Future<List<Lesson>> getSchedule() async {
+    final student = await _authService.getSavedUser();
+    final studentId = student?.id ?? 0;
+    
+    // 1. Try Local cache
+    final cached = await _dbService.getCache('schedule', studentId);
+    if (cached != null && cached.containsKey('items')) {
+       final List<dynamic> items = cached['items'];
+       _backgroundRefreshSchedule(studentId);
+       return items.map((json) => Lesson.fromJson(json)).toList();
+    }
+
+    return await _backgroundRefreshSchedule(studentId);
+  }
+
+  Future<List<Lesson>> _backgroundRefreshSchedule(int studentId) async {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.scheduleList),
         headers: await _getHeaders(),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         final data = body['data'];
         final List<dynamic> items = (data is List) ? data : (data['items'] ?? []);
+        
+        // Update Local DB
+        await _dbService.saveCache('schedule', studentId, {'items': items});
+        
         return items.map((json) => Lesson.fromJson(json)).toList();
-      } else {
-        throw Exception("Failed to load schedule: ${response.statusCode}");
       }
     } catch (e) {
-      print("DataService: Error fetching schedule: $e");
-      if (useMock) {
-        return [];
-      }
-      return [];
+      print("Schedule Sync Error: $e");
     }
+    return [];
   }
 
 
 
   // 12. Get Detailed Grades (O'zlashtirish)
   Future<List<dynamic>> getGrades() async {
+    final student = await _authService.getSavedUser();
+    final studentId = student?.id ?? 0;
+
+    final cached = await _dbService.getCache('subjects', studentId); // Using subjects table for grades/subjects
+    if (cached != null && cached.containsKey('grades')) {
+      _backgroundRefreshGrades(studentId);
+      return cached['grades'];
+    }
+
+    return await _backgroundRefreshGrades(studentId);
+  }
+
+  Future<List<dynamic>> _backgroundRefreshGrades(int studentId) async {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.grades),
@@ -398,33 +451,54 @@ class DataService {
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == true) {
-           return body['data'];
+           final items = body['data'];
+           // Update Local Cache (Merge or separate key)
+           final existing = await _dbService.getCache('subjects', studentId) ?? {};
+           existing['grades'] = items;
+           await _dbService.saveCache('subjects', studentId, existing);
+           return items;
         }
       } 
-      return [];
     } catch (e) {
-      print("DataService: Error fetching grades: $e");
-      return [];
+      print("Grades Sync Error: $e");
     }
+    return [];
   }
 
   // 13. Get Detailed Subjects
   Future<List<dynamic>> getSubjects() async {
+    final student = await _authService.getSavedUser();
+    final studentId = student?.id ?? 0;
+
+    final cached = await _dbService.getCache('subjects', studentId);
+    if (cached != null && cached.containsKey('list')) {
+      _backgroundRefreshSubjects(studentId);
+      return cached['list'];
+    }
+    return await _backgroundRefreshSubjects(studentId);
+  }
+
+  Future<List<dynamic>> _backgroundRefreshSubjects(int studentId) async {
     try {
       final response = await http.get(
         Uri.parse(ApiConstants.subjects),
         headers: await _getHeaders(),
-      ).timeout(const Duration(seconds: 20));
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        if (body['success'] == true) return body['data'];
+        if (body['success'] == true) {
+          final items = body['data'];
+          final existing = await _dbService.getCache('subjects', studentId) ?? {};
+          existing['list'] = items;
+          await _dbService.saveCache('subjects', studentId, existing);
+          return items;
+        }
       }
-      return [];
     } catch (e) {
-      print("DataService: Error fetching subjects: $e");
-      return [];
+      print("Subjects Sync Error: $e");
     }
+    return [];
   }
 
   // 14. Get Subject Resources
