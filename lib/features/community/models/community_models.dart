@@ -264,31 +264,40 @@ class Comment {
 
 class Chat {
   final String id;
+  final String partnerId; // NEW
   final String partnerName;
   final String partnerAvatar;
+  final String partnerUsername; 
+  final String partnerRole;     
   final String lastMessage;
   final String timeAgo;
   final int unreadCount;
   final bool isOnline;
-  final bool isLastMessageMine; // NEW
+  final bool isLastMessageMine; 
 
   Chat({
     required this.id,
+    required this.partnerId, // NEW
     required this.partnerName,
     required this.partnerAvatar,
+    required this.partnerUsername, 
+    required this.partnerRole,     
     required this.lastMessage,
     required this.timeAgo,
     this.unreadCount = 0,
     this.isOnline = false,
-    this.isLastMessageMine = false, // NEW
+    this.isLastMessageMine = false, 
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
     final user = json['target_user'] ?? {};
     return Chat(
       id: json['id'].toString(),
+      partnerId: user['id']?.toString() ?? "0", // NEW
       partnerName: user['full_name'] ?? "Foydalanuvchi",
       partnerAvatar: user['image_url'] ?? "",
+      partnerUsername: user['username'] ?? "", 
+      partnerRole: user['role'] ?? "Talaba",  
       lastMessage: json['last_message'] ?? "",
       timeAgo: _formatDate(json['last_message_time']), 
       unreadCount: json['unread_count'] ?? 0,
@@ -299,7 +308,6 @@ class Chat {
 
   String get formattedName {
     if (partnerName.isEmpty) return "Noma'lum";
-
     final parts = partnerName.trim().split(RegExp(r'\s+'));
     
     String capitalize(String s) {
@@ -309,8 +317,6 @@ class Chat {
     }
 
     if (parts.length >= 2) {
-      // Assuming format: "SURNAME NAME ..."
-      // We want: "Name Surname"
       final surname = capitalize(parts[0]);
       final name = capitalize(parts[1]);
       return "$name $surname";
@@ -351,7 +357,8 @@ class Message {
 String _formatDate(String? dateStr) {
   if (dateStr == null) return "Unknown";
   try {
-    final date = DateTime.parse(dateStr).toLocal(); // Convert UTC to Local
+    if (!dateStr.endsWith('Z')) dateStr = "${dateStr}Z"; // Fix Timezone
+    final date = DateTime.parse(dateStr).toLocal(); 
     final now = DateTime.now();
     final diff = now.difference(date);
     
@@ -368,8 +375,9 @@ String _formatDate(String? dateStr) {
 String _formatTime(String? dateStr) {
   if (dateStr == null) return "";
   try {
+    if (!dateStr.endsWith('Z')) dateStr = "${dateStr}Z"; // Fix Timezone
     final date = DateTime.parse(dateStr).toLocal();
-    return "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+    return "${date.hour.toString().padLeft(2,'0')}:${date.minute.toString().padLeft(2, '0')}";
   } catch (e) {
     return "";
   }

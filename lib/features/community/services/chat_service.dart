@@ -39,11 +39,14 @@ class ChatService {
          // Let's manually construct it from the response to be safe.
          return Chat(
            id: data['chat_id'].toString(),
+           partnerId: data['target_user']['id'].toString(), // NEW
            partnerName: data['target_user']['full_name'],
            partnerAvatar: data['target_user']['image_url'] ?? "",
+           partnerUsername: data['target_user']['username'] ?? "", 
+           partnerRole: data['target_user']['role'] ?? "student",  
            lastMessage: "Suhbat boshlandi", 
            timeAgo: "Hozirgina",
-           isLastMessageMine: true // Default to true so it looks cleaner
+           isLastMessageMine: true 
          );
       } else {
         print("Chat Start Error: ${response.statusCode} - ${response.body}");

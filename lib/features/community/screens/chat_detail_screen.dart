@@ -85,29 +85,45 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-              backgroundImage: widget.chat.partnerAvatar.isNotEmpty 
-                  ? NetworkImage(widget.chat.partnerAvatar) 
-                  : null,
+        title: InkWell(
+          onTap: () {
+             Navigator.push(
+               context,
+               MaterialPageRoute(
+                 builder: (_) => UserProfileScreen(
+                   authorId: widget.chat.partnerId,
+                   authorName: widget.chat.formattedName,
+                   authorUsername: widget.chat.partnerUsername, // No @ here, screen adds it?
+                   authorAvatar: widget.chat.partnerAvatar,
+                   authorRole: widget.chat.partnerRole,
+                 )
+               )
+             );
+          },
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundImage: widget.chat.partnerAvatar.isNotEmpty 
+                    ? NetworkImage(widget.chat.partnerAvatar) 
+                    : null,
                child: widget.chat.partnerAvatar.isEmpty 
-                  ? Text(widget.chat.partnerName.isNotEmpty ? widget.chat.partnerName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 14))
-                  : null,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(widget.chat.formattedName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                   const Text("Online", style: TextStyle(color: Colors.grey, fontSize: 12)) 
-                ],
+                    ? Text(widget.chat.formattedName.isNotEmpty ? widget.chat.formattedName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 14))
+                    : null,
               ),
-            )
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     Text(widget.chat.formattedName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                     Text("@${widget.chat.partnerUsername} • ${widget.chat.partnerRole}", style: const TextStyle(color: Colors.grey, fontSize: 12)) 
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
         actions: [
           IconButton(icon: const Icon(Icons.more_vert), onPressed: (){}),
