@@ -243,6 +243,7 @@ class CommunityService {
       
       print("Edit Post Result: ${response.statusCode}");
       return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
       print("CommunityService: Error editing post: $e");
       return false;
     }
