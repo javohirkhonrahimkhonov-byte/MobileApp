@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
-import '../services/community_service.dart';
+import '../services/chat_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final Chat chat;
@@ -13,56 +14,66 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  final CommunityService _service = CommunityService();
+  final ChatService _service = ChatService();
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  
   List<Message> _messages = [];
   bool _isLoading = true;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    _startPolling();
   }
 
-  Future<void> _loadMessages() async {
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        _loadMessages(silent: true);
+      }
+    });
+  }
+
+  Future<void> _loadMessages({bool silent = false}) async {
     final msgs = await _service.getMessages(widget.chat.id);
     if (mounted) {
       setState(() {
-        _messages = msgs.reversed.toList(); // Reverse for standard chat view
-        _isLoading = false;
+        _messages = msgs; // API returns ordered by desc (newest first), which matches reverse list view
+        if (!silent) _isLoading = false;
       });
     }
   }
 
-  void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
 
-    final newMessage = Message(
-      id: DateTime.now().toString(),
-      content: _controller.text.trim(),
-      isMe: true,
-      timestamp: "${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}",
-      isRead: false,
-    );
-
-    setState(() {
-      _messages.insert(0, newMessage);
-      _controller.clear();
-    });
+    _controller.clear();
     
-    // Mock Reply
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-         setState(() {
-           _messages.insert(0, Message(
-             id: "reply_${DateTime.now()}", 
-             content: "Ok, tushunarli.", 
-             isMe: false, 
-             timestamp: "Hozirgina"
-           ));
-         });
-      }
-    });
+    // Optimistic UI (Optional, but let's wait for server for consistency or add simple local pending)
+    // Actually, let's just send and refresh.
+    
+    final newMsg = await _service.sendMessage(widget.chat.id, text);
+    
+    if (newMsg != null && mounted) {
+      setState(() {
+        _messages.insert(0, newMsg);
+      });
+    } else {
+      // Error
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Xabar yuborishda xatolik")));
+    }
   }
 
   @override
@@ -79,28 +90,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-               child: Text(
-                widget.chat.partnerName[0],
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 14),
-              ),
+              backgroundImage: widget.chat.partnerAvatar.isNotEmpty 
+                  ? NetworkImage(widget.chat.partnerAvatar) 
+                  : null,
+               child: widget.chat.partnerAvatar.isEmpty 
+                  ? Text(widget.chat.partnerName.isNotEmpty ? widget.chat.partnerName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: 14))
+                  : null,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(widget.chat.partnerName, style: const TextStyle(color: Colors.black, fontSize: 16)),
-                   Text(
-                     widget.chat.isOnline ? "Online" : "Last seen ${widget.chat.timeAgo}",
-                     style: TextStyle(color: widget.chat.isOnline ? Colors.green : Colors.grey, fontSize: 12),
-                   )
+                   Text(widget.chat.partnerName, style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                   const Text("Online", style: TextStyle(color: Colors.grey, fontSize: 12)) // Static for now as per plan
                 ],
               ),
             )
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.call), onPressed: (){}),
           IconButton(icon: const Icon(Icons.more_vert), onPressed: (){}),
         ],
       ),
@@ -109,15 +118,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                  reverse: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = _messages[index];
-                    return _buildMessageBubble(msg);
-                  },
-                ),
+              : _messages.isEmpty 
+                  ? Center(child: Text("Hozircha xabarlar yo'q", style: TextStyle(color: Colors.grey[400])))
+                  : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true, // Bottom to top
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = _messages[index];
+                        return _buildMessageBubble(msg);
+                      },
+                    ),
           ),
           _buildInputArea(),
         ],
@@ -180,7 +192,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.white,
-      child: SafeArea( // For iPhone bottom bar
+      child: SafeArea( 
         child: Row(
           children: [
             IconButton(

@@ -3,10 +3,12 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/auth_service.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
+import '../services/chat_service.dart'; // NEW
 import '../widgets/post_card.dart';
 import '../../../../core/utils/role_mapper.dart';
-import '../../../../core/models/student.dart'; // NEW
+import '../../../../core/models/student.dart'; 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'chat_detail_screen.dart'; // NEW
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
@@ -32,6 +34,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final CommunityService _service = CommunityService();
+  final ChatService _chatService = ChatService(); // NEW
 
   int _postCount = 0;
   int _repostCount = 0; // NEW
@@ -405,7 +408,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                         const SizedBox(width: 12),
                         OutlinedButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            final chat = await _chatService.startChat(widget.authorId);
+                            if (chat != null && mounted) {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => ChatDetailScreen(chat: chat)));
+                            } else if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Chatni ochib bo'lmadi")));
+                            }
+                          },
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             side: const BorderSide(color: Colors.black12),

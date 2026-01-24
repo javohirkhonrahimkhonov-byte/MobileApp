@@ -280,6 +280,19 @@ class Chat {
     this.unreadCount = 0,
     this.isOnline = false,
   });
+
+  factory Chat.fromJson(Map<String, dynamic> json) {
+    final user = json['target_user'] ?? {};
+    return Chat(
+      id: json['id'].toString(),
+      partnerName: user['full_name'] ?? "Foydalanuvchi",
+      partnerAvatar: user['image_url'] ?? "",
+      lastMessage: json['last_message'] ?? "",
+      timeAgo: _formatDate(json['last_message_time']), 
+      unreadCount: json['unread_count'] ?? 0,
+      isOnline: false, // Not implemented yet
+    );
+  }
 }
 
 class Message {
@@ -298,4 +311,41 @@ class Message {
     this.isRead = false,
     this.mediaUrl,
   });
+
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+      id: json['id'].toString(),
+      content: json['content'] ?? "",
+      isMe: json['is_mine'] ?? false,
+      timestamp: _formatTime(json['created_at']),
+      isRead: json['is_read'] ?? false,
+    );
+  }
+}
+
+String _formatDate(String? dateStr) {
+  if (dateStr == null) return "Unknown";
+  try {
+    final date = DateTime.parse(dateStr).toLocal(); // Convert UTC to Local
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inMinutes < 1) return "Hozirgina";
+    if (diff.inMinutes < 60) return "${diff.inMinutes} daqiqa";
+    if (diff.inHours < 24) return "${diff.inHours} soat";
+    if (diff.inDays < 7) return "${diff.inDays} kun";
+    return "${date.day}/${date.month}/${date.year}";
+  } catch (e) {
+    return "";
+  }
+}
+
+String _formatTime(String? dateStr) {
+  if (dateStr == null) return "";
+  try {
+    final date = DateTime.parse(dateStr).toLocal();
+    return "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+  } catch (e) {
+    return "";
+  }
 }
