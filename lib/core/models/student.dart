@@ -51,16 +51,23 @@ class Student {
     
     // ... Name Logic Copied ...
     String fullName = "";
-    if (json['lastname'] != null && json['firstname'] != null) {
-      fullName = "${sentenceCase(json['lastname'].toString())} ${sentenceCase(json['firstname'].toString())}";
-    } else {
-      String raw = json['full_name'] ?? "Talaba";
-      var parts = raw.split(' ');
+    String? jsonFullName = json['full_name'] ?? json['name'];
+    String? firstName = json['first_name'] ?? json['short_name'] ?? json['firstname'];
+    String? lastName = json['last_name'] ?? json['lastname'];
+
+    if (lastName != null && firstName != null) {
+      fullName = "${sentenceCase(lastName.toString())} ${sentenceCase(firstName.toString())}";
+    } else if (jsonFullName != null && jsonFullName != "Talaba") {
+      var parts = jsonFullName.split(' ');
       if (parts.length >= 2) {
         fullName = "${sentenceCase(parts[0])} ${sentenceCase(parts[1])}";
       } else {
-        fullName = sentenceCase(raw);
+        fullName = sentenceCase(jsonFullName);
       }
+    } else if (firstName != null) {
+      fullName = sentenceCase(firstName);
+    } else {
+      fullName = "Talaba";
     }
 
     String? getPrettyName(String key) {

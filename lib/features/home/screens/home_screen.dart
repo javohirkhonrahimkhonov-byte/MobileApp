@@ -153,6 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent() {
+    final student = Provider.of<AuthProvider>(context).currentUser;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -164,11 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 radius: 24,
                 backgroundColor: Colors.grey[200],
                 child: () {
-                   final url = _profile?['image_url'] ?? _profile?['image'];
-                   if (url != null && url.toString().isNotEmpty) {
+                   final url = student?.imageUrl;
+                   if (url != null && url.isNotEmpty) {
                      return ClipOval(
                        child: CachedNetworkImage(
-                         imageUrl: url.toString(),
+                         imageUrl: url,
                          width: 48,
                          height: 48,
                          fit: BoxFit.cover,
@@ -188,21 +190,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         "Salom, ${() {
-                          final firstName = _profile?['first_name'] ?? _profile?['short_name'];
-                          if (firstName != null && firstName.toString().isNotEmpty) {
-                            return firstName.toString();
-                          }
-                          final name = _profile?['full_name'] ?? 'Talaba';
-                          final parts = name.split(' ');
+                          if (student == null) return "Talaba";
+                          
+                          final fullName = student.fullName;
+                          if (fullName == "Talaba") return "Talaba";
+
+                          final parts = fullName.split(' ');
+                          
+                          // If we have "Last First Middle" (Uzbek standard), take First (index 1)
                           if (parts.length >= 2) {
-                            final first = parts[1];
-                            return first[0].toUpperCase() + first.substring(1).toLowerCase();
+                             String first = parts[1];
+                             // If the first part is very short (Initials), maybe take the first part?
+                             // But usually it's "Rahimov J." or "Rahimov Javohir"
+                             if (first.length > 1) {
+                               return first[0].toUpperCase() + first.substring(1).toLowerCase();
+                             }
+                             return parts[0]; // Fallback to Lastname
                           }
-                          return name;
+                          
+                          return fullName;
                         }()}!",
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      if (_profile?['is_premium'] == true) ...[
+                      if (student?.isPremium == true) ...[
                         const SizedBox(width: 6),
                         const Icon(Icons.verified, color: Colors.blue, size: 20),
                       ]
@@ -225,7 +235,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: const Icon(Icons.notifications_none_rounded, size: 28),
                       onPressed: () async {
                         await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
-                        // No need to manually refresh here, polling will handle it or screen can sync
                         notificationProvider.refreshUnreadCount();
                       },
                     ),
