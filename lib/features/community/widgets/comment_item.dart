@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
 import '../screens/user_profile_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CommentItem extends StatelessWidget {
   final Comment comment;
@@ -142,11 +143,19 @@ class CommentItem extends StatelessWidget {
             },
             child: CircleAvatar(
               backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-              backgroundImage: comment.authorAvatar.isNotEmpty ? NetworkImage(comment.authorAvatar) : null,
               radius: isReply ? 14 : 18, 
-              child: comment.authorAvatar.isEmpty 
-                ? Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: isReply ? 12 : 14))
-                : null,
+              child: comment.authorAvatar.isNotEmpty 
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: comment.authorAvatar,
+                      width: isReply ? 28 : 36,
+                      height: isReply ? 28 : 36,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Icon(Icons.person, size: isReply ? 16 : 20, color: Colors.grey),
+                      errorWidget: (context, url, error) => Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: isReply ? 12 : 14)),
+                    ),
+                  )
+                : Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "?", style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue, fontSize: isReply ? 12 : 14)),
             ),
           ),
           const SizedBox(width: 12),

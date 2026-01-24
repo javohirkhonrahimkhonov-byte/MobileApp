@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -126,11 +127,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: ClipOval(
                           child: student.imageUrl != null && student.imageUrl!.isNotEmpty
-                              ? Image.network(
-                                  student.imageUrl!,
+                              ? CachedNetworkImage(
+                                  imageUrl: student.imageUrl!,
                                   fit: BoxFit.cover,
-                                  headers: const {'User-Agent': 'Mozilla/5.0'},
-                                  errorBuilder: (ctx, err, stack) => _buildInitials(student.fullName),
+                                  placeholder: (context, url) => Container(color: Colors.grey[100]),
+                                  errorWidget: (context, url, err) => _buildInitials(student.fullName),
                                 )
                               : _buildInitials(student.fullName),
                         ),

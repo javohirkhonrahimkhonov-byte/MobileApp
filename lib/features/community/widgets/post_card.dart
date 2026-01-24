@@ -7,6 +7,7 @@ import '../../../../core/utils/role_mapper.dart';
 import '../models/community_models.dart';
 import '../services/community_service.dart';
 import '../screens/user_profile_screen.dart'; 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'edit_post_sheet.dart';
 import 'comment_sheet.dart';
 
@@ -291,12 +292,18 @@ class _PostCardState extends State<PostCard> {
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.grey[200],
-                    backgroundImage: widget.post.authorAvatar.isNotEmpty
-                        ? NetworkImage(widget.post.authorAvatar)
-                        : null,
-                    child: widget.post.authorAvatar.isEmpty
-                        ? Text(widget.post.authorName.isNotEmpty ? widget.post.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue))
-                        : null,
+                    child: widget.post.authorAvatar.isNotEmpty
+                        ? ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: widget.post.authorAvatar,
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey),
+                              errorWidget: (context, url, error) => Text(widget.post.authorName.isNotEmpty ? widget.post.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
+                            ),
+                          )
+                        : Text(widget.post.authorName.isNotEmpty ? widget.post.authorName[0] : "?", style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -455,7 +462,12 @@ class _PostCardState extends State<PostCard> {
             padding: const EdgeInsets.only(right: 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(widget.post.mediaUrls[index], fit: BoxFit.cover),
+              child: CachedNetworkImage(
+                imageUrl: widget.post.mediaUrls[index],
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(color: Colors.grey[100], child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
             ),
           );
         }

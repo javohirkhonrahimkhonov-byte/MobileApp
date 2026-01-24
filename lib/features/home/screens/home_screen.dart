@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:talabahamkor_mobile/features/feedback/screens/feedback_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:talabahamkor_mobile/core/services/data_service.dart';
@@ -157,23 +158,24 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header (Avatar + Name + Status)
           Row(
             children: [
               CircleAvatar(
                 radius: 24,
                 backgroundColor: Colors.grey[200],
-                backgroundImage: () {
-                   final url = _profile?['image_url'] ?? _profile?['image'];
-                   if (url != null && url.toString().isNotEmpty) {
-                     return NetworkImage(url);
-                   }
-                   return null;
-                }(),
                 child: () {
                    final url = _profile?['image_url'] ?? _profile?['image'];
                    if (url != null && url.toString().isNotEmpty) {
-                     return null;
+                     return ClipOval(
+                       child: CachedNetworkImage(
+                         imageUrl: url.toString(),
+                         width: 48,
+                         height: 48,
+                         fit: BoxFit.cover,
+                         placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey),
+                         errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey),
+                       ),
+                     );
                    }
                    return const Icon(Icons.person, color: Colors.grey);
                 }(),

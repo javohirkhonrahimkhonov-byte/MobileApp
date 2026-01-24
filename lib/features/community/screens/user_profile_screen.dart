@@ -6,6 +6,7 @@ import '../services/community_service.dart';
 import '../widgets/post_card.dart';
 import '../../../../core/utils/role_mapper.dart';
 import '../../../../core/models/student.dart'; // NEW
+import 'package:cached_network_image/cached_network_image.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String authorName;
@@ -216,10 +217,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                      backgroundImage: widget.authorAvatar.isNotEmpty ? NetworkImage(widget.authorAvatar) : null,
-                      child: widget.authorAvatar.isEmpty 
-                         ? Text(widget.authorName[0], style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold))
-                         : null,
+                      child: widget.authorAvatar.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: widget.authorAvatar,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Icon(Icons.person, size: 40, color: Colors.grey),
+                                errorWidget: (context, url, error) => Text(widget.authorName.isNotEmpty ? widget.authorName[0] : "?", style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
+                              ),
+                            )
+                          : Text(widget.authorName.isNotEmpty ? widget.authorName[0] : "?", style: const TextStyle(fontSize: 32, color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 16),

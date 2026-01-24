@@ -108,10 +108,10 @@ class CommunityService {
     }
   }
 
-  Future<List<Post>> getPosts({required String scope}) async {
+  Future<List<Post>> getPosts({required String scope, int skip = 0, int limit = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConstants.communityPosts}?category=$scope'),
+        Uri.parse('${ApiConstants.communityPosts}?category=$scope&skip=$skip&limit=$limit'),
         headers: await _getHeaders(),
       );
 
@@ -128,10 +128,10 @@ class CommunityService {
     }
   }
 
-  Future<List<Post>> getRepostedPosts(String studentId) async {
+  Future<List<Post>> getRepostedPosts(String studentId, {int skip = 0, int limit = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConstants.communityPosts}/reposted?target_student_id=$studentId'),
+        Uri.parse('${ApiConstants.communityPosts}/reposted?target_student_id=$studentId&skip=$skip&limit=$limit'),
         headers: await _getHeaders(),
       );
 

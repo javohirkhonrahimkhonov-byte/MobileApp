@@ -32,6 +32,26 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     'specialty': true,
     'faculty': true,
   };
+  
+  final Map<String, bool> _hasMore = {
+    'university': true,
+    'specialty': true,
+    'faculty': true,
+  };
+  
+  final Map<String, bool> _isFetchingMore = {
+     'university': false,
+     'specialty': false,
+     'faculty': false,
+  };
+
+  final Map<String, ScrollController> _scrollControllers = {
+     'university': ScrollController(),
+     'specialty': ScrollController(),
+     'faculty': ScrollController(),
+  };
+
+  final int _limit = 15;
 
   @override
   void initState() {
@@ -42,6 +62,17 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     // Initial Load
     _loadAllScopes();
     
+    // Setup Scroll Listeners
+    _scrollControllers.forEach((scope, controller) {
+       controller.addListener(() {
+          if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
+             if (_hasMore[scope] == true && _isFetchingMore[scope] == false && _isLoading[scope] == false) {
+                _fetchMorePosts(scope);
+             }
+          }
+       });
+    });
+
     // Start Polling (Real-time Simulation)
     _startPolling();
   }
@@ -50,6 +81,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   void dispose() {
     _pollTimer?.cancel();
     _tabController.dispose();
+    _scrollControllers.forEach((_, c) => c.dispose());
     super.dispose();
   }
 
@@ -85,11 +117,12 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
     }
 
     try {
-      final newPosts = await _service.getPosts(scope: scope);
+      final newPosts = await _service.getPosts(scope: scope, skip: 0, limit: _limit);
       if (mounted) {
         setState(() {
           _posts[scope] = newPosts;
           _isLoading[scope] = false;
+          _hasMore[scope] = newPosts.length >= _limit;
         });
       }
     } catch (e) {
@@ -100,6 +133,28 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       }
       debugPrint("Polling Error: $e");
     }
+  }
+
+  Future<void> _fetchMorePosts(String scope) async {
+     if (_isFetchingMore[scope] == true) return;
+     
+     setState(() => _isFetchingMore[scope] = true);
+     
+     try {
+        final skip = _posts[scope]?.length ?? 0;
+        final morePosts = await _service.getPosts(scope: scope, skip: skip, limit: _limit);
+        
+        if (mounted) {
+           setState(() {
+              _posts[scope]?.addAll(morePosts);
+              _isFetchingMore[scope] = false;
+              _hasMore[scope] = morePosts.length >= _limit;
+           });
+        }
+     } catch (e) {
+        if (mounted) setState(() => _isFetchingMore[scope] = false);
+        debugPrint("Load More Error: $e");
+     }
   }
 
   String _getCurrentScope() {
@@ -229,9 +284,17 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
         await _fetchPosts(scope, isSilent: false);
       },
       child: ListView.builder(
+        controller: _scrollControllers[scope],
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-        itemCount: posts.length,
+        itemCount: posts.length + (_hasMore[scope] == true ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == posts.length) {
+             return const Padding(
+               padding: EdgeInsets.symmetric(vertical: 20),
+               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+             );
+          }
+          
           return PostCard(
             post: posts[index],
             onDelete: () {
