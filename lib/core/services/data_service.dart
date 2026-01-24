@@ -747,11 +747,14 @@ class DataService {
     return [];
   }
 
-  Future<String?> initiateCertificateUpload() async {
+  Future<String?> initiateCertificateUpload(String title) async {
     try {
       final response = await http.post(
         Uri.parse("${ApiConstants.backendUrl}/student/certificates/init-upload"),
         headers: await _getHeaders(),
+        body: json.encode({
+          'title': title,
+        }),
       );
       final data = json.decode(response.body);
       return data['message'];
