@@ -7,10 +7,22 @@ import 'core/services/data_service.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/push_notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'dart:io';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase (Requires project settings)
+  try {
+    await Firebase.initializeApp();
+    await PushNotificationService.initialize();
+  } catch (e) {
+    debugPrint("Firebase Init Error: $e");
+  }
+
   HttpOverrides.global = MyHttpOverrides(); // Bypass SSL issues for Emulator
   runApp(
     MultiProvider(
