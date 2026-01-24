@@ -663,11 +663,15 @@ class DataService {
     return [];
   }
 
-  Future<String?> initiateDocumentUpload() async {
+  Future<String?> initiateDocumentUpload({String? category, String? title}) async {
     try {
       final response = await http.post(
         Uri.parse("${ApiConstants.backendUrl}/student/documents/init-upload"),
         headers: await _getHeaders(),
+        body: json.encode({
+          'category': category,
+          'title': title,
+        }),
       );
       final data = json.decode(response.body);
       return data['message'];
