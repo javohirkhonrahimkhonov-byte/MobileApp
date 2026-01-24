@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/community_models.dart';
-import '../services/community_service.dart';
+import '../services/chat_service.dart'; // NEW
 import 'chat_detail_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -12,7 +12,7 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  final CommunityService _service = CommunityService();
+  final ChatService _service = ChatService(); // CHANGED
 
   @override
   Widget build(BuildContext context) {
