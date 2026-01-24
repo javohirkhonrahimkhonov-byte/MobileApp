@@ -34,10 +34,10 @@ class _AcademicScreenState extends State<AcademicScreen> {
       final data = await _dataService.getDashboardStats(forceRefresh: forceRefresh);
       if (mounted) {
         setState(() {
-          _gpa = (data['gpa'] ?? 0.0).toDouble();
-          _missedHours = (data['missed_hours'] ?? 0).toInt();
-          _excusedHours = (data['missed_hours_excused'] ?? 0).toInt();
-          _unexcusedHours = (data['missed_hours_unexcused'] ?? 0).toInt();
+          _gpa = double.tryParse(data['gpa']?.toString() ?? '0.0') ?? 0.0;
+          _missedHours = int.tryParse(data['missed_hours']?.toString() ?? '0') ?? 0;
+          _excusedHours = int.tryParse(data['missed_hours_excused']?.toString() ?? '0') ?? 0;
+          _unexcusedHours = int.tryParse(data['missed_hours_unexcused']?.toString() ?? '0') ?? 0;
           _isLoading = false;
         });
       }
