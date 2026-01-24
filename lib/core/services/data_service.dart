@@ -132,9 +132,14 @@ class DataService {
           "activities_approved_count": data['activities_approved_count'] ?? 0
         };
 
-        // Update Local DB
-        await _dbService.saveCache('dashboard', studentId, result);
-        return result;
+        // Update Local DB (Non-blocking or at least non-failing for UI)
+        try {
+          await _dbService.saveCache('dashboard', studentId, result);
+        } catch (e) {
+          print("Warning: Failed to cache dashboard: $e");
+        }
+        
+        return result; // RETURN LIVE DATA
       }
     } catch (e) {
       print("Dashboard Sync Error: $e");
