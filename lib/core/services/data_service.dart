@@ -645,6 +645,7 @@ class DataService {
       print("DataService: Error clearing AI history: $e");
       return false;
     }
+  }
   // 20. Document Management
   Future<List<dynamic>> getDocuments() async {
     try {
