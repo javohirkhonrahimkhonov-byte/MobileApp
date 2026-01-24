@@ -32,7 +32,7 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
     }
   }
 
-  Future<void> _initiateUpload(String title) async {
+  Future<bool> _initiateUpload(String title) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Botga yuklash so'rovi yuborilmoqda...")),
     );
@@ -47,77 +47,94 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
           duration: const Duration(seconds: 4),
         ),
       );
+      return !msg.toLowerCase().contains("xato");
     }
+    return false;
   }
 
   void _showUploadForm() {
     final TextEditingController titleController = TextEditingController();
+    bool isSubmitting = false;
     
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Sertifikat yuklash", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: "Sertifikat nomi",
-                  hintText: "Masalan: IELTS Certificate",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  prefixIcon: const Icon(Icons.workspace_premium_rounded),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    if (titleController.text.isEmpty) {
-                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, sertifikat nomini kiriting")));
-                       return;
-                    }
-                    _initiateUpload(titleController.text);
-                  },
-                  icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
-                  label: const Text("Telegram orqali yuklash"),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.primaryBlue),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Sertifikat yuklash", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: titleController,
+                  enabled: !isSubmitting,
+                  decoration: InputDecoration(
+                    labelText: "Sertifikat nomi",
+                    hintText: "Masalan: IELTS Certificate",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.workspace_premium_rounded),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _loadCertificates();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: OutlinedButton.icon(
+                    onPressed: isSubmitting ? null : () async {
+                      if (titleController.text.trim().isEmpty) {
+                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Iltimos, sertifikat nomini kiriting")));
+                         return;
+                      }
+                      
+                      setModalState(() => isSubmitting = true);
+                      final success = await _initiateUpload(titleController.text.trim());
+                      if (mounted) {
+                        if (success) {
+                           Navigator.pop(context);
+                        } else {
+                           setModalState(() => isSubmitting = false);
+                        }
+                      }
+                    },
+                    icon: isSubmitting 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryBlue))
+                      : const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
+                    label: Text(isSubmitting ? "Yuborilmoqda..." : "Telegram orqali yuklash"),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppTheme.primaryBlue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
-                  child: const Text("Saqlash", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting ? null : () {
+                      Navigator.pop(context);
+                      _loadCertificates();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Ro'yxatni yangilash", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
