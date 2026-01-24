@@ -144,12 +144,8 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
   Widget _buildGradesCard(dynamic grades) {
     if (grades == null) return const SizedBox();
     
-    final overall = grades['overall'] ?? 0;
-    final on = grades['on']?['val_5'] ?? 0;
-    final yn = grades['yn']?['val_5'] ?? 0;
-    
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -158,16 +154,14 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("O'zlashtirish", style: TextStyle(color: Colors.grey, fontSize: 13)),
-          const SizedBox(height: 10),
+          const Text("O'zlashtirish", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildGradeItem("Joriy Baho", "$overall", isMain: true),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-              _buildGradeItem("ON", "$on"),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-              _buildGradeItem("YN", "$yn"),
+              _buildGradeItem("ON (Oraliql)", "$on"),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.15)),
+              _buildGradeItem("YN (Yakuniy)", "$yn"),
             ],
           )
         ],
