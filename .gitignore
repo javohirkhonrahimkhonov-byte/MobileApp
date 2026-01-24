@@ -1,20 +1,48 @@
-venv/
-__pycache__/
-*.pyc
-.env
+# Non-project files
 .DS_Store
-nohup.out
-uploads/
+.history
+.vscode/
+.idea/
+*.iml
 *.log
+nohup.out
 
 # Flutter/Dart
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 build/
+pubspec.lock
+
+# Android
+android/local.properties
+android/key.properties
+android/app/**/generated/
+android/.gradle
+*.jks
+*.keystore
+
+# iOS
 ios/Flutter/Generated.xcconfig
 ios/Flutter/flutter_export_environment.sh
-android/.gradle
-.idea/
-*.iml
-config.py
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+
+# macOS
+macos/Flutter/Generated.xcconfig
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+windows/flutter/ephemeral/
+
+# Secrets
+.env
+firebase-key.json
+google-services.json
+GoogleService-Info.plist
