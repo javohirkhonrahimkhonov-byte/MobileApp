@@ -50,6 +50,40 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
     }
   }
 
+  Future<void> _confirmDelete(int certId, String title) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Sertifikatni o'chirish"),
+        content: Text("Rostdan ham '$title' sertifikatini o'chirmoqchimisiz?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Bekor qilish")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text("O'chirish"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteCert(certId);
+    }
+  }
+
+  Future<void> _deleteCert(int certId) async {
+    final success = await _dataService.deleteCertificate(certId);
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sertifikat muvaffaqiyatli o'chirildi"), backgroundColor: Colors.green));
+        _loadCertificates();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("O'chirishda xatolik yuz berdi"), backgroundColor: Colors.red));
+      }
+    }
+  }
+
   Future<void> _sendToBot(int certId) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Sertifikat botga yuborilmoqda...")),
@@ -191,16 +225,33 @@ class _CertificatesScreenState extends State<CertificatesScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50], 
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
-                    onPressed: () => _sendToBot(cert['id']),
-                    tooltip: "Botda ko'rish",
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                        onPressed: () => _confirmDelete(cert['id'], cert['title'] ?? "Sertifikat"),
+                        tooltip: "O'chirish",
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50], 
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
+                        onPressed: () => _sendToBot(cert['id']),
+                        tooltip: "Botda ko'rish",
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

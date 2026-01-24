@@ -681,6 +681,19 @@ class DataService {
     }
   }
 
+  Future<bool> deleteDocument(int docId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("${ApiConstants.backendUrl}/student/documents/$docId"),
+        headers: await _getHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("DataService: Error deleting document: $e");
+      return false;
+    }
+  }
+
   Future<String?> sendDocumentToBot(int docId) async {
     try {
       final response = await http.post(
@@ -745,6 +758,19 @@ class DataService {
     } catch (e) {
       print("DataService: Error initiating cert upload: $e");
       return "Tarmoq xatosi";
+    }
+  }
+
+  Future<bool> deleteCertificate(int certId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("${ApiConstants.backendUrl}/student/certificates/$certId"),
+        headers: await _getHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("DataService: Error deleting certificate: $e");
+      return false;
     }
   }
 

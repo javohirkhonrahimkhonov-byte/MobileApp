@@ -284,16 +284,33 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       ],
                     ),
                   ),
-                  trailing: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
-                      onPressed: () => _sendToBot(doc['id']),
-                      tooltip: "Botda ko'rish",
-                    ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                          onPressed: () => _confirmDelete(doc['id'], doc['title']),
+                          tooltip: "O'chirish",
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
+                          onPressed: () => _sendToBot(doc['id']),
+                          tooltip: "Botda ko'rish",
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -337,6 +354,40 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       ),
     );
   }
+  Future<void> _confirmDelete(int docId, String title) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Hujjatni o'chirish"),
+        content: Text("Rostdan ham '$title' hujjatini o'chirmoqchimisiz?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Bekor qilish")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text("O'chirish"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteDoc(docId);
+    }
+  }
+
+  Future<void> _deleteDoc(int docId) async {
+    final success = await _dataService.deleteDocument(docId);
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Hujjat muvaffaqiyatli o'chirildi"), backgroundColor: Colors.green));
+        _loadDocuments();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("O'chirishda xatolik yuz berdi"), backgroundColor: Colors.red));
+      }
+    }
+  }
+
   Future<void> _sendToBot(int docId) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Hujjat botga yuborilmoqda...")),
