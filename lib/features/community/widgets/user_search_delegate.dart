@@ -14,7 +14,32 @@ class UserSearchDelegate extends SearchDelegate {
   @override
   String get searchFieldLabel => "Talabalarni qidirish...";
 
-  // ... (actions/leading same) ...
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            query = '';
+            showSuggestions(context);
+          },
+        ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildSearchList();
+  }
 
   @override
   Widget buildSuggestions(BuildContext context) {
