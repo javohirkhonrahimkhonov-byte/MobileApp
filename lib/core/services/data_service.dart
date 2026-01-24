@@ -645,9 +645,51 @@ class DataService {
       print("DataService: Error clearing AI history: $e");
       return false;
     }
+  // 20. Document Management
+  Future<List<dynamic>> getDocuments() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiConstants.backendUrl}/student/documents"),
+        headers: await _getHeaders(),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['data'] ?? [];
+      }
+    } catch (e) {
+      print("DataService: Error getting documents: $e");
+    }
+    return [];
   }
 
-  // 20. Request Document
+  Future<String?> initiateDocumentUpload() async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConstants.backendUrl}/student/documents/init-upload"),
+        headers: await _getHeaders(),
+      );
+      final data = json.decode(response.body);
+      return data['message'];
+    } catch (e) {
+      print("DataService: Error initiating upload: $e");
+      return "Tarmoq xatosi";
+    }
+  }
+
+  Future<String?> sendDocumentToBot(int docId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiConstants.backendUrl}/student/documents/$docId/send-to-bot"),
+        headers: await _getHeaders(),
+      );
+      final data = json.decode(response.body);
+      return data['message'];
+    } catch (e) {
+      print("DataService: Error sending doc to bot: $e");
+      return "Tarmoq xatosi";
+    }
+  }
+
   Future<String?> requestDocument(String type) async {
     try {
       final response = await http.post(

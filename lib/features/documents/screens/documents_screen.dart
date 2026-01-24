@@ -11,14 +11,59 @@ class DocumentsScreen extends StatefulWidget {
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
   final DataService _dataService = DataService();
-  bool _isLoading = false;
-  List<dynamic> _documents = []; // Placeholder for real docs if implemented
+  bool _isLoading = true;
+  List<dynamic> _documents = [];
 
   @override
   void initState() {
     super.initState();
-    // In a real app, we'd fetch actual documents here
-    // _loadDocuments();
+    _loadDocuments();
+  }
+
+  Future<void> _loadDocuments() async {
+    setState(() => _isLoading = true);
+    final docs = await _dataService.getDocuments();
+    if (mounted) {
+      setState(() {
+        _documents = docs;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _initiateUpload() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Botga yuklash so'rovi yuborilmoqda...")),
+    );
+    
+    final msg = await _dataService.initiateDocumentUpload();
+    if (mounted && msg != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: msg.toLowerCase().contains("xato") ? Colors.red : AppTheme.primaryBlue,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendToBot(int docId) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Hujjat botga yuborilmoqda...")),
+    );
+    
+    final msg = await _dataService.sendDocumentToBot(docId);
+    if (mounted && msg != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: msg.toLowerCase().contains("xato") ? Colors.red : Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -31,36 +76,40 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: _buildBody(),
+      body: RefreshIndicator(
+        onRefresh: _loadDocuments,
+        color: AppTheme.primaryBlue,
+        child: _isLoading && _documents.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : _buildBody(),
+      ),
     );
   }
 
   Widget _buildBody() {
-    // For now, always empty as requested (demo docs removed)
     if (_documents.isEmpty) {
-      return Column(
+      return Stack(
         children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.folder_copy_outlined, size: 80, color: Colors.grey[200]),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Hujjatlar yo'q",
-                    style: TextStyle(color: Colors.grey[400], fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Hali hech qanday hujjat yuklanmagan",
-                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
-                  ),
-                ],
-              ),
+          ListView(), // For pull-to-refresh to work even when empty
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.folder_copy_outlined, size: 80, color: Colors.grey[200]),
+                const SizedBox(height: 16),
+                Text(
+                  "Hujjatlar yo'q",
+                  style: TextStyle(color: Colors.grey[400], fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Hali hech qanday hujjat yuklanmagan",
+                  style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                ),
+              ],
             ),
           ),
-          _buildBottomButton(),
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomButton()),
         ],
       );
     }
@@ -73,8 +122,69 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             itemCount: _documents.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
-               // ... Future real item implementation
-               return const SizedBox();
+              final doc = _documents[index];
+              final isPdf = doc['type'] == 'document' || (doc['title'] ?? '').toLowerCase().contains('.pdf');
+              
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isPdf ? Colors.red[50] : Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
+                      color: isPdf ? Colors.red : Colors.blue,
+                    ),
+                  ),
+                  title: Text(
+                    doc['title'] as String,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_rounded, size: 12, color: Colors.grey[500]),
+                        const SizedBox(width: 4),
+                        Text(
+                          doc['created_at'] as String,
+                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          doc['category'] as String,
+                          style: TextStyle(color: AppTheme.primaryBlue.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  trailing: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.telegram_rounded, color: AppTheme.primaryBlue),
+                      onPressed: () => _sendToBot(doc['id']),
+                      tooltip: "Botda ko'rish",
+                    ),
+                  ),
+                ),
+              );
             },
           ),
         ),
@@ -86,80 +196,32 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Widget _buildBottomButton() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05), 
-            blurRadius: 20, 
-            offset: const Offset(0, -5)
-          )
-        ],
-      ),
+      color: Colors.transparent, // Let background show
       child: SafeArea(
         child: SizedBox(
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _showAddDocumentSheet,
+            onPressed: _initiateUpload,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
+              elevation: 4,
+              shadowColor: AppTheme.primaryBlue.withOpacity(0.3),
             ),
-            child: const Text(
-              "Hujjat yuklash",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_to_photos_rounded, color: Colors.white),
+                SizedBox(width: 10),
+                Text(
+                  "Hujjat yuklash",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  void _showAddDocumentSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: Text("Hujjat turini tanlang", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            Divider(height: 1, color: Colors.grey[100]),
-            _buildActionItem(Icons.credit_card_rounded, "Passport nusxasi"),
-            _buildActionItem(Icons.work_outline_rounded, "Rezyume (CV)"),
-            _buildActionItem(Icons.assignment_ind_rounded, "Obyektivka"),
-            _buildActionItem(Icons.folder_shared_rounded, "Boshqa hujjat"),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionItem(IconData icon, String title) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(10)),
-        child: Icon(icon, color: Colors.black87, size: 22),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-      onTap: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fayl tanlash oynasi ochilmoqda...")));
-      },
-    );
   }
 }
