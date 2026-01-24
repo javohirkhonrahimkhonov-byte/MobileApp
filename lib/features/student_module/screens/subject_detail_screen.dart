@@ -144,6 +144,9 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
   Widget _buildGradesCard(dynamic grades) {
     if (grades == null) return const SizedBox();
     
+    final on = grades['on']?['val_5'] ?? 0;
+    final yn = grades['yn']?['val_5'] ?? 0;
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
