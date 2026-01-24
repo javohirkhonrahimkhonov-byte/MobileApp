@@ -243,8 +243,63 @@ class CommunityService {
       
       print("Edit Post Result: ${response.statusCode}");
       return response.statusCode >= 200 && response.statusCode < 300;
-    } catch (e) {
       print("CommunityService: Error editing post: $e");
+      return false;
+    }
+  }
+
+  // --- Subscription ---
+  Future<Map<String, dynamic>?> toggleSubscription(String targetId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConstants.backendUrl}/community/subscribe/$targetId'),
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        return json.decode(utf8.decode(response.bodyBytes));
+      }
+      return null;
+    } catch (e) {
+      print("CommunityService: Toggle sub error: $e");
+      return null;
+    }
+  }
+
+  Future<Map<String, int>?> getSubscriberCounts(String targetId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/subscribers/count?target_id=$targetId'),
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return {
+          "followers": data['followers'] ?? 0,
+          "following": data['following'] ?? 0
+        };
+      }
+      return null;
+    } catch (e) {
+      print("CommunityService: Get counts error: $e");
+      return null;
+    }
+  }
+  
+  Future<bool> checkSubscription(String targetId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.backendUrl}/community/check-subscription/$targetId'),
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return data['subscribed'] ?? false;
+      }
+      return false;
+    } catch (e) {
       return false;
     }
   }
