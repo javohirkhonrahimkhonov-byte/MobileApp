@@ -167,8 +167,8 @@ class UserSearchDelegate extends SearchDelegate {
                       authorId: student.id.toString(),
                       authorUsername: student.username ?? "",
                       authorAvatar: student.imageUrl ?? "",
-                      authorRole: "Talaba",
-                      authorIsPremium: student.isPremium, // NEW
+                      authorRole: student.role ?? "student", // Pass code, not label
+                      authorIsPremium: student.isPremium,
                     )));
                   },
                 ),

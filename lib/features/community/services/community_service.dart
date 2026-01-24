@@ -256,7 +256,7 @@ class CommunityService {
       authorName: json['author_name'] ?? "Noma'lum",
       authorUsername: json['author_username'] ?? "",
       authorAvatar: json['author_avatar'] ?? json['author_image'] ?? json['image'] ?? "", 
-      authorRole: json['author_role'] ?? "Talaba",
+      authorRole: json['author_role'] ?? "student", // Use code
       content: json['content'] ?? "",
       timeAgo: _formatDate(json['created_at']),
       scope: json['category_type'],

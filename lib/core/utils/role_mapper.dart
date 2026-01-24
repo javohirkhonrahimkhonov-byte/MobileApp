@@ -25,7 +25,9 @@ class RoleMapper {
     "super_admin": "Super Administrator",
     "tutor": "Tyutor",
     "dormitory": "Yotoqxona",
-    "lawyer": "Yurist"
+    "lawyer": "Yurist",
+    "talaba": "Talaba", // Safety fallback
+    "user": "Talaba",
   };
 
   static String getLabel(String? code) {
