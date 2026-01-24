@@ -32,6 +32,7 @@ class LocalDatabaseService {
       CREATE TABLE dashboard (
         id $idType,
         student_id $intType,
+        semester_code $textType,
         data $textType,
         updated_at $textType
       )

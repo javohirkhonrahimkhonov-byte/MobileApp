@@ -58,7 +58,7 @@ class PushNotificationService {
       if (userToken == null) return;
 
       final response = await http.post(
-        Uri.parse("${ApiConstants.backendUrl}/notifications/register-token"),
+        Uri.parse("${ApiConstants.backendUrl}/student/notifications/register-token"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $userToken",

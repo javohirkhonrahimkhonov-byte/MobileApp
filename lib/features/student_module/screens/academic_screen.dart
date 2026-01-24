@@ -146,10 +146,11 @@ class _AcademicScreenState extends State<AcademicScreen> {
             _buildMenuItem(context, "Imtihonlar", Icons.edit_document, Colors.redAccent),
             _buildMenuItem(context, "Reyting Daftarchasi", Icons.history_edu_rounded, Colors.teal),
           ],
-        ),
-      ),
-    );
-  }
+        ), // Column
+      ), // SingleChildScrollView
+    ), // RefreshIndicator
+  );
+}
 
   bool _navigationLock = false;
 
